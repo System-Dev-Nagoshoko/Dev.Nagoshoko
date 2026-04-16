@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Domain Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+    body {
+
+      font-family: sans-serif;
+
+      text-align: center;
+
+      padding: 40px;
+
+      background: #f5f5f5;
+
+    }
+
+    .box {
+
+      background: white;
+
+      padding: 30px;
+
+      border-radius: 12px;
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+      display: inline-block;
+
+    }
+
+    h1 {
+
+      margin-bottom: 10px;
+
+    }
+
+    .ok {
+
+      color: green;
+
+      font-weight: bold;
+
+      margin-top: 10px;
+
+    }
+
+    .info {
+
+      font-size: 14px;
+
+      margin-top: 15px;
+
+      color: #555;
+
+    }
+</style>
+</head>
+<body>
+<div class="box">
+<h1>接続確認ページ</h1>
+<p>このページが表示されていれば、ドメイン設定は成功しています。</p>
+<div class="ok">✔ Domain Connected</div>
+<div class="info">
+<p id="url"></p>
+<p id="time"></p>
+</div>
+</div>
+<script>
+
+    // 現在のURL表示
+
+    document.getElementById("url").textContent =
+
+      "URL: " + window.location.href;
+
+    // 現在時刻表示（キャッシュ確認にも使える）
+
+    document.getElementById("time").textContent =
+
+      "Time: " + new Date().toLocaleString();
+</script>
+</body>
+</html>
+ 
