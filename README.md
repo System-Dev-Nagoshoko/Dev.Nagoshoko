@@ -32,7 +32,7 @@
 
 - HTML / CSS / TypeScript
 
-- GitHub Pages / Cloudflare Pages（予定）
+- GitHub Pages （予定）
 
 - LINE Messaging API（連携予定）
 
