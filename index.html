@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>名護商工 Event Guide</title>
     <style>
         :root {
@@ -23,46 +23,85 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
+        /* ヘッダー */
         header {
             background-color: var(--nago-navy);
             color: var(--white);
-            padding: 24px 16px;
+            padding: 20px 16px;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         header h1 {
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             letter-spacing: 0.05em;
         }
 
-        header p {
-            margin: 6px 0 0;
-            font-size: 0.85rem;
-            opacity: 0.8;
-        }
-
+        /* 学科選択タブ（横スクロール） */
         .tab-nav {
             display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
             background: var(--white);
             position: sticky;
             top: 0;
             z-index: 100;
             border-bottom: 2px solid var(--nago-blue);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-nav::-webkit-scrollbar {
+            display: none;
         }
 
         .tab-nav button {
-            flex: 1;
-            padding: 18px 10px;
+            flex: 0 0 85px;
+            padding: 12px 5px;
             border: none;
             background: none;
-            font-size: 1rem;
             font-weight: bold;
             color: var(--nago-blue);
+            text-align: center;
+            transition: 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .tab-nav button.active {
+            background-color: #f0f4f8;
+            color: var(--nago-navy);
+            border-bottom: 4px solid var(--nago-navy);
+        }
+
+        /* 学年選択エリア */
+        .grade-selector {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+
+        .grade-btn {
+            flex: 1;
+            max-width: 100px;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid var(--nago-blue);
+            background: white;
+            color: var(--nago-blue);
+            font-weight: bold;
+            font-size: 0.85rem;
             cursor: pointer;
         }
 
+        .grade-btn.active {
+            background: var(--nago-blue);
+            color: white;
+        }
+
+        /* リスト・カード */
         .event-list {
             padding: 16px;
             max-width: 600px;
@@ -72,80 +111,78 @@
         .card {
             background: var(--white);
             border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
             border-left: 6px solid var(--nago-blue);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            animation: fadeIn 0.4s ease-out;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease-out;
         }
 
         .card h3 {
-            margin: 0 0 12px 0;
-            font-size: 1.25rem;
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
             color: var(--nago-navy);
         }
 
         .card-meta {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border-top: 1px dashed #eee;
-            padding-top: 12px;
+            gap: 8px;
+            font-size: 0.85rem;
         }
 
         .badge {
-            background-color: #eef2f6;
+            background: #eef2f6;
             color: var(--nago-blue);
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-weight: bold;
             border: 1px solid var(--nago-blue);
         }
 
         .loc {
             margin: 0;
-            color: var(--nago-navy);
             font-weight: bold;
+        }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #eee;
         }
 
         footer {
             text-align: center;
-            padding: 40px 16px;
-            font-size: 0.85rem;
+            padding: 30px 16px;
+            font-size: 0.8rem;
             color: var(--text-sub);
         }
 
-        /* NYCリンクのスタイル */
         footer a {
             color: var(--nago-blue);
             text-decoration: none;
             font-weight: bold;
-            border-bottom: 1px solid transparent;
-            transition: border-bottom 0.2s;
-        }
-
-        footer a:hover {
-            border-bottom: 1px solid var(--nago-blue);
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
+
     <header>
         <h1>名護商工 Event Guide</h1>
-        <p>学園祭・行事案内システム</p>
     </header>
 
     <div id="app">
         </div>
 
     <footer>
-        &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC. All rights reserved.</a>
+        &copy; 2026 <a href="https://nagoyc.stki.org/NYC.   All rights reserved." target="_blank">NYC</a>
     </footer>
 
     <script type="module" src="./src/main.ts"></script>
