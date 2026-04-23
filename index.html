@@ -23,7 +23,6 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* ヘッダー */
         header {
             background-color: var(--nago-navy);
             color: var(--white);
@@ -65,6 +64,7 @@
             text-align: center;
             transition: 0.2s;
             font-size: 0.75rem;
+            cursor: pointer;
         }
 
         .tab-nav button.active {
@@ -73,35 +73,7 @@
             border-bottom: 4px solid var(--nago-navy);
         }
 
-        /* 学年選択エリア */
-        .grade-selector {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            background: #fff;
-            border-bottom: 1px solid #eee;
-        }
-
-        .grade-btn {
-            flex: 1;
-            max-width: 100px;
-            padding: 8px;
-            border-radius: 20px;
-            border: 1px solid var(--nago-blue);
-            background: white;
-            color: var(--nago-blue);
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .grade-btn.active {
-            background: var(--nago-blue);
-            color: white;
-        }
-
-        /* リスト・カード */
+        /* リスト・カードデザイン */
         .event-list {
             padding: 16px;
             max-width: 600px;
@@ -145,17 +117,9 @@
             font-weight: bold;
         }
 
-        .info-text {
-            font-size: 0.85rem;
-            color: #555;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px dashed #eee;
-        }
-
         footer {
             text-align: center;
-            padding: 30px 16px;
+            padding: 40px 16px;
             font-size: 0.8rem;
             color: var(--text-sub);
         }
@@ -182,7 +146,7 @@
         </div>
 
     <footer>
-        &copy; 2026 <a href="https://nagoyc.stki.org/NYC.   All rights reserved." target="_blank">NYC</a>
+        &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
     </footer>
 
     <script type="module" src="./src/main.ts"></script>
