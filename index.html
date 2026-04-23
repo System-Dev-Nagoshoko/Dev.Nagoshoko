@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Guide System</title>
+    <style>
+      :root { --primary: #007AFF; --bg: #f2f2f7; }
+      body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #1c1c1e; }
+      header { background: #fff; padding: 20px; text-align: center; border-bottom: 1px solid #d1d1d6; }
+      header h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+      header p { margin: 5px 0 0; font-size: 0.8rem; color: #8e8e93; }
+      
+      .tab-nav { display: flex; background: #fff; position: sticky; top: 0; border-bottom: 1px solid #d1d1d6; }
+      .tab-nav button { flex: 1; padding: 15px; border: none; background: none; font-weight: bold; cursor: pointer; }
+      .tab-nav button:active { background: #eee; }
+
+      .event-list { padding: 15px; }
+      .card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .card h3 { margin: 10px 0; font-size: 1.1rem; }
+      .card-meta { display: flex; justify-content: space-between; font-size: 0.75rem; }
+      .badge { background: #e5e5ea; padding: 2px 8px; border-radius: 4px; }
+      .loc { margin: 0; color: var(--primary); font-weight: bold; font-size: 0.9rem; }
+      
+      .map-view, .terms-view { padding: 20px; }
+      footer { text-align: center; font-size: 0.7rem; color: #8e8e93; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
