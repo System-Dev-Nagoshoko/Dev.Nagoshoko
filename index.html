@@ -2,153 +2,46 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>名護商工 Event Guide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商工祭 CONNECT</title>
     <style>
         :root {
-            --nago-navy: #003366;
-            --nago-blue: #005bac;
-            --bg-body: #f4f7f9;
-            --text-main: #1a1a1a;
-            --text-sub: #666666;
-            --white: #ffffff;
+            --primary-color: #003366; /* 名護商工イメージ */
+            --accent-color: #ff9900;
+            --bg-color: #f4f7f9;
         }
-
-        body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            margin: 0;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.6;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        header {
-            background-color: var(--nago-navy);
-            color: var(--white);
-            padding: 20px 16px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            letter-spacing: 0.05em;
-        }
-
-        /* 学科選択タブ（横スクロール） */
-        .tab-nav {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            background: var(--white);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 2px solid var(--nago-blue);
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tab-nav::-webkit-scrollbar {
-            display: none;
-        }
-
-        .tab-nav button {
-            flex: 0 0 85px;
-            padding: 12px 5px;
-            border: none;
-            background: none;
-            font-weight: bold;
-            color: var(--nago-blue);
-            text-align: center;
-            transition: 0.2s;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-
-        .tab-nav button.active {
-            background-color: #f0f4f8;
-            color: var(--nago-navy);
-            border-bottom: 4px solid var(--nago-navy);
-        }
-
-        /* リスト・カードデザイン */
-        .event-list {
-            padding: 16px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .card {
-            background: var(--white);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border-left: 6px solid var(--nago-blue);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .card h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            color: var(--nago-navy);
-        }
-
-        .card-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-
-        .badge {
-            background: #eef2f6;
-            color: var(--nago-blue);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            border: 1px solid var(--nago-blue);
-        }
-
-        .loc {
-            margin: 0;
-            font-weight: bold;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 16px;
-            font-size: 0.8rem;
-            color: var(--text-sub);
-        }
-
-        footer a {
-            color: var(--nago-blue);
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body { font-family: sans-serif; margin: 0; background: var(--bg-color); }
+        header { background: var(--primary-color); color: white; padding: 1rem; text-align: center; }
+        .search-container { padding: 1rem; position: sticky; top: 0; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #search-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 1rem; }
+        .event-list { padding: 1rem; display: grid; gap: 1rem; }
+        .event-card { background: white; padding: 1rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .event-card h3 { margin: 0 0 0.5rem 0; color: var(--primary-color); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; background: #eee; margin-right: 5px; }
+        .loc-badge { background: #e3f2fd; color: #1976d2; }
+        .time-badge { background: #fff3e0; color: #e65100; }
+        .description { font-size: 0.9rem; color: #666; margin-top: 8px; }
+        footer { text-align: center; padding: 2rem; color: #888; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>名護商工 Event Guide</h1>
-    </header>
+<header>
+    <h1>商工祭 CONNECT</h1>
+    <p>企画・会場案内システム</p>
+</header>
 
-    <div id="app">
-        </div>
+<div class="search-container">
+    <input type="text" id="search-input" placeholder="企画名や場所でキーワード検索...">
+</div>
 
-    <footer>
-        &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
-    </footer>
+<div id="app" class="event-list">
+    </div>
 
-    <script type="module" src="./src/main.ts"></script>
+<footer>
+    &copy; 2026 商工祭 運営事務局
+</footer>
+
+<script type="module" src="./src/main.ts"></script>
 </body>
 </html>
