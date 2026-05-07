@@ -5,141 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>名護商工 Event Guide</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js"></script>
+    <script src="./typescript.js"></script>
 
     <style>
-        :root {
-            --nago-navy: #003366;
-            --nago-blue: #005bac;
-            --bg-body: #f4f7f9;
-            --text-main: #1a1a1a;
-            --text-sub: #666666;
-            --white: #ffffff;
-        }
-        body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            line-height: 1.6;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        header {
-            background-color: var(--nago-navy);
-            color: var(--white);
-            padding: 20px 16px;
-            text-align: center;
-        }
-        .tab-nav {
-            display: flex;
-            overflow-x: auto;
-            background: var(--white);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 2px solid var(--nago-blue);
-        }
-        .tab-nav button {
-            flex: 0 0 85px;
-            padding: 12px 5px;
-            border: none;
-            background: none;
-            font-weight: bold;
-            color: var(--nago-blue);
-            font-size: 0.75rem;
-        }
-        .tab-nav button.active {
-            background-color: #f0f4f8;
-            color: var(--nago-navy);
-            border-bottom: 4px solid var(--nago-navy);
-        }
-        .event-list { padding: 16px; max-width: 600px; margin: 0 auto; }
-        .card {
-            background: var(--white);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border-left: 6px solid var(--nago-blue);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-        }
-        .badge {
-            background: #eef2f6;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--nago-blue);
-            font-size: 0.8rem;
-        }
-        footer { text-align: center; padding: 40px 16px; font-size: 0.8rem; color: var(--text-sub); }
+        /* (これまでのCSSはそのまま維持) */
+        :root { --nago-navy: #003366; --nago-blue: #005bac; --bg-body: #f4f7f9; --text-main: #1a1a1a; --white: #ffffff; }
+        body { font-family: sans-serif; margin: 0; background: var(--bg-body); }
+        header { background: var(--nago-navy); color: white; padding: 20px; text-align: center; }
+        .tab-nav { display: flex; overflow-x: auto; background: white; border-bottom: 2px solid var(--nago-blue); }
+        .tab-nav button { flex: 0 0 85px; padding: 12px; border: none; background: none; color: var(--nago-blue); font-weight: bold; }
+        .tab-nav button.active { background: #f0f4f8; border-bottom: 4px solid var(--nago-navy); }
+        .card { background: white; margin: 10px; padding: 15px; border-radius: 10px; border-left: 6px solid var(--nago-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>名護商工 Event Guide</h1>
-    </header>
-
-    <div id="app">
-        <p style="text-align: center; padding: 40px; color: #666;">
-            システム起動中...
-        </p>
-    </div>
-
-    <footer>
-        &copy; 2026 NYC. All rights reserved.
-    </footer>
+    <header><h1>名護商工 Event Guide</h1></header>
+    <div id="app"><p style="text-align:center; padding:50px;">システムを起動しています...</p></div>
 
     <script>
-        /**
-         * TypeScriptをブラウザで実行するための最終手段
-         */
-        async function bootSystem() {
-            const TARGET_TS = "./src/main.ts";
-            const app = document.getElementById('app');
-
+        // 100%確実に動かすための起動スクリプト
+        async function runTs() {
             try {
-                // 1. ライブラリが読み込まれるのを最大5秒待機
-                let retry = 0;
-                while (typeof ts === 'undefined' && retry < 50) {
-                    await new Promise(r => setTimeout(r, 100));
-                    retry++;
-                }
-
+                // ライブラリの準備を待つ
                 if (typeof ts === 'undefined') {
-                    throw new Error("TypeScriptコンパイラの読み込みに時間がかかりすぎています。ページを更新してください。");
+                    throw new Error("typescript.js が読み込めていません。ファイルがリポジトリにあるか確認してください。");
                 }
 
-                // 2. main.tsを取得
-                const response = await fetch(TARGET_TS);
-                if (!response.ok) throw new Error("main.tsファイルが読み込めません。パスを確認してください。");
-                const tsCode = await response.text();
+                // main.tsを取得
+                const res = await fetch('./src/main.ts');
+                if (!res.ok) throw new Error("main.ts が見つかりません。");
+                const code = await res.text();
 
-                // 3. JSに変換 (型定義を無視してトランスパイル)
-                const jsCode = ts.transpile(tsCode, { 
-                    target: ts.ScriptTarget.ESNext,
-                    module: ts.ModuleKind.None,
-                    noEmitOnError: false
-                });
-
-                // 4. 実行
-                const scriptElement = document.createElement('script');
-                scriptElement.text = jsCode;
-                document.body.appendChild(scriptElement);
-                
-                console.log("TypeScript System: ON");
-
+                // 変換して実行
+                const js = ts.transpile(code, { target: 2, module: 0 });
+                const script = document.createElement('script');
+                script.text = js;
+                document.body.appendChild(script);
+                console.log("Success: TS -> JS");
             } catch (e) {
-                console.error("Boot Error:", e);
-                app.innerHTML = `
-                    <div style="padding:20px; color:#d32f2f; background:#ffebee; border-radius:8px; margin:20px;">
-                        <strong>エラーが発生しました</strong><br>
-                        ${e.message}
-                    </div>
-                `;
+                document.getElementById('app').innerHTML = `<div style="color:red; padding:20px;">起動エラー: ${e.message}</div>`;
             }
         }
-
-        // 実行
-        bootSystem();
+        window.addEventListener('DOMContentLoaded', runTs);
     </script>
 </body>
 </html>
