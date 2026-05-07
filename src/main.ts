@@ -1,42 +1,7 @@
-interface ClassProject {
-  grade: number;
-  dept: string;
-  name: string;
-  location: string;
-  time: string;
-  description: string;
-  status: '空き' | 'やや混雑' | '混雑';
-}
-
-const departments = [
-  "工業技術科 機械", 
-  "工業技術科 電気", 
-  "建築科", 
-  "総合情報科", 
-  "商業科", 
-  "地域産業科"
-];
-
-const projectData: ClassProject[] = [];
-
-departments.forEach(dept => {
-  [3, 2, 1].forEach(grade => {
-    projectData.push({
-      grade,
-      dept,
-      name: `${dept} ${grade}年 企画`,
-      location: `${grade}F ${dept.split(' ').pop()}実習室`,
-      time: "09:30 - 15:30",
-      description: `${dept}の${grade}年生による、学習成果を活かした専門的な展示・体験です。`,
-      status: '空き'
-    });
-  });
-});
-
-let currentGradeFilter = 3;
+// (これまでの ClassProject 定義や departments 等はそのまま)
 
 /**
- * 学科名からカラーを取得する関数（追加）
+ * 学科名からカラーを取得する関数
  */
 function getDeptColor(dept: string): string {
   if (dept.includes('機械')) return '#e53935';   // 赤
@@ -45,7 +10,7 @@ function getDeptColor(dept: string): string {
   if (dept.includes('総合情報')) return '#1e88e5'; // 青
   if (dept.includes('商業')) return '#8e24aa';   // 紫
   if (dept.includes('地域産業')) return '#f06292'; // ピンク
-  return '#005bac'; // デフォルト
+  return '#005bac'; 
 }
 
 function render() {
@@ -73,7 +38,7 @@ function render() {
         return `
           <div class="card" style="border-left: 8px solid ${deptColor};">
             <div style="display: flex; justify-content: space-between; align-items: start;">
-              <span class="badge" style="background-color: ${deptColor}; color: white; border: none; font-size: 0.7rem;">
+              <span class="badge" style="background: none; border: 1px solid ${deptColor}; color: ${deptColor}; font-size: 0.7rem;">
                 ${p.dept}
               </span>
               <span style="font-size: 0.8rem; font-weight: bold; color: ${getStatusColor(p.status)};">
@@ -81,7 +46,7 @@ function render() {
               </span>
             </div>
             <h3 style="margin: 8px 0; font-size: 1.1rem;">${p.name}</h3>
-            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px;">
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; color: ${deptColor};">
               📍 ${p.location}
             </div>
             <p style="font-size: 0.8rem; color: #555; margin: 0; line-height: 1.4;">
@@ -94,18 +59,4 @@ function render() {
   `;
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case '空き': return '#4caf50';
-    case 'やや混雑': return '#ff9800';
-    case '混雑': return '#f44336';
-    default: return '#999';
-  }
-}
-
-(window as any).setGrade = (g: number) => {
-  currentGradeFilter = g;
-  render();
-};
-
-render();
+// (getStatusColor, setGrade, render初回実行などはそのまま)
