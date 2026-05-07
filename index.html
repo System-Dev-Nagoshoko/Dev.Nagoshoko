@@ -14,162 +14,50 @@
             --bg-body: #f4f7f9;
             --text-main: #1a1a1a;
             --white: #ffffff;
-            
-            /* 学科別カラー定義 */
-            --color-kikai: #e53935;   /* 工業・機械：赤 */
-            --color-denki: #fb8c00;   /* 工業・電気：橙 */
-            --color-kenchiku: #7cb342; /* 建築：黄緑 */
-            --color-johou: #1e88e5;    /* 情報：青 */
-            --color-shogyou: #8e24aa;  /* 商業：紫 */
-            --color-chisan: #f06292;   /* 地産：ピンク */
         }
-
-        body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            margin: 0;
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        header {
-            background-color: var(--nago-navy);
-            color: var(--white);
-            padding: 20px 16px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        header h1 { margin: 0; font-size: 1.2rem; letter-spacing: 0.05em; }
-
-        /* 学年選択タブ */
-        .tab-nav {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            background: var(--white);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 2px solid var(--nago-blue);
-        }
-
-        .tab-nav button {
-            flex: 1;
-            min-width: 85px;
-            padding: 14px 5px;
-            border: none;
-            background: none;
-            font-weight: bold;
-            color: var(--nago-blue);
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        .tab-nav button.active {
-            background-color: #f0f4f8;
-            color: var(--nago-navy);
-            border-bottom: 4px solid var(--nago-navy);
-        }
-
-        .event-list { padding: 16px; max-width: 600px; margin: 0 auto; }
-
-        /* カードデザインの維持 */
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-            border-left: 8px solid var(--nago-blue); /* デフォルト色 */
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .card h3 { margin: 10px 0 6px 0; font-size: 1.15rem; color: var(--nago-navy); }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.75rem;
-            color: var(--white);
-            margin-bottom: 4px;
-        }
-
-        .loc-info { font-size: 0.9rem; font-weight: bold; color: #444; display: flex; align-items: center; gap: 4px; }
-        .status-dot { float: right; font-size: 0.85rem; font-weight: bold; color: #4caf50; }
-
-        footer { text-align: center; padding: 40px; font-size: 0.8rem; color: #888; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--bg-body); padding-bottom: env(safe-area-inset-bottom); }
+        header { background-color: var(--nago-navy); color: var(--white); padding: 20px 16px; text-align: center; }
+        header h1 { margin: 0; font-size: 1.2rem; }
+        .tab-nav { display: flex; overflow-x: auto; background: var(--white); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--nago-blue); }
+        .tab-nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; font-weight: bold; color: var(--nago-blue); cursor: pointer; }
+        .tab-nav button.active { background-color: #f0f4f8; border-bottom: 4px solid var(--nago-navy); }
+        .card { background: var(--white); border-radius: 12px; padding: 16px; margin: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-bottom: 4px; background: white; }
+        footer { text-align: center; padding: 20px; color: #888; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>名護商工 Event Guide</h1>
-    </header>
-
-    <div id="app">
-        <p style="text-align: center; padding: 50px; color: #666;">
-            システムを読み込み中...
-        </p>
-    </div>
-
-    <footer>
-        &copy; 2026 NYC. All rights reserved.
-    </footer>
+    <header><h1>名護商工 Event Guide</h1></header>
+    <div id="app"><p style="text-align: center; padding: 50px;">main.ts を読み込み中...</p></div>
 
     <script>
-        /**
-         * 2. main.ts を取得して、学科カラーを適用して実行
-         */
-        async function runSystem() {
+        async function loadAndRunTs() {
             const app = document.getElementById('app');
-            const TARGET_TS = "./src/main.ts";
-
             try {
-                // ライブラリロード待ち
+                // 1. main.ts を取得 (キャッシュを避けるためタイムスタンプ付与)
+                const response = await fetch('./src/main.ts?t=' + new Date().getTime());
+                if (!response.ok) throw new Error("main.ts が見つかりません。パスを確認してください。");
+                const tsCode = await response.text();
+
+                // 2. TypeScript ライブラリの準備を待つ
                 let retry = 0;
                 while (typeof ts === 'undefined' && retry < 50) {
                     await new Promise(r => setTimeout(r, 100));
                     retry++;
                 }
 
-                const response = await fetch(TARGET_TS);
-                if (!response.ok) throw new Error("main.ts が読み込めません。");
-                let tsCode = await response.text();
-
-                // TypeScript -> JavaScript
-                const jsCode = ts.transpile(tsCode);
-
-                // 学科カラー判定ロジックを追加して実行
-                const scriptElement = document.createElement('script');
-                scriptElement.text = `
-                    // グローバルなカラー判定関数を定義
-                    window.getDeptColor = (dept) => {
-                        if (dept.includes('機械')) return 'var(--color-kikai)';
-                        if (dept.includes('電気')) return 'var(--color-denki)';
-                        if (dept.includes('建築')) return 'var(--color-kenchiku)';
-                        if (dept.includes('情報')) return 'var(--color-johou)';
-                        if (dept.includes('商業')) return 'var(--color-shogyou)';
-                        if (dept.includes('産業')) return 'var(--color-chisan)';
-                        return 'var(--nago-blue)';
-                    };
-                    ${jsCode}
-                `;
-                document.body.appendChild(scriptElement);
+                // 3. 変換と実行
+                const jsCode = ts.transpile(tsCode, { target: ts.ScriptTarget.ESNext });
+                const script = document.createElement('script');
+                script.text = jsCode;
+                document.body.appendChild(script);
 
             } catch (e) {
-                app.innerHTML = `<div style="color:red; text-align:center; padding:20px;">起動エラー: ${e.message}</div>`;
+                app.innerHTML = `<div style="color:red; padding:20px; text-align:center;">エラー: ${e.message}</div>`;
             }
         }
-
-        window.addEventListener('DOMContentLoaded', runSystem);
+        window.addEventListener('load', loadAndRunTs);
     </script>
 </body>
 </html>
