@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>名護商工 Event Guide</title>
     
-    <script id="ts-compiler" src="https://unpkg.com/typescript@latest/lib/typescriptServices.js"></script>
+    <script src="https://unpkg.com/typescript@latest/lib/typescriptServices.js"></script>
 
     <style>
         :root {
@@ -117,73 +117,55 @@
     </header>
 
     <div id="app">
-        <p style="text-align: center; padding: 20px; color: #999;">システムを読み込み中...</p>
+        <p style="text-align: center; padding: 40px; color: #666;">
+            データを読み込み中...
+        </p>
     </div>
 
     <footer>
         &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
     </footer>
 
-    <script type="text/typescript" src="./src/main.ts"></script>
-
     <script>
-        (function() {
-            const TS_LIB_URL = "https://unpkg.com/typescript@latest/lib/typescriptServices.js";
-            const TARGET_TS_FILE = "./src/main.ts";
+        // ページの読み込み完了後に実行
+        window.onload = async function() {
+            const TARGET_TS = "./src/main.ts";
+            const app = document.getElementById('app');
 
-            // ライブラリを読み込む関数
-            function loadScript(url) {
-                return new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.onload = resolve;
-                    script.onerror = reject;
-                    document.head.appendChild(script);
-                });
-            }
-
-            async function init() {
-                try {
-                    // ① まずTypeScriptライブラリを確実に読み込む
-                    console.log("Loading TypeScript library...");
-                    await loadScript(TS_LIB_URL);
-
-                    // ② ライブラリ(ts)が定義されたか最終確認
-                    if (typeof ts === 'undefined') {
-                        throw new Error("TypeScript library loaded but 'ts' object is not found.");
-                    }
-
-                    // ③ main.tsファイルを取得
-                    const response = await fetch(TARGET_TS_FILE);
-                    if (!response.ok) throw new Error(`Failed to load ${TARGET_TS_FILE}`);
-                    const tsCode = await response.text();
-
-                    // ④ JavaScriptに変換
-                    const jsCode = ts.transpile(tsCode, { 
-                        target: ts.ScriptTarget.ESNext,
-                        module: ts.ModuleKind.None 
-                    });
-
-                    // ⑤ 実行
-                    const scriptElement = document.createElement('script');
-                    scriptElement.text = jsCode;
-                    document.body.appendChild(scriptElement);
-                    console.log("TypeScript environment is ready and executed.");
-
-                } catch (e) {
-                    console.error("System Error:", e);
-                    const app = document.getElementById('app');
-                    if (app) {
-                        app.innerHTML = `<div style="padding:20px; color:red; border:1px solid red; border-radius:8px;">
-                            <strong>システムエラー:</strong><br>${e.message}
-                        </div>`;
-                    }
+            try {
+                // 1. TypeScriptライブラリが読み込まれているかチェック
+                if (typeof ts === 'undefined') {
+                    throw new Error("TypeScriptライブラリの読み込みに失敗しました。ネット接続を確認してください。");
                 }
-            }
 
-            // 実行開始
-            init();
-        })();
+                // 2. .tsファイルを取得
+                const response = await fetch(TARGET_TS);
+                if (!response.ok) throw new Error("main.tsが見つかりません。パスを確認してください。");
+                const tsCode = await response.text();
+
+                // 3. JSに変換
+                const jsCode = ts.transpile(tsCode, { 
+                    target: ts.ScriptTarget.ESNext,
+                    module: ts.ModuleKind.None 
+                });
+
+                // 4. 実行
+                const scriptElement = document.createElement('script');
+                scriptElement.text = jsCode;
+                document.body.appendChild(scriptElement);
+                
+                console.log("TypeScript System Ready.");
+
+            } catch (e) {
+                console.error(e);
+                app.innerHTML = `
+                    <div style="padding:20px; color:#d32f2f; background:#ffebee; border-radius:8px; margin:20px;">
+                        <strong>エラーが発生しました</strong><br>
+                        ${e.message}
+                    </div>
+                `;
+            }
+        };
     </script>
 </body>
 </html>
