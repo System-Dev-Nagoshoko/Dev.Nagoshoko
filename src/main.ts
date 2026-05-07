@@ -1,4 +1,3 @@
-// 1. 仕様書に基づくデータ項目の定義 
 interface ClassProject {
   grade: number;       // 学年 (1, 2, 3)
   dept: string;        // 学科名 (機械, 電気, 情報, 商業, 地産)
@@ -9,11 +8,9 @@ interface ClassProject {
   status: '空き' | 'やや混雑' | '混雑'; // 混雑状況 [cite: 16]
 }
 
-// 2. 5学科 × 3学年 = 15クラスのデータセット
 const departments = ["機械科", "電気科", "総合情報科", "商業科", "地域産業科"];
 const projectData: ClassProject[] = [];
 
-// 15クラス分のデータを生成 [cite: 14]
 departments.forEach(dept => {
   [3, 2, 1].forEach(grade => {
     projectData.push({
@@ -36,7 +33,6 @@ function render() {
   const app = document.querySelector<HTMLDivElement>('#app');
   if (!app) return;
 
-  // 仕様書の「企画一覧表示」に基づくフィルタリング [cite: 11]
   const filtered = projectData.filter(p => p.grade === currentGradeFilter);
 
   app.innerHTML = `
