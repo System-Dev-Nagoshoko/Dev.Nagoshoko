@@ -15,10 +15,9 @@
             --text-main: #1a1a1a;
             --white: #ffffff;
         }
-        body { font-family: "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: var(--bg-body); padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: sans-serif; margin: 0; background-color: var(--bg-body); padding-bottom: env(safe-area-inset-bottom); }
         header { background-color: var(--nago-navy); color: var(--white); padding: 20px 16px; text-align: center; }
-        header h1 { margin: 0; font-size: 1.2rem; }
-        .tab-nav { display: flex; overflow-x: auto; background: var(--white); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid var(--nago-blue); }
+        .tab-nav { display: flex; overflow-x: auto; background: var(--white); border-bottom: 2px solid var(--nago-blue); position: sticky; top: 0; z-index: 100; }
         .tab-nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; font-weight: bold; color: var(--nago-blue); cursor: pointer; }
         .tab-nav button.active { background-color: #f0f4f8; border-bottom: 4px solid var(--nago-navy); }
         .card { background: var(--white); border-radius: 12px; padding: 16px; margin: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
@@ -34,13 +33,29 @@
     <script>
         async function loadAndRunTs() {
             const app = document.getElementById('app');
-            try {
-                // 1. main.ts を取得 (キャッシュを避けるためタイムスタンプ付与)
-                const response = await fetch('./src/main.ts?t=' + new Date().getTime());
-                if (!response.ok) throw new Error("main.ts が見つかりません。パスを確認してください。");
-                const tsCode = await response.text();
+            // 探すパスのリスト
+            const paths = ['./src/main.ts', './main.ts', '../src/main.ts'];
+            let tsCode = "";
+            let foundPath = "";
 
-                // 2. TypeScript ライブラリの準備を待つ
+            try {
+                // 1. パスを順番に試す
+                for (const path of paths) {
+                    try {
+                        const response = await fetch(path + '?t=' + new Date().getTime());
+                        if (response.ok) {
+                            tsCode = await response.text();
+                            foundPath = path;
+                            break;
+                        }
+                    } catch (e) { continue; }
+                }
+
+                if (!tsCode) {
+                    throw new Error("どのパスからも main.ts が見つかりませんでした。");
+                }
+
+                // 2. TypeScript ライブラリのロード待ち
                 let retry = 0;
                 while (typeof ts === 'undefined' && retry < 50) {
                     await new Promise(r => setTimeout(r, 100));
@@ -48,13 +63,20 @@
                 }
 
                 // 3. 変換と実行
-                const jsCode = ts.transpile(tsCode, { target: ts.ScriptTarget.ESNext });
+                const jsCode = ts.transpile(tsCode, { 
+                    target: ts.ScriptTarget.ESNext,
+                    module: ts.ModuleKind.None 
+                });
                 const script = document.createElement('script');
                 script.text = jsCode;
                 document.body.appendChild(script);
+                console.log("成功: " + foundPath + " を実行しました");
 
             } catch (e) {
-                app.innerHTML = `<div style="color:red; padding:20px; text-align:center;">エラー: ${e.message}</div>`;
+                app.innerHTML = `<div style="color:red; padding:20px; text-align:center;">
+                    エラー: ${e.message}<br>
+                    <small>ファイル構成が正しいか確認してください。</small>
+                </div>`;
             }
         }
         window.addEventListener('load', loadAndRunTs);
