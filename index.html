@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>名護商工 Event Guide</title>
+    
+    <script src="https://unpkg.com/typescript@latest/lib/typescriptServices.js"></script>
+
     <style>
         :root {
             --nago-navy: #003366;
@@ -37,7 +40,7 @@
             letter-spacing: 0.05em;
         }
 
-        /* 学科選択タブ（横スクロール） */
+        /* 学科選択タブ */
         .tab-nav {
             display: flex;
             overflow-x: auto;
@@ -149,6 +152,32 @@
         &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
     </footer>
 
-    <script type="module" src="./src/main.ts"></script>
+    <script type="text/typescript" src="./src/main.ts"></script>
+
+    <script>
+        (async function() {
+            const tsScript = document.querySelector('script[type="text/typescript"]');
+            if (tsScript && tsScript.src) {
+                try {
+                    // main.tsをテキストとして取得
+                    const response = await fetch(tsScript.src);
+                    const tsCode = await response.text();
+                    
+                    // TS -> JS 変換
+                    const jsCode = ts.transpile(tsCode, { 
+                        target: ts.ScriptTarget.ESNext,
+                        module: ts.ModuleKind.None 
+                    });
+                    
+                    // 実行
+                    const scriptElement = document.createElement('script');
+                    scriptElement.text = jsCode;
+                    document.body.appendChild(scriptElement);
+                } catch (e) {
+                    console.error("TypeScriptの読み込みに失敗しました:", e);
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
