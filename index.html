@@ -128,46 +128,61 @@
 
     <script>
         (function() {
-            const compiler = document.getElementById('ts-compiler');
+            const TS_LIB_URL = "https://unpkg.com/typescript@latest/lib/typescriptServices.js";
+            const TARGET_TS_FILE = "./src/main.ts";
 
-            const startTranspile = async () => {
-                const tsScript = document.querySelector('script[type="text/typescript"]');
-                if (!tsScript) return;
+            // ライブラリを読み込む関数
+            function loadScript(url) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
 
+            async function init() {
                 try {
-                    // 1. .tsファイルを取得
-                    const response = await fetch(tsScript.src);
-                    if (!response.ok) throw new Error("File not found");
-                    const tsCode = await response.text();
+                    // ① まずTypeScriptライブラリを確実に読み込む
+                    console.log("Loading TypeScript library...");
+                    await loadScript(TS_LIB_URL);
 
-                    // 2. JSに変換 (tsオブジェクトがロードされていることを確認)
+                    // ② ライブラリ(ts)が定義されたか最終確認
                     if (typeof ts === 'undefined') {
-                        throw new Error("TypeScript compiler not loaded yet");
+                        throw new Error("TypeScript library loaded but 'ts' object is not found.");
                     }
 
+                    // ③ main.tsファイルを取得
+                    const response = await fetch(TARGET_TS_FILE);
+                    if (!response.ok) throw new Error(`Failed to load ${TARGET_TS_FILE}`);
+                    const tsCode = await response.text();
+
+                    // ④ JavaScriptに変換
                     const jsCode = ts.transpile(tsCode, { 
                         target: ts.ScriptTarget.ESNext,
                         module: ts.ModuleKind.None 
                     });
 
-                    // 3. 実行用スクリプトを作成
+                    // ⑤ 実行
                     const scriptElement = document.createElement('script');
                     scriptElement.text = jsCode;
                     document.body.appendChild(scriptElement);
-                    console.log("TypeScript executed successfully.");
-                } catch (e) {
-                    console.error("Error:", e);
-                    document.getElementById('app').innerHTML = `<p style="color:red; text-align:center;">エラー: ${e.message}</p>`;
-                }
-            };
+                    console.log("TypeScript environment is ready and executed.");
 
-            // ライブラリがすでに読み込まれているかチェック
-            if (typeof ts !== 'undefined') {
-                startTranspile();
-            } else {
-                // まだなら読み込み完了を待つ
-                compiler.onload = startTranspile;
+                } catch (e) {
+                    console.error("System Error:", e);
+                    const app = document.getElementById('app');
+                    if (app) {
+                        app.innerHTML = `<div style="padding:20px; color:red; border:1px solid red; border-radius:8px;">
+                            <strong>システムエラー:</strong><br>${e.message}
+                        </div>`;
+                    }
+                }
             }
+
+            // 実行開始
+            init();
         })();
     </script>
 </body>
