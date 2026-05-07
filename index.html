@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>名護商工 Event Guide</title>
     
-    <script src="https://unpkg.com/typescript@latest/lib/typescriptServices.js"></script>
+    <script id="ts-compiler" src="https://unpkg.com/typescript@latest/lib/typescriptServices.js"></script>
 
     <style>
         :root {
@@ -53,9 +53,7 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .tab-nav::-webkit-scrollbar {
-            display: none;
-        }
+        .tab-nav::-webkit-scrollbar { display: none; }
 
         .tab-nav button {
             flex: 0 0 85px;
@@ -65,7 +63,6 @@
             font-weight: bold;
             color: var(--nago-blue);
             text-align: center;
-            transition: 0.2s;
             font-size: 0.75rem;
             cursor: pointer;
         }
@@ -76,7 +73,6 @@
             border-bottom: 4px solid var(--nago-navy);
         }
 
-        /* リスト・カードデザイン */
         .event-list {
             padding: 16px;
             max-width: 600px;
@@ -93,19 +89,8 @@
             animation: fadeIn 0.3s ease-out;
         }
 
-        .card h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            color: var(--nago-navy);
-        }
-
-        .card-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-
+        .card h3 { margin: 0 0 8px 0; font-size: 1.1rem; color: var(--nago-navy); }
+        .card-meta { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
         .badge {
             background: #eef2f6;
             color: var(--nago-blue);
@@ -114,24 +99,10 @@
             font-weight: bold;
             border: 1px solid var(--nago-blue);
         }
+        .loc { margin: 0; font-weight: bold; }
 
-        .loc {
-            margin: 0;
-            font-weight: bold;
-        }
-
-        footer {
-            text-align: center;
-            padding: 40px 16px;
-            font-size: 0.8rem;
-            color: var(--text-sub);
-        }
-
-        footer a {
-            color: var(--nago-blue);
-            text-decoration: none;
-            font-weight: bold;
-        }
+        footer { text-align: center; padding: 40px 16px; font-size: 0.8rem; color: var(--text-sub); }
+        footer a { color: var(--nago-blue); text-decoration: none; font-weight: bold; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
@@ -146,7 +117,8 @@
     </header>
 
     <div id="app">
-        </div>
+        <p style="text-align: center; padding: 20px; color: #999;">システムを読み込み中...</p>
+    </div>
 
     <footer>
         &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
@@ -155,27 +127,46 @@
     <script type="text/typescript" src="./src/main.ts"></script>
 
     <script>
-        (async function() {
-            const tsScript = document.querySelector('script[type="text/typescript"]');
-            if (tsScript && tsScript.src) {
+        (function() {
+            const compiler = document.getElementById('ts-compiler');
+
+            const startTranspile = async () => {
+                const tsScript = document.querySelector('script[type="text/typescript"]');
+                if (!tsScript) return;
+
                 try {
-                    // main.tsをテキストとして取得
+                    // 1. .tsファイルを取得
                     const response = await fetch(tsScript.src);
+                    if (!response.ok) throw new Error("File not found");
                     const tsCode = await response.text();
-                    
-                    // TS -> JS 変換
+
+                    // 2. JSに変換 (tsオブジェクトがロードされていることを確認)
+                    if (typeof ts === 'undefined') {
+                        throw new Error("TypeScript compiler not loaded yet");
+                    }
+
                     const jsCode = ts.transpile(tsCode, { 
                         target: ts.ScriptTarget.ESNext,
                         module: ts.ModuleKind.None 
                     });
-                    
-                    // 実行
+
+                    // 3. 実行用スクリプトを作成
                     const scriptElement = document.createElement('script');
                     scriptElement.text = jsCode;
                     document.body.appendChild(scriptElement);
+                    console.log("TypeScript executed successfully.");
                 } catch (e) {
-                    console.error("TypeScriptの読み込みに失敗しました:", e);
+                    console.error("Error:", e);
+                    document.getElementById('app').innerHTML = `<p style="color:red; text-align:center;">エラー: ${e.message}</p>`;
                 }
+            };
+
+            // ライブラリがすでに読み込まれているかチェック
+            if (typeof ts !== 'undefined') {
+                startTranspile();
+            } else {
+                // まだなら読み込み完了を待つ
+                compiler.onload = startTranspile;
             }
         })();
     </script>
