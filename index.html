@@ -1,85 +1,229 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>名護商工 Event Guide</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>名護商工 Event Guide</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js"></script>
+<style>
 
-    <style>
         :root {
+
             --nago-navy: #003366;
+
             --nago-blue: #005bac;
-            --bg-body: #f4f7f9;
-            --text-main: #1a1a1a;
+
+            --bg-gray: #efeff4;
+
             --white: #ffffff;
+
+            --border: #d1d1d6;
+
         }
-        body { font-family: sans-serif; margin: 0; background-color: var(--bg-body); padding-bottom: env(safe-area-inset-bottom); }
-        header { background-color: var(--nago-navy); color: var(--white); padding: 20px 16px; text-align: center; }
-        .tab-nav { display: flex; overflow-x: auto; background: var(--white); border-bottom: 2px solid var(--nago-blue); position: sticky; top: 0; z-index: 100; }
-        .tab-nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; font-weight: bold; color: var(--nago-blue); cursor: pointer; }
-        .tab-nav button.active { background-color: #f0f4f8; border-bottom: 4px solid var(--nago-navy); }
-        .card { background: var(--white); border-radius: 12px; padding: 16px; margin: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-bottom: 4px; background: white; }
-        footer { text-align: center; padding: 20px; color: #888; font-size: 0.8rem; }
-    </style>
+ 
+        /* 画面全体を固定してスクロールさせない */
+
+        html, body {
+
+            margin: 0;
+
+            padding: 0;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            background-color: var(--bg-gray);
+
+            font-family: -apple-system, sans-serif;
+
+        }
+ 
+        /* 全体レイアウトのコンテナ */
+
+        .wrapper {
+
+            display: flex;
+
+            flex-direction: column;
+
+            height: 100vh;
+
+        }
+ 
+        /* 上部ヘッダー */
+
+        header {
+
+            background-color: var(--nago-navy);
+
+            color: var(--white);
+
+            padding: env(safe-area-inset-top) 0 10px;
+
+            text-align: center;
+
+            flex-shrink: 0;
+
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+
+        }
+
+        header h1 { margin: 10px 0; font-size: 1.1rem; letter-spacing: 0.05em; }
+ 
+        /* 中央のスクロール可能エリア */
+
+        main {
+
+            flex-grow: 1;
+
+            overflow-y: auto;
+
+            -webkit-overflow-scrolling: touch; /* iOSでのスクロールを滑らかに */
+
+            padding-bottom: 20px;
+
+        }
+ 
+        /* 下部ナビゲーションバー */
+
+        .bottom-nav {
+
+            flex-shrink: 0;
+
+            height: calc(55px + env(safe-area-inset-bottom));
+
+            background-color: var(--white);
+
+            border-top: 1px solid var(--border);
+
+            display: flex;
+
+            justify-content: space-around;
+
+            padding-bottom: env(safe-area-inset-bottom);
+
+        }
+ 
+        .nav-item {
+
+            flex: 1;
+
+            text-decoration: none;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            color: #8e8e93;
+
+            transition: 0.1s;
+
+        }
+ 
+        .nav-item.active {
+
+            color: var(--nago-blue);
+
+        }
+ 
+        .nav-item .icon { font-size: 20px; margin-bottom: 2px; }
+
+        .nav-item .label { font-size: 10px; font-weight: 500; }
+ 
+        /* コンテンツ用スタイル */
+
+        .card {
+
+            background: var(--white);
+
+            margin: 12px;
+
+            padding: 16px;
+
+            border-radius: 8px;
+
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+
+        }
+</style>
 </head>
 <body>
-
-    <header><h1>名護商工 Event Guide</h1></header>
-    <div id="app"><p style="text-align: center; padding: 50px;">main.ts を読み込み中...</p></div>
-
+ 
+    <div class="wrapper">
+<header>
+<h1>名護商工 Event Guide</h1>
+</header>
+ 
+        <main id="app">
+<!-- コンテンツがここに挿入される -->
+<p style="text-align: center; margin-top: 40px;">Loading...</p>
+</main>
+ 
+        <nav class="bottom-nav">
+<a href="index.html" class="nav-item active">
+<span class="icon">🏠</span>
+<span class="label">HOME</span>
+</a>
+<a href="map.html" class="nav-item">
+<span class="icon">📍</span>
+<span class="label">MAP</span>
+</a>
+<a href="schedule.html" class="nav-item">
+<span class="icon">🕒</span>
+<span class="label">TIME</span>
+</a>
+<a href="settings.html" class="nav-item">
+<span class="icon">⚙️</span>
+<span class="label">INFO</span>
+</a>
+</nav>
+</div>
+ 
     <script>
+
+        // TypeScript読み込み処理（変更なし）
+
         async function loadAndRunTs() {
+
             const app = document.getElementById('app');
-            // 探すパスのリスト
-            const paths = ['./src/main.ts', './main.ts', '../src/main.ts'];
+
+            const paths = ['./main.ts', './src/main.ts'];
+
             let tsCode = "";
-            let foundPath = "";
 
             try {
-                // 1. パスを順番に試す
-                for (const path of paths) {
-                    try {
-                        const response = await fetch(path + '?t=' + new Date().getTime());
-                        if (response.ok) {
-                            tsCode = await response.text();
-                            foundPath = path;
-                            break;
-                        }
-                    } catch (e) { continue; }
+
+                for (const p of paths) {
+
+                    const res = await fetch(p + '?t=' + Date.now());
+
+                    if (res.ok) { tsCode = await res.text(); break; }
+
                 }
 
-                if (!tsCode) {
-                    throw new Error("どのパスからも main.ts が見つかりませんでした。");
-                }
+                if (!tsCode) throw new Error("main.ts not found");
 
-                // 2. TypeScript ライブラリのロード待ち
-                let retry = 0;
-                while (typeof ts === 'undefined' && retry < 50) {
-                    await new Promise(r => setTimeout(r, 100));
-                    retry++;
-                }
+                while (typeof ts === 'undefined') await new Promise(r => setTimeout(r, 50));
 
-                // 3. 変換と実行
-                const jsCode = ts.transpile(tsCode, { 
-                    target: ts.ScriptTarget.ESNext,
-                    module: ts.ModuleKind.None 
-                });
-                const script = document.createElement('script');
-                script.text = jsCode;
-                document.body.appendChild(script);
-                console.log("成功: " + foundPath + " を実行しました");
+                const js = ts.transpile(tsCode, { target: 99, module: 0 });
 
-            } catch (e) {
-                app.innerHTML = `<div style="color:red; padding:20px; text-align:center;">
-                    エラー: ${e.message}<br>
-                    <small>ファイル構成が正しいか確認してください。</small>
-                </div>`;
-            }
+                const s = document.createElement('script');
+
+                s.text = js;
+
+                document.body.appendChild(s);
+
+            } catch (e) { app.innerHTML = `<p style="color:red; text-align:center;">${e.message}</p>`; }
+
         }
+
         window.addEventListener('load', loadAndRunTs);
-    </script>
+</script>
 </body>
 </html>
+ 
