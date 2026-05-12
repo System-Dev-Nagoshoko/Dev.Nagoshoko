@@ -1,3 +1,5 @@
+// インターフェース定義
+
 interface ClassProject {
 
     grade: number;
@@ -32,21 +34,21 @@ const departments = [
  
 let currentGradeFilter = 3;
  
-const getDeptColor = (dept: string): string => {
+const getDeptColor = (dept: string) => {
 
-    if (dept.includes('機械')) return '#FF4B3E';
+    if (dept.indexOf('機械') !== -1) return '#FF4B3E';
 
-    if (dept.includes('電気')) return '#D4C500'; // 可読性のため少し濃い黄色に
+    if (dept.indexOf('電気') !== -1) return '#D4C500';
 
-    if (dept.includes('建築')) return '#FFB000';
+    if (dept.indexOf('建築') !== -1) return '#FFB000';
 
-    if (dept.includes('情報')) return '#76D25C';
+    if (dept.indexOf('情報') !== -1) return '#76D25C';
 
-    if (dept.includes('商業')) return '#40CFFF';
+    if (dept.indexOf('商業') !== -1) return '#40CFFF';
 
-    if (dept.includes('地域創生')) return '#1E88E5';
+    if (dept.indexOf('地域創生') !== -1) return '#1E88E5';
 
-    if (dept.includes('観光')) return '#8E24AA';
+    if (dept.indexOf('観光') !== -1) return '#8E24AA';
 
     return '#005bac';
 
@@ -64,31 +66,45 @@ const getStatusColor = (status: string) => {
  
 function render() {
 
-    const app = document.querySelector<HTMLDivElement>('#app');
+    const app = document.getElementById('app');
 
-    const tabArea = document.querySelector<HTMLDivElement>('#tab-area');
+    const tabArea = document.getElementById('tab-area');
 
     if (!app || !tabArea) return;
  
-    // タブの更新
+    // タブの生成
 
-    tabArea.innerHTML = [3, 2, 1].map(g => `
-<button onclick="window.setGrade(${g})" class="${currentGradeFilter === g ? 'active' : ''}">
+    const grades = [3, 2, 1];
 
-            ${g}年生
-</button>
+    let tabHtml = '';
 
-    `).join('');
+    for (let i = 0; i < grades.length; i++) {
+
+        const g = grades[i];
+
+        const activeClass = currentGradeFilter === g ? 'active' : '';
+
+        tabHtml += `<button onclick="setGrade(${g})" class="${activeClass}">${g}年生</button>`;
+
+    }
+
+    tabArea.innerHTML = tabHtml;
  
-    // リストの更新
+    // リストの生成
 
-    app.innerHTML = departments.map(dept => {
+    let listHtml = '';
+
+    for (let j = 0; j < departments.length; j++) {
+
+        const dept = departments[j];
 
         const color = getDeptColor(dept);
 
-        const status: ClassProject['status'] = '空き'; // 初期値
+        const status = '空き';
 
-        return `
+        const deptName = dept.split(' ').pop();
+ 
+        listHtml += `
 <div class="card" style="border-left: 6px solid ${color};">
 <span class="badge" style="border: 1.5px solid ${color}; color: ${color};">
 
@@ -96,7 +112,7 @@ function render() {
 </span>
 <h3 style="margin: 4px 0 8px; font-size: 1.05rem;">
 
-                    ${currentGradeFilter}年：${dept.split(' ').pop()}企画
+                    ${currentGradeFilter}年：${deptName}企画
 </h3>
 <div style="display: flex; justify-content: space-between; align-items: flex-end;">
 <div style="font-size: 0.85rem; font-weight: bold; color: #555;">
@@ -111,13 +127,15 @@ function render() {
 
         `;
 
-    }).join('');
+    }
+
+    app.innerHTML = listHtml;
 
 }
  
-// グローバルに関数を公開
+// Windowオブジェクトへ登録（エラー回避のため明示的に）
 
-(window as any).setGrade = (g: number) => {
+(window as any).setGrade = function(g: number) {
 
     currentGradeFilter = g;
 
