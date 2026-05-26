@@ -1,0 +1,65 @@
+---
+// フロントマター（設定エリア）
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header>
+      <h1>{title}</h1>
+      <p>名護商工 企画案内システム</p>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      &copy; 2026 <a href="https://nagoyc.stki.org/" target="_blank">NYC</a>. All rights reserved.
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --nago-navy: #003366;
+    --nago-blue: #005bac;
+    --bg-body: #f4f7f9;
+    --text-main: #1a1a1a;
+    --text-sub: #666666;
+    --white: #ffffff;
+  }
+  body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+    margin: 0;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header {
+    background-color: var(--nago-navy);
+    color: var(--white);
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  header h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.05em; }
+  header p { margin: 5px 0 0 0; font-size: 0.85rem; opacity: 0.8; }
+  
+  footer {
+    text-align: center;
+    padding: 40px 16px;
+    font-size: 0.8rem;
+    color: var(--text-sub);
+  }
+  footer a { color: var(--nago-blue); text-decoration: none; font-weight: bold; }
+</style>
