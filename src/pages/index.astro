@@ -1,0 +1,298 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// 1. 仕様書のデータ項目に基づいた型定義
+interface ClassProject {
+  grade: number;       // 学年 (1, 2, 3)
+  dept: string;        // 団体名（学科）
+  name: string;        // 企画名
+  location: string;    // 開催場所
+  time: string;        // 開催時間
+  description: string; // 説明文
+  status: '空き' | 'やや混雑' | '混雑'; // 混雑状況
+  target: string;      // 対象者（ファミリー、中学生など）
+}
+
+// 2. 5学科 × 3学年の全15クラスのデータを用意（Astroのサーバー側で安全に処理）
+const DEPARTMENTS = ["機械科", "電気科", "総合情報科", "商業科", "地域産業科"];
+const projectData: ClassProject[] = [];
+
+DEPARTMENTS.forEach(dept => {
+  [3, 2, 1].forEach(grade => {
+    projectData.push({
+      grade,
+      dept,
+      name: `${dept} ${grade}年 案内企画`,
+      location: `${grade}F ${dept.replace("科", "")}実習室`,
+      time: "09:30 - 15:30",
+      description: `日頃の学習成果や専門技術を盛り込んだ、${dept}${grade}年生による特別な展示・体験エリアです。`,
+      status: grade === 3 ? 'やや混雑' : '空き', // 3年生は少し混みやすいと仮定
+      target: "全年齢対象"
+    });
+  });
+});
+---
+
+<Layout title="商工祭 CONNECT">
+  <div class="search-box">
+    <input 
+      type="text" 
+      id="search-input" 
+      placeholder="企画名・学科・場所などで検索..." 
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="grade-nav">
+    <button class="grade-btn active" data-grade="3">3年生</button>
+    <button class="grade-btn" data-grade="2">2年生</button>
+    <button class="grade-btn" data-grade="1">1年生</button>
+  </div>
+
+  <div class="event-list" id="project-container">
+    </div>
+</Layout>
+
+<script define:vars={{ projectData }}>
+  let currentGrade = 3;
+  let searchQuery = "";
+
+  const container = document.getElementById('project-container');
+  const searchInput = document.getElementById('search-input');
+  const gradeButtons = document.querySelectorAll('.grade-btn');
+
+  // 仕様書項目「混雑状況」の視覚化（色分け）
+  function getStatusColor(status) {
+    switch(status) {
+      case '空き': return '#4caf50';      // 緑
+      case 'やや混雑': return '#ff9800';  // 橙
+      case '混雑': return '#f44336';    // 赤
+      default: return '#999999';
+    }
+  }
+
+  // リアルタイム検索 ＆ 学年フィルタリングロジック
+  function updateList() {
+    if (!container) return;
+
+    // 学年と検索キーワードのダブルチェック
+    const filtered = projectData.filter(p => {
+      const matchesGrade = p.grade === currentGrade;
+      const matchesQuery = !searchQuery ? true : (
+        p.name.toLowerCase().includes(searchQuery) ||
+        p.dept.toLowerCase().includes(searchQuery) ||
+        p.location.toLowerCase().includes(searchQuery) ||
+        p.description.toLowerCase().includes(searchQuery)
+      );
+      return matchesGrade && matchesQuery;
+    });
+
+    // HTMLの動的生成
+    container.innerHTML = filtered.map(p => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="badge dept-badge">${p.dept}</span>
+            <h3>${p.name}</h3>
+          </div>
+          <span class="status-badge" style="background-color: ${getStatusColor(p.status)}">
+            ${p.status}
+          </span>
+        </div>
+        
+        <div class="card-meta">
+          <span class="badge loc">📍 ${p.location}</span>
+          <span class="badge time">🕒 ${p.time}</span>
+          <span class="badge target">👥 ${p.target}</span>
+        </div>
+        
+        <p class="info-text">${p.description}</p>
+        
+        <div class="card-footer">
+          <button class="detail-btn" onclick="alert('${p.name}の詳細画面へ（LINE誘導対応予定）')">
+            Webで詳細確認
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // 検索結果がゼロの場合の対応
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="no-result">
+          <p>該当する企画が見つかりませんでした。</p>
+          <p style="font-size: 0.85rem; color: #999; margin-top: 5px;">別のキーワードをお試しください。</p>
+        </div>
+      `;
+    }
+  }
+
+  // 検索窓に入力された時のイベント
+  searchInput?.addEventListener('input', (e) => {
+    searchQuery = e.target.value.trim().toLowerCase();
+    updateList();
+  });
+
+  // 学年ボタンが押された時のイベント
+  gradeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      gradeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGrade = Number(btn.getAttribute('data-grade'));
+      updateList();
+    });
+  });
+
+  // 最初に画面を開いた時の表示設定
+  updateList();
+</script>
+
+<style>
+  /* 検索ボックスのスタイル */
+  .search-box {
+    padding: 16px;
+    background: var(--white);
+    border-bottom: 1px solid #eef2f5;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #dcdcdc;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--nago-blue);
+    background-color: var(--white);
+    box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.1);
+  }
+
+  /* 学年選択ナビゲーション */
+  .grade-nav {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-bottom: 1px solid #eef2f5;
+  }
+  .grade-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #dcdcdc;
+    background: #f8fafc;
+    color: var(--text-sub);
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .grade-btn.active {
+    background: var(--nago-blue);
+    color: var(--white);
+    border-color: var(--nago-blue);
+  }
+
+  /* 企画カード一覧のコンテナ */
+  .event-list {
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* 単一カードのデザイン */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+    border-left: 6px solid var(--nago-blue);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 10px;
+  }
+  .card h3 { 
+    margin: 4px 0 0 0; 
+    font-size: 1.15rem; 
+    color: var(--nago-navy); 
+    font-weight: bold;
+  }
+  
+  /* バッジ関連 */
+  .card-meta { 
+    display: flex; 
+    flex-wrap: wrap;
+    gap: 6px; 
+    margin-top: 10px; 
+    font-size: 0.8rem; 
+  }
+  .badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+  }
+  .dept-badge { background: #eef2f6; color: var(--nago-blue); }
+  .badge.loc { background: #e3f2fd; color: #1976d2; }
+  .badge.time { background: #fff3e0; color: #e65100; }
+  .badge.target { background: #e8f5e9; color: #2e7d32; }
+
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--white);
+    white-space: nowrap;
+  }
+
+  /* 説明文 */
+  .info-text {
+    font-size: 0.88rem;
+    color: #4a5568;
+    margin: 14px 0 0 0;
+    padding-top: 10px;
+    border-top: 1px dashed #edf2f7;
+    line-height: 1.5;
+  }
+
+  /* カード下部アクション */
+  .card-footer {
+    margin-top: 14px;
+  }
+  .detail-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--nago-blue);
+    background: var(--white);
+    color: var(--nago-blue);
+    font-weight: bold;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .detail-btn:hover {
+    background: #f0f7ff;
+  }
+
+  /* 検索結果がない場合の表示 */
+  .no-result {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--text-sub);
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+  }
+</style>
