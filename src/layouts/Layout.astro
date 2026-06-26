@@ -1,192 +1,34 @@
 ---
-// フロントマター：サーバー側（ビルド時）に動くTypeScript
-import Layout from '../layouts/Layout.astro';
-
-// データ構造の定義
-interface ClassProject {
-  grade: number;
-  dept: string;
-  name: string;
-  location: string;
-  time: string;
-  description: string;
-  status: '空き' | 'やや混雑' | '混雑';
-  target: string;
-  color: string;
+// src/layouts/Layout.astro
+interface Props {
+  title: string;
 }
-
-// 5学科×3学年 = 全15クラスのデータ自動生成
-const DEPARTMENTS = [
-  { name: "機械科", color: "#ff4d20" },
-  { name: "電気科", color: "#ffd400" },
-  { name: "建築科", color: "#ffaa1d" },
-  { name: "総合情報科", color: "#59ce5d" },
-  { name: "商業科", color: "#32c5ff" },
-  { name: "地域産業科", color: "#2582d1" }
-];
-
-const projectData: ClassProject[] = [];
-
-DEPARTMENTS.forEach(d => {
-  [3, 2, 1].forEach(grade => {
-    let displayName = `${d.name} ${grade}年 案内企画`;
-    if (d.name === "機械科") displayName = `工業技術科 機械コース ${grade}年`;
-    if (d.name === "電気科") displayName = `工業技術科 電気コース ${grade}年`;
-
-    projectData.push({
-      grade,
-      dept: d.name,
-      name: displayName,
-      location: `${grade}F ${d.name.replace("科", "")}実習室`,
-      time: "09:30 - 15:30",
-      description: `日頃の学習成果や専門技術を盛り込んだ、${d.name}${grade}年生による特別な展示・体験エリアです。`,
-      status: grade === 3 ? 'やや混雑' : '空き',
-      target: "全年齢対象",
-      color: d.color
-    });
-  });
-});
+const { title } = Astro.props;
 ---
-
-<Layout title="商工祭 CONNECT">
-  <div class="search-box">
-    <input type="text" id="search-input" placeholder="企画名・学科・場所などで検索..." autocomplete="off" />
-  </div>
-
-  <div class="grade-nav">
-    <button class="grade-btn active" data-grade="3">3年生</button>
-    <button class="grade-btn" data-grade="2">2年生</button>
-    <button class="grade-btn" data-grade="1">1年生</button>
-  </div>
-
-  <div class="event-list" id="project-container"></div>
-</Layout>
-
-<script define:vars={{ projectData }}>
-  let currentGrade = 3;
-  let searchQuery = "";
-
-  const container = document.getElementById('project-container');
-  const searchInput = document.getElementById('search-input');
-  const gradeButtons = document.querySelectorAll('.grade-btn');
-
-  function getStatusColor(status) {
-    if (status === '空き') return '#4caf50';
-    if (status === 'やや混雑') return '#ff9800';
-    return '#f44336';
-  }
-
-  function updateList() {
-    if (!container) return;
-
-    const filtered = projectData.filter(p => {
-      const matchesGrade = p.grade === currentGrade;
-      const matchesQuery = !searchQuery ? true : (
-        p.name.toLowerCase().includes(searchQuery) ||
-        p.dept.toLowerCase().includes(searchQuery) ||
-        p.location.toLowerCase().includes(searchQuery) ||
-        p.description.toLowerCase().includes(searchQuery)
-      );
-      return matchesGrade && matchesQuery;
-    });
-
-    container.innerHTML = filtered.map(p => `
-      <div class="card" style="--dept-color: ${p.color}">
-        <div class="card-header">
-          <div>
-            <span class="badge dept-badge">${p.dept}</span>
-            <h3>${p.name}</h3>
-          </div>
-          <span class="status-badge" style="background-color: ${getStatusColor(p.status)}">${p.status}</span>
-        </div>
-        <div class="card-meta">
-          <span class="badge loc">📍 ${p.location}</span>
-          <span class="badge time">🕒 ${p.time}</span>
-          <span class="badge target">👥 ${p.target}</span>
-        </div>
-        <p class="info-text">${p.description}</p>
-        <div class="card-footer">
-          <button class="detail-btn">Webで詳細確認</button>
-        </div>
-      </div>
-    `).join('');
-
-    if (filtered.length === 0) {
-      container.innerHTML = `<div class="no-result"><p>該当する企画が見つかりませんでした。</p></div>`;
-    }
-  }
-
-  searchInput?.addEventListener('input', (e) => {
-    searchQuery = e.target.value.trim().toLowerCase();
-    updateList();
-  });
-
-  gradeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      gradeButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentGrade = Number(btn.getAttribute('data-grade'));
-      updateList();
-    });
-  });
-
-  updateList();
-</script>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
 
 <style is:global>
-  .search-box { padding: 16px; background: var(--white); border-bottom: 1px solid #eef2f5; position: sticky; top: 0; z-index: 10; }
-  .search-box input { width: 100%; padding: 14px; border: 1px solid #dcdcdc; border-radius: 12px; box-sizing: border-box; font-size: 1rem; background-color: #f8fafc; }
-  
-  .grade-nav { display: flex; gap: 8px; padding: 12px 16px; background: var(--white); border-bottom: 1px solid #eef2f5; }
-  .grade-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #dcdcdc; background: #f8fafc; color: var(--text-sub); font-weight: bold; font-size: 0.9rem; cursor: pointer; }
-  .grade-btn.active { background: var(--nago-blue); color: var(--white); border-color: var(--nago-blue); }
+  /* サイト全体で使う共通の文字色や背景色の定義 */
+  :root {
+    --white: #ffffff;
+    --nago-blue: #2582d1;
+    --nago-navy: #1a202c;
+    --text-sub: #718096;
+  }
 
-  .event-list { padding: 16px; max-width: 600px; margin: 0 auto; }
-  
-  .card { 
-    background: var(--white); 
-    border-radius: 12px; 
-    padding: 18px; 
-    margin-bottom: 16px; 
-    border-left: 6px solid var(--dept-color); 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+  body {
+    background-color: #f1f5f9;
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
   }
-  .card-header { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
-  .card h3 { margin: 4px 0 0 0; font-size: 1.15rem; color: var(--nago-navy); }
-  
-  .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 0.8rem; }
-  .badge { padding: 3px 8px; border-radius: 6px; font-weight: bold; }
-  
-  .dept-badge { 
-    background: var(--dept-color); 
-    color: white; 
-    font-size: 0.75rem;
-  }
-  
-  .badge.loc { background: #e3f2fd; color: #1976d2; }
-  .badge.time { background: #fff3e0; color: #e65100; }
-  .badge.target { background: #e8f5e9; color: #2e7d32; }
-  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: var(--white); }
-
-  .info-text { font-size: 0.88rem; color: #4a5568; margin: 14px 0 0 0; padding-top: 10px; border-top: 1px dashed #edf2f7; }
-  .card-footer { margin-top: 14px; }
-  
-  .detail-btn { 
-    width: 100%; 
-    padding: 10px; 
-    border-radius: 8px; 
-    border: 1px solid var(--dept-color); 
-    background: var(--white); 
-    color: var(--dept-color); 
-    font-weight: bold; 
-    font-size: 0.88rem; 
-    cursor: pointer; 
-    transition: all 0.2s;
-  }
-  .detail-btn:hover {
-    background: var(--dept-color);
-    color: white;
-  }
-  
-  .no-result { text-align: center; padding: 40px 16px; color: var(--text-sub); background: var(--white); border-radius: 12px; border: 1px dashed #cbd5e1; }
 </style>
