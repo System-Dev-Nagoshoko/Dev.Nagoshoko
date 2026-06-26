@@ -1,34 +1,37 @@
----
-// src/layouts/Layout.astro
-interface Props {
-  title: string;
-}
-const { title } = Astro.props;
----
-<!DOCTYPE html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-  </head>
-  <body>
-    <slot />
+<slot />
+
+    <footer class="site-footer">
+      <p>Created by <a href="https://nagoyc.stki.org/" target="_blank" rel="noopener noreferrer">NYC</a></p>
+    </footer>
   </body>
 </html>
 
 <style is:global>
-  /* サイト全体で使う共通の文字色や背景色の定義 */
-  :root {
-    --white: #ffffff;
-    --nago-blue: #2582d1;
-    --nago-navy: #1a202c;
-    --text-sub: #718096;
-  }
+  /* （上の root や body などのスタイルはそのまま残してください） */
 
-  body {
-    background-color: #f1f5f9;
+  /* クレジット用のデザイン */
+  .site-footer {
+    margin-top: auto;
+    padding: 24px 16px;
+    text-align: center;
+    background-color: transparent;
+  }
+  .site-footer p {
     margin: 0;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #94a3b8; /* 主張しすぎない上品なグレー */
+    letter-spacing: 0.05em;
+  }
+  
+  /* 🔗 NYCのリンク専用のスタイルを追加 */
+  .site-footer a {
+    color: #64748b; /* リンクも文字に馴染む色に */
+    text-decoration: underline; /* リンクと分かるように下線をつける */
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
+  }
+  .site-footer a:hover {
+    color: #2582d1; /* ホバーした時だけ名護商工のブルーに美しく変化 */
   }
 </style>
