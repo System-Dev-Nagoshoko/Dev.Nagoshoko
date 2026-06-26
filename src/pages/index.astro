@@ -1,48 +1,56 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// メニュー（ポータルカード）のデータ定義
+// メニュー（ポータルカード）のデータ定義（熱中症ナビを追加！）
 const portalMenus = [
   {
     title: "企画・クラス検索",
     description: "各学科・クラスが提供する展示や体験企画を、場所や混雑状況からリアルタイムで探せます。",
-    icon: "fa-solid fa-magnifying-glass",
+    icon: "🔍",
     link: "./search/",
-    accent: "#005bac", // Nago Blue
+    accent: "#ff4d20", // 機械科の赤
+    status: "OPEN"
+  },
+  {
+    title: "熱中症対策ナビ",
+    description: "去年の全情コン出品システム。現在の暑さ指数（WBGT）や、校内の水分補給スポットをご案内します。",
+    icon: "☀️", 
+    link: "./wbgt/", // 新しく作るページへのリンク
+    accent: "#ff9800", // 警戒のオレンジ
     status: "OPEN"
   },
   {
     title: "タイムスケジュール",
     description: "体育館のステージ発表や中庭のイベント時間をチェック。見逃せない企画を予約しましょう。",
-    icon: "fa-solid fa-calendar-clock",
+    icon: "🕒",
     link: "#",
-    accent: "#ffaa1d", // Architecture Orange
+    accent: "#ffaa1d", // 建築科のオレンジ
     status: "COMING SOON"
   },
   {
     title: "デジタル校内マップ",
     description: "広い実習棟や教室の配置をスマホで確認。現在地から目的の企画までのルートを案内します。",
-    icon: "fa-solid fa-map-location-dot",
+    icon: "🗺️",
     link: "#",
-    accent: "#59ce5d", // Info Green
+    accent: "#59ce5d", // 総合情報科の緑
     status: "COMING SOON"
   },
   {
     title: "商工祭インフォ",
     description: "落とし物、休憩所、救護室の案内や、運営からの重要なお知らせをリアルタイムで配信します。",
-    icon: "fa-solid fa-circle-info",
+    icon: "📢",
     link: "#",
-    accent: "#ff4d20", // Mechanical Red
+    accent: "#32c5ff", // 商業科の青
     status: "INFO"
   }
 ];
 ---
 
-<Layout title="商工祭 CONNECT">
+<Layout title="【第7回商工祭】案内システム">
   <div class="portal-container">
     <header class="hero">
       <div class="hero-content">
-        <h2 class="hero-title">Connecting<br/><span>Skills & People</span></h2>
+        <h2 class="hero-title">【第7回商工祭】<br/><span>案内システム</span></h2>
         <p class="hero-subtitle">名護商工の「技術」と「人」を繋ぐポータルサイト</p>
       </div>
     </header>
@@ -52,7 +60,7 @@ const portalMenus = [
         <a href={menu.link} class="portal-card" style={`--accent: ${menu.accent}`}>
           <div class="card-header">
             <div class="icon-box">
-              <i class={menu.icon}></i>
+              <span>{menu.icon}</span>
             </div>
             <span class="status-tag">{menu.status}</span>
           </div>
@@ -62,7 +70,7 @@ const portalMenus = [
           </div>
           <div class="card-footer">
             <span>詳細を見る</span>
-            <i class="fa-solid fa-arrow-right"></i>
+            <span class="arrow-icon">➔</span>
           </div>
         </a>
       ))}
@@ -71,24 +79,21 @@ const portalMenus = [
 </Layout>
 
 <style is:global>
-  /* ポータル全体のコンテナ */
   .portal-container {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
     padding: 20px 16px 60px;
   }
-
-  /* ヒーローセクションのデザイン */
   .hero {
-    padding: 40px 0;
+    padding: 30px 0;
     text-align: left;
     border-bottom: 2px solid #e2e8f0;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
   }
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.2;
     color: var(--nago-navy);
     margin: 0;
     letter-spacing: -0.02em;
@@ -99,33 +104,28 @@ const portalMenus = [
   .hero-subtitle {
     margin-top: 12px;
     color: var(--text-sub);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
   }
-
-  /* グリッドレイアウト */
   .menu-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  /* メニューカードのデザイン */
-  .portal-card {
-    background: var(--white);
-    border-radius: 20px;
-    padding: 24px;
-    text-decoration: none;
-    color: inherit;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 16px;
+  }
+  .portal-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
     border: 1px solid #f1f5f9;
     position: relative;
     overflow: hidden;
   }
-
   .portal-card::before {
     content: '';
     position: absolute;
@@ -135,39 +135,27 @@ const portalMenus = [
     height: 100%;
     background: var(--accent);
   }
-
   .portal-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20 rgba(0, 0, 0, 0.08);
     border-color: var(--accent);
   }
-
-  /* カードの中身 */
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
-
   .icon-box {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     background: #f8fafc;
-    border-radius: 14px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    color: var(--accent);
-    transition: all 0.3s;
+    font-size: 1.5rem;
   }
-
-  .portal-card:hover .icon-box {
-    background: var(--accent);
-    color: white;
-  }
-
   .status-tag {
     font-size: 0.7rem;
     font-weight: 800;
@@ -175,51 +163,32 @@ const portalMenus = [
     background: #f1f5f9;
     border-radius: 20px;
     color: #64748b;
-    letter-spacing: 0.05em;
   }
-
   .card-body h3 {
-    margin: 0 0 8px 0;
-    font-size: 1.25rem;
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
     color: var(--nago-navy);
   }
-
   .card-body p {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     color: var(--text-sub);
-    line-height: 1.6;
+    line-height: 1.5;
   }
-
   .card-footer {
-    margin-top: 24px;
+    margin-top: 16px;
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 700;
     font-size: 0.85rem;
     color: var(--accent);
-    opacity: 0.8;
   }
-
-  .card-footer i {
-    transition: transform 0.3s;
+  .arrow-icon {
+    transition: transform 0.2s;
+    display: inline-block;
   }
-
-  .portal-card:hover .card-footer i {
-    transform: translateX(5px);
-  }
-
-  /* PC向けの2列表示 */
-  @media (min-width: 640px) {
-    .menu-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    .hero {
-      padding: 60px 0;
-    }
-    .hero-title {
-      font-size: 3.5rem;
-    }
+  .portal-card:hover .arrow-icon {
+    transform: translateX(4px);
   }
 </style>
