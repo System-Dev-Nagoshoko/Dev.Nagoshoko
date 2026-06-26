@@ -12,25 +12,23 @@ interface ClassProject {
   description: string;
   status: '空き' | 'やや混雑' | '混雑';
   target: string;
-  color: string; // ★ 学科カラーを追加
+  color: string;
 }
 
 // 5学科×3学年 = 全15クラスのデータ自動生成
-// ★ 学科名とカラーコードをセットで定義
 const DEPARTMENTS = [
   { name: "機械科", color: "#ff4d20" },
   { name: "電気科", color: "#ffd400" },
   { name: "建築科", color: "#ffaa1d" },
   { name: "総合情報科", color: "#59ce5d" },
   { name: "商業科", color: "#32c5ff" },
-  { name: "地域産業科", color: "#2582d1" } // ※観光類型なども必要ならここに追加
+  { name: "地域産業科", color: "#2582d1" }
 ];
 
 const projectData: ClassProject[] = [];
 
 DEPARTMENTS.forEach(d => {
   [3, 2, 1].forEach(grade => {
-    // データの見た目を画像に合わせて調整
     let displayName = `${d.name} ${grade}年 案内企画`;
     if (d.name === "機械科") displayName = `工業技術科 機械コース ${grade}年`;
     if (d.name === "電気科") displayName = `工業技術科 電気コース ${grade}年`;
@@ -44,7 +42,7 @@ DEPARTMENTS.forEach(d => {
       description: `日頃の学習成果や専門技術を盛り込んだ、${d.name}${grade}年生による特別な展示・体験エリアです。`,
       status: grade === 3 ? 'やや混雑' : '空き',
       target: "全年齢対象",
-      color: d.color // ★ 各データに色を持たせる
+      color: d.color
     });
   });
 });
@@ -72,14 +70,12 @@ DEPARTMENTS.forEach(d => {
   const searchInput = document.getElementById('search-input');
   const gradeButtons = document.querySelectorAll('.grade-btn');
 
-  // 混雑状況の色分け関数
   function getStatusColor(status) {
     if (status === '空き') return '#4caf50';
     if (status === 'やや混雑') return '#ff9800';
     return '#f44336';
   }
 
-  // 画面表示を更新するメインロジック
   function updateList() {
     if (!container) return;
 
@@ -95,7 +91,6 @@ DEPARTMENTS.forEach(d => {
     });
 
     // 動的にHTML（カード）を生成して挿入
-    // ★ style="--dept-color: ${p.color}" を追加して、CSS変数をカードごとに切り替える
     container.innerHTML = filtered.map(p => `
       <div class="card" style="--dept-color: ${p.color}">
         <div class="card-header">
@@ -122,7 +117,6 @@ DEPARTMENTS.forEach(d => {
     }
   }
 
-  // 検索窓・ボタンのイベント処理（変更なし）
   searchInput?.addEventListener('input', (e) => {
     searchQuery = e.target.value.trim().toLowerCase();
     updateList();
@@ -140,8 +134,20 @@ DEPARTMENTS.forEach(d => {
   updateList();
 </script>
 
-<style>
-  /* 元のスタイルを活かしつつ、カラーを連動するように調整 */
+<style is:global>
+  :root {
+    --white: #ffffff;
+    --nago-blue: #2582d1;
+    --nago-navy: #1a202c;
+    --text-sub: #718096;
+  }
+
+  body {
+    background-color: #f1f5f9;
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
   .search-box { padding: 16px; background: var(--white); border-bottom: 1px solid #eef2f5; position: sticky; top: 0; z-index: 10; }
   .search-box input { width: 100%; padding: 14px; border: 1px solid #dcdcdc; border-radius: 12px; box-sizing: border-box; font-size: 1rem; background-color: #f8fafc; }
   
@@ -151,14 +157,13 @@ DEPARTMENTS.forEach(d => {
 
   .event-list { padding: 16px; max-width: 600px; margin: 0 auto; }
   
-  /* ★ border-left の色を --dept-color（データごとの色）に変更 */
   .card { 
     background: var(--white); 
     border-radius: 12px; 
     padding: 18px; 
     margin-bottom: 16px; 
     border-left: 6px solid var(--dept-color); 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
   }
   .card-header { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
   .card h3 { margin: 4px 0 0 0; font-size: 1.15rem; color: var(--nago-navy); }
@@ -166,7 +171,6 @@ DEPARTMENTS.forEach(d => {
   .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 0.8rem; }
   .badge { padding: 3px 8px; border-radius: 6px; font-weight: bold; }
   
-  /* ★ 学科バッジの文字色と薄い背景色にイメージカラーを応用 */
   .dept-badge { 
     background: var(--dept-color); 
     color: white; 
@@ -181,7 +185,6 @@ DEPARTMENTS.forEach(d => {
   .info-text { font-size: 0.88rem; color: #4a5568; margin: 14px 0 0 0; padding-top: 10px; border-top: 1px dashed #edf2f7; }
   .card-footer { margin-top: 14px; }
   
-  /* ★ 詳細ボタンの枠線と文字色も学科カラーに合わせると統一感が出ます */
   .detail-btn { 
     width: 100%; 
     padding: 10px; 
