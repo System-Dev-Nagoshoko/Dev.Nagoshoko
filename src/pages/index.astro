@@ -1,22 +1,22 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// メニュー（ポータルカード）のデータ定義（熱中症ナビを追加！）
+// メニュー（ポータルカード）のデータ定義（グラデーションアクセントに変更！）
 const portalMenus = [
   {
     title: "企画・クラス検索",
     description: "各学科・クラスが提供する展示や体験企画を、場所や混雑状況からリアルタイムで探せます。",
     icon: "🔍",
     link: "./search/",
-    accent: "#ff4d20", // 機械科の赤
+    accent: "linear-gradient(135deg, #ff4d20, #ff7850)", // 機械科の赤
     status: "OPEN"
   },
   {
     title: "熱中症対策ナビ",
     description: "去年の全情コン出品システム。現在の暑さ指数（WBGT）や、校内の水分補給スポットをご案内します。",
     icon: "☀️", 
-    link: "./wbgt/", // 新しく作るページへのリンク
-    accent: "#ff9800", // 警戒のオレンジ
+    link: "./wbgt/index.html", // 💡 public/wbgt/index.html に繋がるように変更
+    accent: "linear-gradient(135deg, #ff9800, #ffb74d)", // 警戒のオレンジ
     status: "OPEN"
   },
   {
@@ -24,32 +24,46 @@ const portalMenus = [
     description: "体育館のステージ発表や中庭のイベント時間をチェック。見逃せない企画を予約しましょう。",
     icon: "🕒",
     link: "#",
-    accent: "#ffaa1d", // 建築科のオレンジ
-    status: "COMING SOON"
+    accent: "linear-gradient(135deg, #ffaa1d, #ffd54f)", // 建築科のオレンジ
+    status: "COMING"
   },
   {
     title: "デジタル校内マップ",
     description: "広い実習棟や教室の配置をスマホで確認。現在地から目的の企画までのルートを案内します。",
     icon: "🗺️",
     link: "#",
-    accent: "#59ce5d", // 総合情報科の緑
-    status: "COMING SOON"
+    accent: "linear-gradient(135deg, #59ce5d, #81c784)", // 総合情報科の緑
+    status: "COMING"
   },
   {
     title: "商工祭インフォ",
     description: "落とし物、休憩所、救護室の案内や、運営からの重要なお知らせをリアルタイムで配信します。",
     icon: "📢",
     link: "#",
-    accent: "#32c5ff", // 商業科の青
+    accent: "linear-gradient(135deg, #32c5ff, #4fc3f7)", // 商業科の青
     status: "INFO"
   }
 ];
 ---
 
 <Layout title="【第7回商工祭】案内システム">
-  <div class="portal-container">
+  <div id="loader-screen" class="loader-screen">
+    <div class="loader-content">
+      <div class="cyber-spinner"></div>
+      <div class="loader-text-group">
+        <p class="status-text">CONNECTING TO SYSTEM...</p>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill"></div>
+        </div>
+        <p class="loading-sub">Fetching database for Nago Shoko Festival...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="portal-container main-content-fade">
     <header class="hero">
       <div class="hero-content">
+        <div class="badge-top">SYSTEM ONLINE</div>
         <h2 class="hero-title">【第7回商工祭】<br/><span>案内システム</span></h2>
         <p class="hero-subtitle">名護商工の「技術」と「人」を繋ぐポータルサイト</p>
       </div>
@@ -57,7 +71,7 @@ const portalMenus = [
 
     <nav class="menu-grid">
       {portalMenus.map((menu) => (
-        <a href={menu.link} class="portal-card" style={`--accent: ${menu.accent}`}>
+        <a href={menu.link} class={`portal-card status-${menu.status.toLowerCase()}`} style={`--accent-grad: ${menu.accent}`}>
           <div class="card-header">
             <div class="icon-box">
               <span>{menu.icon}</span>
@@ -69,7 +83,7 @@ const portalMenus = [
             <p>{menu.description}</p>
           </div>
           <div class="card-footer">
-            <span>詳細を見る</span>
+            <span class="action-text">LAUNCH SYSTEM</span>
             <span class="arrow-icon">➔</span>
           </div>
         </a>
@@ -78,117 +92,282 @@ const portalMenus = [
   </div>
 </Layout>
 
-<style is:global>
-  .portal-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px 16px 60px;
+<script is:inline>
+  const loader = document.getElementById('loader-screen');
+  
+  // セッション中に最初の1回だけローディングを走らせる設定
+  if (!sessionStorage.getItem('loaded')) {
+    document.body.style.overflow = 'hidden'; // 読み込み中はスクロール不可
+    
+    setTimeout(() => {
+      loader.classList.add('fade-out');
+      document.body.style.overflow = 'visible';
+      sessionStorage.setItem('loaded', 'true');
+    }, 2200); // 2.2秒後にメイン画面へ移行
+  } else {
+    // 2回目以降（他のページから戻った時など）はローディング画面をスキップ
+    loader.style.display = 'none';
   }
+</script>
+
+<style is:global>
+  /* ⚙️ システムローディング専用のスタイル */
+  .loader-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0b0f19; /* 深いダークネイビー */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease, visibility 0.6s;
+  }
+
+  .loader-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 80%;
+    max-width: 300px;
+  }
+
+  .cyber-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(37, 130, 209, 0.1);
+    border-radius: 50%;
+    border-top-color: #2582d1; /* 名護商工ブルー */
+    border-right-color: #2582d1;
+    animation: spin 1s linear infinite;
+  }
+
+  .loader-text-group {
+    width: 100%;
+    text-align: center;
+  }
+
+  .status-text {
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+    margin: 0 0 8px 0;
+    animation: blink 1.5s infinite;
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 4px;
+    background-color: #1e293b;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, #2582d1, #38bdf8);
+    animation: progress-load 2s ease-in-out forwards;
+  }
+
+  .loading-sub {
+    color: #475569;
+    font-size: 0.65rem;
+    margin: 8px 0 0 0;
+    font-family: monospace;
+  }
+
+  /* メメインコンテンツのフェードイン */
+  .main-content-fade {
+    animation: content-in 0.8s 1.9s ease-out both;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes progress-load { 0% { width: 0%; } 50% { width: 60%; } 100% { width: 100%; } }
+  @keyframes content-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* 💻 メインレイアウトの刷新 */
+  .portal-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  .badge-top {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #2582d1;
+    background: rgba(37, 130, 209, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    letter-spacing: 0.1em;
+  }
+
   .hero {
-    padding: 30px 0;
-    text-align: left;
-    border-bottom: 2px solid #e2e8f0;
-    margin-bottom: 30px;
+    padding-bottom: 24px;
+    border-bottom: 1px dashed #cbd5e1;
+    margin-bottom: 32px;
   }
   .hero-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    line-height: 1.2;
+    font-size: 2.4rem;
+    font-weight: 900;
+    line-height: 1.15;
     color: var(--nago-navy);
     margin: 0;
     letter-spacing: -0.02em;
   }
   .hero-title span {
-    color: var(--nago-blue);
+    background: linear-gradient(90deg, #2582d1, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
   .hero-subtitle {
-    margin-top: 12px;
+    margin-top: 8px;
     color: var(--text-sub);
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.95rem;
   }
+
+  /* 📊 カードグリッド（2列レイアウト） */
   .menu-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
+  @media (min-width: 520px) {
+    .menu-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    /* 最後のインフォカードを横いっぱいに広げる */
+    .portal-card:last-child {
+      grid-column: span 2;
+    }
+  }
+
+  /* 🃏 高級感のあるサイバーカード */
   .portal-card {
     background: var(--white);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 20px;
+    padding: 24px;
     text-decoration: none;
     color: inherit;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
     display: flex;
     flex-direction: column;
-    transition: all 0.2s ease;
-    border: 1px solid #f1f5f9;
+    justify-content: space-between;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(226, 232, 240, 0.8);
     position: relative;
     overflow: hidden;
   }
+
   .portal-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
-    width: 6px;
-    height: 100%;
-    background: var(--accent);
+    width: 100%;
+    height: 4px;
+    background: var(--accent-grad);
   }
+
   .portal-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20 rgba(0, 0, 0, 0.08);
-    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(37, 130, 209, 0.12);
+    border-color: #3b82f6;
   }
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   .icon-box {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     background: #f8fafc;
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    border: 1px solid #f1f5f9;
   }
+
+  /* 🏷️ ステータスタグの色分け */
   .status-tag {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 800;
     padding: 4px 10px;
-    background: #f1f5f9;
     border-radius: 20px;
-    color: #64748b;
+    letter-spacing: 0.05em;
+  }
+  .status-open .status-tag { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+  .status-coming .status-tag { background: rgba(148, 163, 184, 0.1); color: #64748b; }
+  .status-info .status-tag { background: rgba(56, 189, 248, 0.1); color: #0369a1; }
+
+  .card-body {
+    flex-grow: 1;
   }
   .card-body h3 {
-    margin: 0 0 6px 0;
-    font-size: 1.15rem;
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+    font-weight: 800;
     color: var(--nago-navy);
   }
   .card-body p {
     margin: 0;
     font-size: 0.85rem;
     color: var(--text-sub);
-    line-height: 1.5;
+    line-height: 1.6;
   }
+
   .card-footer {
-    margin-top: 16px;
+    margin-top: 24px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--accent);
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #475569;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
   }
-  .arrow-icon {
-    transition: transform 0.2s;
-    display: inline-block;
-  }
+
+  .action-text { transition: color 0.2s; }
+  .portal-card:hover .action-text { color: #2582d1; }
+
+  .arrow-icon { transition: transform 0.25s; }
   .portal-card:hover .arrow-icon {
     transform: translateX(4px);
+    color: #2582d1;
+  }
+
+  /* COMING SOONのロック演出 */
+  .status-coming { opacity: 0.75; }
+  .status-coming:hover {
+    border-color: rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+    transform: none;
+  }
+  .status-coming .arrow-icon, .status-coming .action-text { display: none; }
+  .status-coming::after {
+    content: '🔒';
+    font-size: 0.8rem;
   }
 </style>
