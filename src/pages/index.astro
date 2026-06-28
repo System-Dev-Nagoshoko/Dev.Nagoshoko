@@ -73,21 +73,6 @@ const portalMenus = [
       <p class="hero-subtitle">名護商工の「技術」と「人」を繋ぐポータル</p>
     </header>
 
-    <div class="status-overview">
-      <div class="overview-item">
-        <span class="num">2</span>
-        <span class="lab">利用可能</span>
-      </div>
-      <div class="overview-item">
-        <span class="num">2</span>
-        <span class="lab">準備中</span>
-      </div>
-      <div class="overview-item">
-        <span class="num">1</span>
-        <span class="lab">通知</span>
-      </div>
-    </div>
-
     <nav class="menu-grid">
       {portalMenus.map((menu) => (
         <a href={menu.link} class={`portal-card status-${menu.status.toLowerCase()}`} style={`--card-accent: ${menu.accent}`}>
@@ -141,10 +126,11 @@ const portalMenus = [
   @keyframes progress-load { 0% { width: 0%; } 100% { width: 100%; } }
   @keyframes content-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* 🌌 サイバー背景エフェクトのCSSを追加！ */
+  /* 🌌 背景演出スタイル */
   body {
     position: relative;
     overflow-x: hidden;
+    background-color: #fafbfd; /* ほんのり青みのある清潔感のあるベース白 */
   }
   
   /* 薄いデジタルの網の目を敷く */
@@ -158,11 +144,11 @@ const portalMenus = [
     background-image: 
       linear-gradient(rgba(226, 232, 240, 0.5) 1px, transparent 1px),
       linear-gradient(90deg, rgba(226, 232, 240, 0.5) 1px, transparent 1px);
-    background-size: 30px 30px; /* 方眼紙のサイズ */
+    background-size: 30px 30px;
     pointer-events: none;
   }
 
-  /* 画面左上に名護商工ブルーの光を滲ませる */
+  /* 画面左上のネオンライト効果 */
   .cyber-bg-glow-1 {
     position: fixed;
     top: -200px;
@@ -170,12 +156,12 @@ const portalMenus = [
     width: 500px;
     height: 500px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(37, 130, 209, 0.08) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(37, 130, 209, 0.07) 0%, transparent 70%);
     z-index: -1;
     pointer-events: none;
   }
 
-  /* 画面右下にも少し柔らかい光を滲ませる */
+  /* 画面右下のネオンライト効果 */
   .cyber-bg-glow-2 {
     position: fixed;
     bottom: -150px;
@@ -183,16 +169,16 @@ const portalMenus = [
     width: 400px;
     height: 400px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.06) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
     z-index: -1;
     pointer-events: none;
   }
 
-  /* 💻 ダッシュボードレイアウト */
+  /* 💻 レイアウト */
   .portal-container {
     max-width: 680px;
     margin: 0 auto;
-    padding: 24px 16px 80px;
+    padding: 32px 16px 80px;
   }
 
   .hero-top-row {
@@ -215,7 +201,9 @@ const portalMenus = [
   }
 
   .hero {
-    margin-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 16px;
   }
   .hero-title {
     font-size: 1.8rem;
@@ -232,29 +220,6 @@ const portalMenus = [
     font-size: 0.85rem;
   }
 
-  /* 📊 ミニステータスパネル (背景と馴染むようにガラス風に変更) */
-  .status-overview {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 24px;
-    background: rgba(226, 232, 240, 0.6);
-    backdrop-filter: blur(4px);
-    padding: 2px;
-    border-radius: 12px;
-  }
-  .overview-item {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 8px;
-    border-radius: 10px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-  }
-  .overview-item .num { font-size: 1.2rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
-  .overview-item .lab { font-size: 0.65rem; color: #64748b; font-weight: 700; }
-
-  /* 🗺️ 2列のスマートグリッド */
   .menu-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -269,15 +234,15 @@ const portalMenus = [
     }
   }
 
-  /* 🃏 横型スリムサイバーカード (ほんのり透けるガラス質感に変更) */
+  /* 🃏 横型スリムサイバーカード (少し透けるガラス質感) */
   .portal-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(8px);
     border-radius: 14px;
     padding: 16px;
     text-decoration: none;
     color: inherit;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.02);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
     border: 1px solid rgba(226, 232, 240, 0.8);
     display: flex;
     gap: 14px;
@@ -299,7 +264,7 @@ const portalMenus = [
 
   .portal-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 130, 209, 0.1);
+    box-shadow: 0 6px 16px rgba(37, 130, 209, 0.08);
     border-color: #2582d1;
     background: #ffffff;
   }
@@ -358,7 +323,7 @@ const portalMenus = [
   }
   .status-coming:hover {
     transform: none;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.02);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
     border-color: #e2e8f0;
   }
 </style>
