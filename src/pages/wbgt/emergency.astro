@@ -1,16 +1,8 @@
 ---
 import Layout from '../../layouts/wbgt1/Layout.astro';
 ---
-// 📊 HTMLの冗長な記述を1回にするためのデータ定義（DRY原則）
-const actionsData = [
-  { type: 'water', label: '💧 水分補給' },
-  { type: 'cool', label: '🧊 体を冷やす' },
-  { type: 'shade', label: '🌳 日陰へ移動' },
-  { type: 'rest', label: '😴 休憩する' }
-];
----
 
-<Layout title="熱中症対策">
+<Layout title="熱中症対策 - 応急処置">
   <div class="app-shell">
     <header class="site-header">
       <div class="header-inner">
@@ -18,7 +10,7 @@ const actionsData = [
           <img src="/wbgt/icons/favicon-192-v2.png" alt="ロゴ" />
         </div>
         <div class="header-text">
-          <h1>💧 熱中症対策</h1>
+          <h1>💧 熱中症 応急処置</h1>
           <p class="lead">今すぐできる対策を選んで行動しよう</p>
         </div>
       </div>
@@ -27,13 +19,12 @@ const actionsData = [
     <main class="container">
       <section class="card">
         <p class="label">すぐにできる対策</p>
-        
         <div class="action-grid">
-          {actionsData.map((item) => (
-            <button class="action-btn" data-type={item.type}>{item.label}</button>
-          ))}
+          <button class="action-btn" onclick="showAction('water')">💧 水分補給</button>
+          <button class="action-btn" onclick="showAction('cool')">🧊 体を冷やす</button>
+          <button class="action-btn" onclick="showAction('shade')">🌳 日陰へ移動</button>
+          <button class="action-btn" onclick="showAction('rest')">😴 休憩する</button>
         </div>
-        
         <div id="actionResult" class="action-result">
           ボタンを押すと対策が表示されます
         </div>
@@ -63,7 +54,7 @@ const actionsData = [
         <div class="nav-icon">🏠</div>
         <div class="nav-text">ホーム</div>
       </a>
-      <a href="/wbgt/prevention/" class="nav-item active">
+      <a href="/wbgt/prevention/" class="nav-item">
         <div class="nav-icon">💧</div>
         <div class="nav-text">熱中症対策</div>
       </a>
@@ -75,46 +66,46 @@ const actionsData = [
   </div>
 </Layout>
 
-<script>
-  const ACTIONS: Record<string, string> = {
-    water: `
-      <strong>💧 水分補給</strong><br><br>
-      ・20〜30分ごとに飲む<br>
-      ・のどが渇く前に飲む
-    `,
-    cool: `
-      <strong>🧊 冷やす</strong><br><br>
-      ・首、わきを冷やす<br>
-      ・風を当てると効果UP
-    `,
-    shade: `
-      <strong>🌳 日陰へ</strong><br><br>
-      ・直射日光を避ける<br>
-      ・屋内に入れるなら入る
-    `,
-    rest: `
-      <strong>😴 休憩</strong><br><br>
-      ・無理せず止まる<br>
-      ・座る・横になる
-    `
-  };
+<script is:inline>
+  window.showAction = function(type) {
+    const el = document.getElementById("actionResult");
+    if (!el) return;
 
-  const buttons = document.querySelectorAll('.action-btn');
-  const result = document.getElementById('actionResult');
+    const actions = {
+      water: `
+        <strong>💧 水分補給</strong><br><br>
+        ・20〜30分ごとに飲む<br>
+        ・のどが渇く前に飲む
+      `,
+      cool: `
+        <strong>🧊 冷やす</strong><br><br>
+        ・首、わきを冷やす<br>
+        ・風を当てると効果UP
+      `,
+      shade: `
+        <strong>🌳 日陰へ</strong><br><br>
+        ・直射日光を避ける<br>
+        ・屋内に入れるなら入る
+      `,
+      rest: `
+        <strong>😴 休憩</strong><br><br>
+        ・無理せず止まる<br>
+        ・座る・横になる
+      `
+    };
 
-  if (result) {
-    buttons.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLButtonElement;
-        const type = target.dataset.type || '';
-        
-        result.innerHTML = ACTIONS[type] || 'ボタンを押すと対策が表示されます';
-        
-        buttons.forEach((b) => b.classList.remove('is-active'));
-        target.classList.add('is-active');
-      });
+    el.innerHTML = actions[type] || 'ボタンを押すと対策が表示されます';
+
+    // ボタンのアクティブ状態を切り替える演出
+    const buttons = document.querySelectorAll('.action-btn');
+    buttons.forEach(btn => {
+      btn.classList.remove('is-active');
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      if (onclickAttr.includes(type)) {
+        btn.classList.add('is-active');
+      }
     });
-  }
+  };
 </script>
 
 <style is:global>
@@ -168,6 +159,5 @@ const actionsData = [
   .nav-item:active { transform: scale(0.97); }
   .nav-icon { font-size: 20px; line-height: 1; }
   .nav-text { font-size: 12px; line-height: 1; letter-spacing: 0.01em; }
-  .site-footer { text-align: center; font-size: 0.75rem; color: #667085; padding: 8px 0 18px; }
   @media (max-width: 480px) { .site-header { padding: 14px 12px; } .header-inner { gap: 10px; align-items: center; } .site-logo img { width: 52px; height: 52px; } .header-text h1 { font-size: 1.2rem; } .header-text .lead { font-size: 0.85rem; line-height: 1.6; } .container { padding: 0 10px 24px; } .card { padding: 14px; border-radius: 14px; } .action-grid { grid-template-columns: 1fr; } .action-btn { padding: 13px 12px; } .action-result { min-height: 140px; font-size: 13px; } .nav-text { font-size: 11px; } }
 </style>
