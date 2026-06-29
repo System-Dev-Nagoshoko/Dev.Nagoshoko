@@ -1,0 +1,278 @@
+---
+import Layout from '../../layouts/wbgt1/Layout.astro';
+---
+<Layout title="あつさ天気予報｜熱中症対策ナビ">
+  <header class="site-header">
+    <div class="container_header">
+      <p class="badge">あつさ天気予報｜Heat Safety Navi</p>
+      <h1>あつさ天気予報</h1>
+      <p class="lead">
+        現在地付近の天気とWBGT（暑さ指数）を確認できます
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel danger">
+      <div class="container_panel">
+        <h2>現在の天気</h2>
+
+        <div class="Box2">
+          <div class="Box2-1">
+            <div id="tenki">取得中...</div>
+            <div id="emoji" class="emoji-wrap"></div>
+          </div>
+
+          <div class="Box2-2">
+            <div class="Box2-2-1">
+              <div id="ondo">温度：--</div>
+              <div id="shitudo">湿度：--</div>
+              <div id="wbgt">WBGT：--</div>
+            </div>
+            <div class="Box2-2-1">
+              <div id="taikan">体感温度：--</div>
+              <div id="wind">風速：--</div>
+              <div id="lat_text">北緯：--</div>
+              <div id="lon_text">東経：--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="Box3">
+          （天気情報は Open-Meteo API を使用）
+        </div>
+      </div>
+    </section>
+
+    <section class="panel danger">
+      <div class="container_panel">
+        <h2>暑さ指数の評価</h2>
+
+        <div class="wbgt-panel">
+          <div id="wbgt-sisuu">WBGT：--</div>
+
+          <div class="wbgt-naiyou">
+            <div id="shisuu">判定中</div>
+            <div id="chuui">位置情報の取得後に表示されます</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="center">
+      <a href="/wbgt/" class="home-btn">🏠 ホームに戻る</a>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  let currentLat: number | null = null;
+  let currentLon: number | null = null;
+
+  window.addEventListener("load", () => {
+    const ok = window.confirm(
+      "天気予報は現在地付近のOpen-Meteoデータを使って表示します。\n\n位置情報を利用してもよいですか？"
+    );
+    if (ok) {
+      const latText = document.getElementById("lat_text");
+      const lonText = document.getElementById("lon_text");
+      if (latText) latText.textContent = "北緯：取得中";
+      if (lonText) lonText.textContent = "東経：取得中";
+      getLocation();
+    } else {
+      const tenkiEl = document.getElementById("tenki");
+      const chuuiEl = document.getElementById("chuui");
+      if (tenkiEl) tenkiEl.innerHTML = "<span class='kyouchou'>未取得</span>";
+      if (chuuiEl) chuuiEl.textContent = "位置情報が許可されていないため取得できません。";
+    }
+  });
+
+  function getLocation() {
+    if (!navigator.geolocation) {
+      alert("この端末では位置情報が使えません。");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLon = pos.coords.longitude;
+        
+        const latText = document.getElementById("lat_text");
+        const lonText = document.getElementById("lon_text");
+        if (latText) latText.innerHTML = "北緯：<span class='kyouchou'>" + currentLat.toFixed(2) + "</span>";
+        if (lonText) lonText.innerHTML = "東経：<span class='kyouchou'>" + currentLon.toFixed(2) + "</span>";
+        
+        if (currentLat !== null && currentLon !== null) {
+          fetchWeather(currentLat, currentLon);
+        }
+      },
+      () => {
+        alert("位置情報の取得に失敗しました。");
+        const chuuiEl = document.getElementById("chuui");
+        if (chuuiEl) chuuiEl.textContent = "位置情報の取得に失敗しました。";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  async function fetchWeather(lat: number, lon: number) {
+    const url =
+      "https://api.open-meteo.com/v1/forecast" +
+      "?latitude=" + lat +
+      "&longitude=" + lon +
+      "&hourly=temperature_2m,apparent_temperature,weather_code," +
+      "relative_humidity_2m,wind_speed_10m,shortwave_radiation" +
+      "&wind_speed_unit=ms" +
+      "&timezone=Asia%2FTokyo" +
+      "&forecast_days=1";
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const now = new Date();
+      
+      let idx = data.hourly.time.findIndex((t: string) =>
+        Math.abs(new Date(t).getTime() - now.getTime()) < 30 * 60 * 1000
+      );
+      if (idx < 0) idx = 0;
+
+      const temp = data.hourly.temperature_2m[idx];
+      const app = data.hourly.apparent_temperature[idx];
+      const hum = data.hourly.relative_humidity_2m[idx];
+      const wind = data.hourly.wind_speed_10m[idx];
+      const code = data.hourly.weather_code[idx];
+      const rad = data.hourly.shortwave_radiation[idx] / 1000;
+
+      const wbgt =
+        0.735 * temp +
+        0.0374 * hum +
+        0.00292 * temp * hum +
+        7.619 * rad -
+        4.557 * rad * rad -
+        0.0572 * wind -
+        4.064;
+
+      let shisuu = "";
+      let naiyou = "";
+      if (wbgt >= 31) {
+        shisuu = "危険";
+        naiyou = "運動は原則禁止";
+      } else if (wbgt >= 28) {
+        shisuu = "厳重警戒";
+        naiyou = "激しい運動は避ける";
+      } else if (wbgt >= 25) {
+        shisuu = "警戒";
+        naiyou = "積極的に休息を";
+      } else if (wbgt >= 21) {
+        shisuu = "注意";
+        naiyou = "積極的に水分補給";
+      } else {
+        shisuu = "ほぼ安全";
+        naiyou = "適時水分補給を";
+      }
+
+      const wbgtSisuuEl = document.getElementById("wbgt-sisuu");
+      const shisuuEl = document.getElementById("shisuu");
+      const chuuiEl = document.getElementById("chuui");
+      const wbgtEl = document.getElementById("wbgt");
+      const tenkiEl = document.getElementById("tenki");
+      const ondoEl = document.getElementById("ondo");
+      const taikanEl = document.getElementById("taikan");
+      const shitudoEl = document.getElementById("shitudo");
+      const windEl = document.getElementById("wind");
+
+      if (wbgtSisuuEl) wbgtSisuuEl.innerHTML = "WBGT：<span class='kyouchou'>" + (Math.round(wbgt * 10) / 10) + "</span>℃";
+      if (shisuuEl) shisuuEl.innerHTML = "<span class='kyouchou'>" + shisuu + "</span>";
+      if (chuuiEl) chuuiEl.textContent = naiyou;
+      if (wbgtEl) wbgtEl.innerHTML = "WBGT：<span class='kyouchou'>" + (Math.round(wbgt * 10) / 10) + "</span>℃";
+      if (tenkiEl) tenkiEl.innerHTML = "<span class='kyouchou'>" + tenkihai(code) + "</span>";
+      if (ondoEl) ondoEl.innerHTML = "温度：<span class='kyouchou'>" + temp.toFixed(1) + "</span>℃";
+      if (taikanEl) taikanEl.innerHTML = "体感温度：<span class='kyouchou'>" + app.toFixed(1) + "</span>℃";
+      if (shitudoEl) shitudoEl.innerHTML = "湿度：<span class='kyouchou'>" + hum.toFixed(0) + "</span>％";
+      if (windEl) windEl.innerHTML = "風速：<span class='kyouchou'>" + wind.toFixed(1) + "</span>m/s";
+
+    } catch (e) {
+      alert("天気情報の取得に失敗しました。");
+      const chuuiEl = document.getElementById("chuui");
+      if (chuuiEl) chuuiEl.textContent = "天気情報の取得に失敗しました。";
+    }
+  }
+
+  function tenkihai(code: number) {
+    const table: Record<number, [string, string]> = {
+      0: ["晴天", "hare"],
+      1: ["一部曇り", "itibukumori"],
+      2: ["一部曇り", "itibukumori2"],
+      3: ["曇り", "kumori"],
+      45: ["霧", "kiri"],
+      48: ["霧", "kiri"],
+      51: ["小雨", "ame"],
+      53: ["雨", "ame"],
+      55: ["強い雨", "tuyoiame"],
+      61: ["雨", "ame"],
+      63: ["強い雨", "tuyoiame"],
+      65: ["強い雨", "tuyoiame"],
+      71: ["雪", "yuki"],
+      73: ["雪", "yuki"],
+      75: ["強い雪", "tuyoyuki"],
+      80: ["にわか雨", "niwakaame"],
+      81: ["にわか雨", "niwakaame"],
+      82: ["激しい雨", "tuyoiame"],
+      95: ["雷雨", "raiu"]
+    };
+
+    const item = table[code] || ["曇り", "kumori"];
+    const emojiEl = document.getElementById("emoji");
+    if (emojiEl) {
+      emojiEl.innerHTML = "<img src='/wbgt/images/" + item[1] + ".png' alt='天気アイコン'>";
+    }
+    return item[0];
+  }
+</script>
+
+<style is:global>
+  :root {
+    --bg: #f2f7ff;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #d1d5db;
+    --primary: #2563eb;
+    --primary-soft: #dbeafe;
+    --red: #ef4444;
+    --radius: 16px;
+    --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    --max: 960px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif; line-height: 1.7; color: var(--text); background: linear-gradient(180deg, #e0f2fe 0%, #f2f7ff 100%); }
+  .container_header { max-width: var(--max); padding: 0 16px; margin: 20px auto; text-align: center; }
+  .container_panel { max-width: var(--max); padding: 0; margin: 20px auto; }
+  .Box2 { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+  @media (min-width: 720px) { .Box2 { grid-template-columns: 240px 1fr; } }
+  .Box2-1 { display: grid; gap: 10px; justify-items: center; text-align: center; }
+  #emoji img { max-width: 220px; width: 100%; height: auto; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.15)); }
+  @media (max-width: 490px) { #emoji img { max-width: 160px; } }
+  .Box2-2 { display: grid; grid-template-columns: 1fr; gap: 8px; border-radius: 14px; padding: 10px; background: rgba(255,255,255,0.55); backdrop-filter: blur(6px); }
+  @media (min-width: 520px) { .Box2-2 { grid-template-columns: 1fr 1fr; } }
+  .Box2-2-1 > div { display: flex; align-items: baseline; gap: 10px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.8); }
+  .kyouchou { font-size: 2em; font-weight: 800; }
+  #wbgt .kyouchou, #wbgt-sisuu .kyouchou { font-size: 2.6em; color: #dc2626; }
+  #ondo, #shitudo, #wbgt, #taikan, #wind, #lat_text, #lon_text { font-size: 0.85rem; color: var(--muted); }
+  .site-header { padding: 28px 0; text-align: center; }
+  .badge { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; background: rgba(37, 99, 235, 0.06); border: 1px solid rgba(37, 99, 235, 0.3); color: #1d4ed8; }
+  .site-header h1 { margin: 14px 0 10px; font-size: clamp(22px, 4.2vw, 30px); }
+  .lead { font-size: 14px; }
+  .panel { margin-top: 20px; padding: 20px; border-radius: var(--radius); background: rgba(255,255,255,0.95); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .panel.danger { border-color: #bfdbfe; box-shadow: 0 12px 28px rgba(191, 219, 254, 0.6); }
+  .wbgt-panel { display: grid; gap: 12px; margin-top: 10px; }
+  @media (min-width: 720px) { .wbgt-panel { grid-template-columns: 240px 1fr; } }
+  .wbgt-naiyou { background: rgba(255,255,255,0.85); border-radius: 14px; padding: 16px; }
+  #shisuu { font-size: 1.6rem; font-weight: 900; }
+  #chuui { font-size: 1rem; }
+  .Box3 { font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .center{ text-align:center; margin:32px auto 16px; }
+  .home-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; width:260px; padding:14px; border-radius:14px; text-decoration:none; font-size:15px; font-weight:700; color:#2563eb; background:#ffffff; border:2px solid #2563eb; box-shadow:0 8px 18px rgba(37,99,235,0.15); transition: all .2s ease; }
+  .home-btn:active{ transform:scale(0.97); background:#2563eb; color:#ffffff; }
+  @media (max-width: 600px) { .panel { padding: 16px; } .site-header h1 { font-size: 22px; } .lead { font-size: 13px; } .home-btn{ width:100%; max-width:320px; } }
+</style>

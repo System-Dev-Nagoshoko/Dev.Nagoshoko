@@ -1,0 +1,119 @@
+---
+import Layout from '../../layouts/wbgt1/Layout.astro';
+---
+// 📊 リンクデータ一覧（HTMLの直書きをなくすため、ここで1回だけ定義してループさせます）
+const features = [
+  { href: '/wbgt/yatyadame/', icon: '🚫', title: 'やっちゃダメリスト' },
+  { href: '/wbgt/simulation/', icon: '🧑‍⚕️', title: '熱中症<br />シミュレーション' },
+  { href: '/wbgt/quiz/', icon: '❓', title: '熱中症クイズ' },
+  { href: '/wbgt/tenki/', icon: '☀️', title: '天気予報' },
+  { href: '/wbgt/prevention/', icon: '🧊', title: '熱中症予防' },
+  { href: '/wbgt/report/', icon: '🌡️', title: '熱リポ' },
+  { href: '/wbgt/emergency/', icon: '🚑', title: '119通報確認サイト' },
+  { href: '/wbgt/omikuji/', icon: '🎐', title: 'おみくじ' },
+];
+---
+
+<Layout title="機能表 | 熱中症対策ナビ">
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="/wbgt/icons/favicon-512-v2.png" alt="logo" />
+        </div>
+        <div>
+          <h1>機能表</h1>
+          <p>Heat Safety Navi</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="screen active">
+        <h2 class="section-title">機能一覧</h2>
+        
+        <div class="feature-grid">
+          {features.map((f) => (
+            <a href={f.href} class="feature-card">
+              <div class="icon">{f.icon}</div>
+              <div class="title" set:html={f.title} />
+            </a>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="/wbgt/">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-text">ホーム</div>
+      </a>
+      <a class="nav-item active" href="/wbgt/features/">
+        <div class="nav-icon">📋</div>
+        <div class="nav-text">機能表</div>
+      </a>
+      <a class="nav-item" href="/wbgt/settings/">
+        <div class="nav-icon">⚙️</div>
+        <div class="nav-text">設定</div>
+      </a>
+    </nav>
+  </div>
+</Layout>
+
+<style is:global>
+  :root{
+    --bg-start: #dff4ff;
+    --bg-end: #eadcff;
+    --surface: rgba(255,255,255,0.82);
+    --surface-strong: rgba(255,255,255,0.92);
+    --card-border: rgba(255,255,255,0.75);
+    --text-main: #22252f;
+    --text-sub: #667085;
+    --primary: #6c63ff;
+    --primary-2: #4f8df7;
+    --primary-soft: #f1efff;
+    --danger: #ff6b6b;
+    --warning: #ffb347;
+    --success: #42c79a;
+    --shadow-sm: 0 8px 20px rgba(43, 53, 88, 0.08);
+    --shadow-md: 0 14px 35px rgba(43, 53, 88, 0.12);
+    --radius-xl: 30px;
+    --radius-lg: 24px;
+    --radius-md: 18px;
+    --radius-sm: 14px;
+    --nav-height: 86px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { height: 100%; font-size: 16px; }
+  body { margin: 0; min-height: 100%; font-family: "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif; color: var(--text-main); background: radial-gradient(circle at top left, rgba(255,255,255,0.6), transparent 35%), linear-gradient(180deg, var(--bg-start), var(--bg-end)); font-size: clamp(14px, 2.5vw, 18px); }
+  button, input, select, textarea { font: inherit; }
+  button { border: none; background: none; cursor: pointer; }
+  img { max-width: 100%; display: block; }
+  a { text-decoration: none; color: inherit; }
+  .app-shell { width: 100%; max-width: 520px; min-height: 100vh; margin: 0 auto; position: relative; padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 14px); background: radial-gradient(circle at top right, rgba(255,255,255,0.45), transparent 30%), linear-gradient(180deg, var(--bg-start), var(--bg-end)); }
+  .topbar { padding: 18px; position: sticky; top: 0; z-index: 20; background: linear-gradient(180deg, rgba(223,244,255,0.9) 0%, rgba(223,244,255,0.72) 60%, rgba(223,244,255,0) 100%); backdrop-filter: blur(10px); }
+  .main-content { padding: 8px 18px 22px; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 24px; background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.86); box-shadow: var(--shadow-sm); }
+  .brand-logo { width: 52px; height: 52px; border-radius: 18px; display: grid; place-items: center; font-size: 24px; color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-2)); }
+  .brand h1 { margin: 0; font-size: 20px; font-weight: 800; }
+  .brand p { margin: 4px 0 0; font-size: 13px; color: var(--text-sub); }
+  .screen { display: none; animation: fadeIn 0.22s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .section-title { margin: 6px 0 16px; font-size: clamp(20px, 5vw, 28px); line-height: 1.25; font-weight: 800; letter-spacing: 0.01em; }
+  .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .feature-card { min-height: 158px; padding: 18px 14px; border-radius: 26px; background: var(--surface); border: 1px solid var(--card-border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; backdrop-filter: blur(12px); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+  .feature-card:hover { background: var(--surface-strong); box-shadow: var(--shadow-md); }
+  .feature-card:active { transform: scale(0.985); }
+  .feature-card .icon, .feature-card .emoji { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 20px; margin-bottom: 12px; font-size: 34px; background: linear-gradient(135deg, #f4f0ff, #ebf7ff); }
+  .feature-card .title, .feature-card .label { font-size: clamp(15px, 3.8vw, 19px); line-height: 1.35; font-weight: 800; color: #6a57bb; word-break: keep-all; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 30; max-width: 520px; margin: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255,255,255,0.9); backdrop-filter: blur(16px); border-top: 1px solid rgba(50, 60, 90, 0.08); box-shadow: 0 -8px 30px rgba(43,53,88,0.06); }
+  .nav-item { min-height: 58px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #5f6475; transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease; text-align: center; padding: 10px; }
+  .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 800; }
+  .nav-item:active { transform: scale(0.97); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-text { font-size: 12px; line-height: 1; letter-spacing: 0.01em; }
+  .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+  @media (max-width: 360px){ .brand h1 { font-size: 20px; } .feature-card { min-height: 144px; border-radius: 22px; } .feature-card .title, .feature-card .label { font-size: 14px; } }
+  @media (min-width: 768px){ body { padding: 18px 0; font-size: 16px; } .app-shell { border-radius: 34px; overflow: hidden; min-height: calc(100vh - 36px); box-shadow: 0 18px 60px rgba(43, 53, 88, 0.14); } .main-content { padding: 10px 20px 24px; } .feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .bottom-nav { border-radius: 22px 22px 0 0; } }
+</style>

@@ -1,0 +1,400 @@
+---
+import Layout from '../../layouts/wbgt1/Layout.astro';
+---
+<Layout title="設定 | 熱中症対策ナビ">
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">
+          <img src="/wbgt/icons/favicon-512-v2.png" alt="logo" />
+        </div>
+        <div>
+          <h1>設定</h1>
+          <p>Heat Safety Navi</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <h2 class="section-title">設定</h2>
+      
+      <div class="settings-card">
+        <div class="setting-row">
+          <span>現在地から設定</span>
+          <button type="button" class="setting-action-btn" id="detectLocationBtn">自動取得</button>
+        </div>
+        
+        <div class="setting-row">
+          <span>都道府県</span>
+          <select id="prefSelect">
+            <option value="">選択してください</option>
+            <option value="北海道">北海道</option>
+            <option value="青森県">青森県</option>
+            <option value="岩手県">岩手県</option>
+            <option value="宮城県">宮城県</option>
+            <option value="秋田県">秋田県</option>
+            <option value="山形県">山形県</option>
+            <option value="福島県">福島県</option>
+            <option value="茨城県">茨城県</option>
+            <option value="栃木県">栃木県</option>
+            <option value="群馬県">群馬県</option>
+            <option value="埼玉県">埼玉県</option>
+            <option value="千葉県">千葉県</option>
+            <option value="東京都">東京都</option>
+            <option value="神奈川県">神奈川県</option>
+            <option value="新潟県">新潟県</option>
+            <option value="富山県">富山県</option>
+            <option value="石川県">石川県</option>
+            <option value="福井県">福井県</option>
+            <option value="山梨県">山梨県</option>
+            <option value="長野県">長野県</option>
+            <option value="岐阜県">岐阜県</option>
+            <option value="静岡県">静岡県</option>
+            <option value="愛知県">愛知県</option>
+            <option value="三重県">三重県</option>
+            <option value="滋賀県">滋賀県</option>
+            <option value="京都府">京都府</option>
+            <option value="大阪府">大阪府</option>
+            <option value="兵庫県">兵庫県</option>
+            <option value="奈良県">奈良県</option>
+            <option value="和歌山県">和歌山県</option>
+            <option value="鳥取県">鳥取県</option>
+            <option value="島根県">島根県</option>
+            <option value="岡山県">岡山県</option>
+            <option value="広島県">広島県</option>
+            <option value="山口県">山口県</option>
+            <option value="徳島県">徳島県</option>
+            <option value="香川県">香川県</option>
+            <option value="愛媛県">愛媛県</option>
+            <option value="高知県">高知県</option>
+            <option value="福岡県">福岡県</option>
+            <option value="佐賀県">佐賀県</option>
+            <option value="長崎県">長崎県</option>
+            <option value="熊本県">熊本県</option>
+            <option value="大分県">大分県</option>
+            <option value="宮崎県">宮崎県</option>
+            <option value="鹿児島県">鹿児島県</option>
+            <option value="沖縄県">沖縄県</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <span>地域</span>
+          <select id="citySelect">
+            <option value="">先に都道府県を選択</option>
+          </select>
+        </div>
+
+        <button type="button" class="setting-row" id="toggleModeBtn">
+          <span>表示モード</span>
+          <span class="value" id="modeValue">通常</span>
+        </button>
+
+        <div class="setting-row">
+          <span>通知</span>
+          <label class="switch">
+            <input type="checkbox" id="notifyToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <span>熱中症警戒通知</span>
+          <label class="switch">
+            <input type="checkbox" id="alertToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <span>天気更新通知</span>
+          <label class="switch">
+            <input type="checkbox" id="weatherToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <span>お知らせ通知</span>
+          <label class="switch">
+            <input type="checkbox" id="newsToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>アプリについて</h3>
+        <p>熱中症対策ナビは、熱中症の予防・判断・学習・緊急対応を支援するアプリです。また、沖縄県DXハイスクール推進プログラム高校生ハッカソンで優秀賞・第三回全国情報教育コンテストにて入賞した作品になります。</p>
+      </div>
+
+      <div class="info-card contact-box">
+        <h3>お問い合わせ</h3>
+        <p>不具合・バグ・ご要望などがあればこちらからご連絡ください。</p>
+        <a href="https://forms.gle/rmKZSvSEztKHeVqTA" class="contact-btn" target="_blank" rel="noopener noreferrer">お問い合わせフォーム</a>
+        <p class="contact-note">※返信が必要な場合はメールアドレスをご入力ください</p>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <a class="nav-item" href="/wbgt/">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-text">ホーム</div>
+      </a>
+      <a class="nav-item" href="/wbgt/features/">
+        <div class="nav-icon">📋</div>
+        <div class="nav-text">機能表</div>
+      </a>
+      <a class="nav-item active" href="/wbgt/settings/">
+        <div class="nav-icon">⚙️</div>
+        <div class="nav-text">設定</div>
+      </a>
+    </nav>
+  </div>
+</Layout>
+
+<script>
+  const AREA_DATA: Record<string, string[]> = {
+    "北海道": ["札幌市","函館市","小樽市","旭川市","室蘭市","釧路市","帯広市","北見市","夕張市","岩見沢市","網走市","留萌市","苫小牧市","稚内市","美唄市","芦別市","江別市","赤平市","紋別市","士別市","名寄市","三笠市","根室市","千歳市","滝川市","砂川市","歌志内市","深川市","富良野市","登別市","恵庭市","伊達市","北広島市","石狩市","北斗市"],
+    "青森県": ["青森市","弘前市","八戸市","黒石市","五所川原市","十和田市","三沢市","むつ市","つがる市","平川市"],
+    "岩手県": ["盛岡市","宮古市","大船渡市","花巻市","北上市","久慈市","遠野市","一関市","陸前高田市","釜石市","二戸市","八幡平市","奥州市","滝沢市"],
+    "宮城県": ["仙台市","石巻市","塩竈市","気仙沼市","白石市","名取市","角田市","多賀城市","岩沼市","登米市","栗原市","東松島市","大崎市","富谷市"],
+    "秋田県": ["秋田市","能代市","横手市","大館市","男鹿市","湯沢市","鹿角市","由利本荘市","潟上市","大仙市","北秋田市","にかほ市","仙北市"],
+    "山形県": ["山形市","米沢市","鶴岡市","酒田市","新庄市","寒河江市","上山市","村山市","長井市","天童市","東根市","尾花沢市","南陽市"],
+    "福島県": ["福島市","会津若松市","郡山市","いわき市","白河市","須賀川市","喜多方市","相馬市","二本松市","田村市","南相馬市","伊達市","本宮市"],
+    "茨城県": ["水戸市","日立市","土浦市","古河市","石岡市","結城市","龍ケ崎市","下妻市","常総市","常陸太田市","高萩市","北茨城市","笠間市","取手市","牛久市","つくば市","ひたちなか市","鹿嶋市","潮来市","守谷市","常陸大宮市","那珂市","筑西市","坂東市","稲敷市","かすみがうら市","桜川市","神栖市","行方市","鉾田市","つくばみらい市","小美玉市"],
+    "栃木県": ["宇朝宮市","足利市","栃木市","佐野市","鹿沼市","日光市","小山市","真岡市","大田原市","矢板市","那須塩原市","さくら市","那須烏山市","下野市"],
+    "群馬県": ["前橋市","高崎市","桐生市","伊勢崎市","太田市","沼田市","館林市","渋川市","藤岡市","富岡市","安中市","みどり市"],
+    "埼玉県": ["さいたま市","川越市","熊谷市","川口市","行田市","秩父市","所沢市","飯能市","加須市","本庄市","東松山市","春日部市","狭山市","羽生市","鴻巣市","深谷市","上尾市","草加市","越谷市","蕨市","戸田市","入間市","朝霞市","志木市","和光市","新座市","桶川市","久喜市","北本市","八潮市","富士見市","三郷市","蓮田市","坂戸市","幸手市","鶴ヶ島市","日高市","吉川市","ふじみ野市","白岡市"],
+    "千葉県": ["千葉市","銚子市","市川市","船橋市","館山市","木更津市","松戸市","野田市","茂原市","成田市","佐倉市","東金市","旭市","習志野市","柏市","勝浦市","市原市","流山市","八千代市","我孫子市","鴨川市","鎌ケ谷市","君津市","富津市","浦安市","四街道市","袖ケ浦市","八街市","印西市","白井市","富里市","南房総市","匝瑳市","香取市","山武市","いすみ市","大網白里市"],
+    "東京都": ["千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区","豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区","八王子市","立川市","武蔵野市","三鷹市","青梅市","府中市","昭島市","調布市","町田市","小金井市","小平市","日野市","東村山市","国分寺市","国立市","福生市","狛江市","東大和市","清瀬市","東久留米市","武蔵村山市","多摩市","稲城市","羽村市","あきる野市","西東京市"],
+    "神奈川県": ["横浜市","川崎市","相模原市","横須賀市","平塚市","鎌倉市","藤沢市","小田原市","茅ヶ崎市","逗子市","三浦市","秦野市","厚木市","大和市","伊勢原市","海老名市","座間市","南足柄市","綾瀬市"],
+    "新潟県": ["新潟市","長岡市","三条市","柏崎市","新発田市","小千谷市","加茂市","十日町市","見附市","村上市","燕市","糸魚川市","妙高市","五泉市","上越市","阿賀野市","佐渡市","魚沼市","南魚沼市","胎内市"],
+    "富山県": ["富山市","高岡市","魚津市","氷見市","滑川市","黒部市","砺波市","小矢部市","南砺市","射水市"],
+    "石川県": ["金沢市","七尾市","小松市","輪島市","珠洲市","加賀市","羽咋市","かほく市","白山市","能美市","野々市市"],
+    "福井県": ["福井市","敦賀市","小浜市","大野市","勝山市","鯖江市","あわら市","越前市","坂井市"],
+    "山梨県": ["甲府市","富士吉田市","都留市","山梨市","大月市","韮崎市","南アルプス市","北杜市","甲斐市","笛吹市","上野原市","甲州市","中央市"],
+    "長野県": ["長野市","松本市","上田市","岡谷市","飯田市","諏訪市","須坂市","小諸市","伊那市","駒ヶ根市","中野市","大町市","飯山市","茅野市","塩尻市","佐久市","千曲市","東御市","安曇野市"],
+    "岐阜県": ["岐阜市","大垣市","高山市","多治見市","関市","中津川市","美濃市","瑞浪市","羽島市","恵那市","美濃加茂市","土岐市","各務原市","可児市","山県市","瑞穂市","飛騨市","本巣市","郡上市","下呂市","海津市"],
+    "静岡県": ["静岡市","浜松市","沼津市","熱海市","三島市","富士宮市","伊東市","島田市","富士市","磐田市","焼津市","掛川市","藤枝市","御殿場市","袋井市","下田市","裾野市","湖西市","伊豆市","御前崎市","菊川市","伊豆の国市","牧之原市"],
+    "愛知県": ["名古屋市","豊橋市","岡崎市","一宮市","瀬戸市","半田市","春日井市","豊川市","津島市","碧南市","刈谷市","豊田市","安城市","西尾市","蒲郡市","犬山市","常滑市","江南市","小牧市","稲沢市","新城市","東海市","大府市","知多市","知立市","尾張旭市","高浜市","岩倉市","豊明市","日進市","田原市","愛西市","清須市","北名古屋市","弥富市","みよし市","あま市","長久手市"],
+    "三重県": ["津市","四日市市","伊勢市","松阪市","桑名市","鈴鹿市","名張市","尾鷲市","亀山市","鳥羽市","熊野市","いなべ市","志摩市","伊賀市"],
+    "滋賀県": ["大津市","彦根市","長浜市","近江八幡市","草津市","守山市","栗東市","甲賀市","野洲市","湖南市","高島市","東近江市","米原市"],
+    "京都府": ["京都市","福知山市","舞鶴市","綾部市","宇治市","宮津市","亀岡市","城陽市","向日市","長岡京市","八幡市","京田辺市","京丹後市","南丹市","木津川市"],
+    "大阪府": ["大阪市","堺市","岸和田市","豊中市","池田市","吹田市","泉大津市","高槻市","貝塚市","守口市","枚方市","茨木市","八尾市","泉佐野市","富田林市","寝屋川市","河内長野市","松原市","大東市","和泉市","箕面市","柏原市","羽曳野市","門真市","摂津市","高石市","藤井寺市","東大阪市","泉南市","四條畷市","交野市","大阪狭山市","阪南市"],
+    "兵庫県": ["神戸市","姫路市","尼崎市","明石市","西宮市","洲本市","芦屋市","伊丹市","相生市","豊岡市","加古川市","赤穂市","西脇市","宝塚市","三木市","高砂市","川西市","小野市","三田市","加西市","丹波篠山市","養父市","丹波市","南あわじ市","朝来市","淡路市","宍粟市","加東市","たつの市"],
+    "奈良県": ["奈良市","大和高田市","大和郡山市","天理市","橿原市","桜井市","五條市","御所市","生駒市","香芝市","葛城市","宇陀市"],
+    "和歌山県": ["和歌山市","海南市","橋本市","有田市","御坊市","田辺市","新宮市","紀の川市","岩出市"],
+    "鳥取県": ["鳥取市","米子市","倉吉市","境港市"],
+    "島根県": ["松江市","浜田市","出雲市","益田市","大田市","安来市","江津市","雲南市"],
+    "岡山県": ["岡山市","倉敷市","津山市","玉野市","笠岡市","井原市","総社市","高梁市","新見市","備前市","瀬戸内市","赤磐市","真庭市","美作市","浅口市"],
+    "広島県": ["広島市","呉市","竹原市","三原市","尾道市","福山市","府中市","三次市","庄原市","大竹市","東広島市","廿日市市","安芸高田市","江田島市"],
+    "山口県": ["下関市","宇部市","山口市","萩市","防府市","下松市","岩国市","光市","長門市","柳井市","美祢市","周南市","山陽小野田市"],
+    "徳島県": ["徳島市","鳴門市","小松島市","阿南市","吉野川市","阿波市","美馬市","三好市"],
+    "香川県": ["高松市","丸亀市","坂出市","善通寺市","観音寺市","さぬき市","東かがわ市","三豊市"],
+    "愛媛県": ["松山市","今治市","宇和島市","八幡浜市","新居浜市","西条市","大洲市","伊予市","四国中央市","西予市","東温市"],
+    "高知県": ["高知市","室戸市","安芸市","南国市","土佐市","須崎市","宿毛市","土佐清水市","四万十市","香南市","香美市"],
+    "福岡県": ["北九州市","福岡市","大牟田市","久留米市","直方市","飯塚市","田川市","柳川市","八女市","筑後市","大川市","行橋市","豊前市","中間市","小郡市","筑紫野市","春日市","大野城市","宗像市","太宰府市","古賀市","福津市","うきは市","宮若市","嘉麻市","朝倉市","みやま市","糸島市","那珂川市"],
+    "佐賀県": ["佐賀市","唐津市","鳥栖市","多久市","伊万里市","武雄市","鹿島市","小城市","嬉野市","神埼市"],
+    "長崎県": ["長崎市","佐世保市","島原市","諫早市","大村市","平戸市","松浦市","対馬市","壱岐市","五島市","西海市","雲仙市","南島原市"],
+    "熊本県": ["熊本市","八代市","人吉市","荒尾市","水俣市","玉名市","山鹿市","菊池市","宇土市","上天草市","宇城市","阿蘇市","天草市","合志市"],
+    "大分県": ["大分市","別府市","中津市","日田市","佐伯市","臼杵市","津久見市","竹田市","豊後高田市","杵築市","宇佐市","豊後大野市","由布市","国東市"],
+    "宮崎県": ["宮崎市","都城市","延岡市","日南市","小林市","日向市","串間市","西都市","えびの市"],
+    "鹿児島県": ["鹿児島市","鹿屋市","枕崎市","阿久根市","出水市","指宿市","西之表市","垂水市","薩摩川内市","日置市","曽於市","霧島市","いちき串木野市","南さつま市","志布志市","奄美市","南九州市","伊佐市","姶良市"],
+    "沖縄県": ["那覇市","宜野湾市","石垣市","浦添市","名護市","糸満市","沖縄市","豊見城市","うるま市","宮古島市","南城市","国頭村","大宜味村","東村","今帰仁村","本部町","恩納村","宜野座村","金武町","伊江村","読谷村","嘉手納町","北谷町","北中城村","中城村","西原町","与那原町","南風原町","渡嘉敷村","座間味村","粟国村","渡名喜村","南大東村","北大東村","伊平屋村","伊是名村","久米島町","八重瀬町","多良間村","竹富町","与那国町"]
+  };
+
+  function saveSetting(key: string, value: string) { localStorage.setItem(key, value); }
+  function loadSetting(key: string) { return localStorage.getItem(key); }
+  function removeSetting(key: string) { localStorage.removeItem(key); }
+
+  const prefSelect = document.getElementById("prefSelect") as HTMLSelectElement;
+  const citySelect = document.getElementById("citySelect") as HTMLSelectElement;
+  const modeValue = document.getElementById("modeValue");
+
+  function changePref(pref: string, selectedCity = "", resetCity = true) {
+    if (!citySelect) return;
+    citySelect.innerHTML = "";
+    if (!pref || !AREA_DATA[pref]) {
+      citySelect.innerHTML = "<option value=''>先に都道府県を選択</option>";
+      saveSetting("pref", pref || "");
+      if (resetCity) { saveSetting("city", ""); removeSetting("lat"); removeSetting("lon"); }
+      return;
+    }
+    const first = document.createElement("option");
+    first.value = ""; first.textContent = "選択してください";
+    citySelect.appendChild(first);
+
+    AREA_DATA[pref].forEach((city) => {
+      const option = document.createElement("option");
+      option.value = city; option.textContent = city;
+      citySelect.appendChild(option);
+    });
+    saveSetting("pref", pref);
+
+    if (selectedCity) {
+      citySelect.value = selectedCity;
+      saveSetting("city", selectedCity);
+    } else if (resetCity) {
+      citySelect.value = ""; saveSetting("city", "");
+      removeSetting("lat"); removeSetting("lon");
+    }
+  }
+
+  prefSelect?.addEventListener("change", (e) => {
+    changePref((e.target as HTMLSelectElement).value);
+  });
+
+  citySelect?.addEventListener("change", (e) => {
+    saveSetting("city", (e.target as HTMLSelectElement).value || "");
+    removeSetting("lat"); removeSetting("lon");
+  });
+
+  document.getElementById("toggleModeBtn")?.addEventListener("click", () => {
+    let mode = loadSetting("displayMode") || "通常";
+    mode = mode === "通常" ? "シンプル" : "通常";
+    saveSetting("displayMode", mode);
+    if (modeValue) modeValue.textContent = mode;
+  });
+
+  // GPS取得
+  document.getElementById("detectLocationBtn")?.addEventListener("click", async () => {
+    if (!confirm("現在地を取得して、都道府県と地域を自動設定しますか？")) return;
+    if (!navigator.geolocation) { alert("このブラウザは位置情報に対応していません。"); return; }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=ja`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const address = data.address || {};
+        let pref = address.state || address.province || "";
+        let city = address.city || address.town || address.village || address.municipality || "";
+
+        if (prefSelect && pref) {
+          prefSelect.value = pref;
+          changePref(pref, city, false);
+        }
+        saveSetting("pref", pref);
+        saveSetting("city", city);
+        saveSetting("lat", String(lat));
+        saveSetting("lon", String(lon));
+        alert(`地域を設定しました：${pref} ${city}`);
+      } catch (error) {
+        alert("地域の自動取得に失敗しました。");
+      }
+    });
+  });
+
+  // トグル要素バインド
+  const toggles = [
+    { id: "notifyToggle", key: "notifyEnabled" },
+    { id: "alertToggle", key: "alertNotify" },
+    { id: "weatherToggle", key: "weatherNotify" },
+    { id: "newsToggle", key: "newsNotify" }
+  ];
+
+  toggles.forEach(t => {
+    const el = document.getElementById(t.id) as HTMLInputElement;
+    el?.addEventListener("change", () => {
+      saveSetting(t.key, el.checked ? "1" : "0");
+    });
+  });
+
+  // 設定の復元
+  document.addEventListener("DOMContentLoaded", () => {
+    const savedPref = loadSetting("pref") || "";
+    const savedCity = loadSetting("city") || "";
+    const savedMode = loadSetting("displayMode") || "通常";
+
+    if (modeValue) modeValue.textContent = savedMode;
+    if (prefSelect && savedPref) {
+      prefSelect.value = savedPref;
+      changePref(savedPref, savedCity, false);
+    }
+
+    toggles.forEach(t => {
+      const el = document.getElementById(t.id) as HTMLInputElement;
+      if (el) el.checked = loadSetting(t.key) === "1";
+    });
+  });
+</script>
+
+<style is:global>
+  :root{
+    --bg-start:#dff4ff;
+    --bg-end:#eadcff;
+    --surface:rgba(255,255,255,0.84);
+    --surface-strong:rgba(255,255,255,0.94);
+    --card-border:rgba(255,255,255,0.78);
+    --text-main:#22252f;
+    --text-sub:#667085;
+    --primary:#6c63ff;
+    --primary-2:#4f8df7;
+    --primary-soft:#f1efff;
+    --shadow-sm:0 8px 20px rgba(43,53,88,0.08);
+    --shadow-md:0 14px 35px rgba(43,53,88,0.12);
+    --radius-xl:30px;
+    --radius-lg:24px;
+    --radius-md:18px;
+    --radius-sm:14px;
+    --nav-height:86px;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html { height:100%; font-size:16px; }
+  body { margin:0; min-height:100%; font-family:"Segoe UI","Hiragino Sans","Yu Gothic UI",sans-serif; color:var(--text-main); background: radial-gradient(circle at top left, rgba(255,255,255,0.6), transparent 35%), linear-gradient(180deg,var(--bg-start),var(--bg-end)); -webkit-text-size-adjust:100%; text-size-adjust:100%; font-size:clamp(14px,2.5vw,18px); }
+  button, input, select, textarea { font:inherit; }
+  button { border:none; background:none; cursor:pointer; }
+  img { max-width:100%; display:block; }
+  a { text-decoration:none; color:inherit; }
+  .app-shell { width:100%; max-width:520px; min-height:100vh; margin:0 auto; position:relative; padding-bottom:calc(var(--nav-height) + env(safe-area-inset-bottom) + 14px); background: radial-gradient(circle at top right, rgba(255,255,255,0.45), transparent 30%), linear-gradient(180deg,var(--bg-start),var(--bg-end)); }
+  .topbar { padding:18px 18px 10px; position:sticky; top:0; z-index:20; background:linear-gradient(180deg, rgba(223,244,255,0.9) 0%, rgba(223,244,255,0.72) 60%, rgba(223,244,255,0) 100%); backdrop-filter:blur(10px); }
+  .main-content { padding:8px 18px 22px; }
+  .brand { display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:24px; background:rgba(255,255,255,0.72); border:1px solid rgba(255,255,255,0.86); box-shadow:var(--shadow-sm); }
+  .brand-logo { width:52px; height:52px; border-radius:18px; display:grid; place-items:center; font-size:24px; color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-2)); box-shadow:0 10px 18px rgba(108,99,255,0.28); flex-shrink:0; overflow:hidden; }
+  .brand-logo img { width:100%; height:100%; object-fit:contain; }
+  .brand h1 { margin:0; font-size:clamp(18px,4.5vw,24px); line-height:1.2; font-weight:800; letter-spacing:0.01em; }
+  .brand p { margin:4px 0 0; font-size:clamp(12px,3vw,14px); color:var(--text-sub); line-height:1.4; }
+  .section-title { margin:6px 0 16px; font-size:clamp(20px,5vw,28px); line-height:1.25; font-weight:800; letter-spacing:0.01em; }
+  .settings-card, .info-card { background:var(--surface); border:1px solid var(--card-border); box-shadow:var(--shadow-sm); border-radius:24px; padding:18px 16px; backdrop-filter:blur(12px); }
+  .settings-card { display:grid; gap:0; }
+  .setting-row { width:100%; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:14px; padding:16px 10px; border:none; border-bottom:1px solid rgba(102,112,133,0.14); background:transparent; text-align:left; }
+  .setting-row:last-child { border-bottom:none; padding-bottom:14px; }
+  button.setting-row { cursor:pointer; }
+  button.setting-row:hover, .setting-row:hover { background:#f5f6ff; border-radius:12px; }
+  button.setting-row:active { transform:scale(0.98); }
+  .setting-row > span:first-child { min-width:0; font-size:14px; font-weight:700; color:var(--text-main); line-height:1.5; word-break:break-word; }
+  .value { color:var(--text-sub); font-weight:700; text-align:right; white-space:nowrap; }
+  .setting-row select { width:160px; max-width:100%; min-width:120px; padding:10px 12px; border-radius:12px; border:1px solid #d8dbe6; background:#fff; color:var(--text-main); font-size:14px; appearance:auto; }
+  .setting-action-btn { min-width:110px; border:none; padding:10px 14px; border-radius:12px; background:linear-gradient(135deg,var(--primary),var(--primary-2)); color:#fff; font-size:14px; font-weight:700; cursor:pointer; box-shadow:var(--shadow-sm); }
+  .setting-action-btn:active { transform:scale(0.98); }
+  .switch { position:relative; display:inline-block; width:52px; height:30px; flex-shrink:0; }
+  .switch input { position:absolute; opacity:0; width:0; height:0; }
+  .slider { position:absolute; inset:0; background:#d6d6de; border-radius:999px; transition:.25s; cursor:pointer; }
+  .slider::before { content:""; position:absolute; width:22px; height:22px; left:4px; top:4px; background:#fff; border-radius:50%; transition:.25s; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+  .switch input:checked + .slider { background:var(--primary); }
+  .switch input:checked + .slider::before { transform:translateX(22px); }
+  .info-card { margin-top:16px; }
+  .info-card h3 { margin:0 0 8px; font-size:18px; line-height:1.3; font-weight:800; }
+  .info-card p { margin:0; color:var(--text-sub); font-size:14px; line-height:1.7; }
+  .contact-box { margin-top:20px; text-align:center; padding:20px 18px; border:1.5px solid rgba(79,70,229,0.18); border-radius:24px; background:rgba(255,255,255,0.9); box-shadow:0 10px 24px rgba(79,70,229,0.08); }
+  .contact-box h3 { margin:0 0 8px; font-size:18px; font-weight:800; color:#111827; }
+  .contact-box p { margin:0; font-size:13px; line-height:1.8; color:#4b5563; }
+  .contact-btn { display:inline-flex; align-items:center; justify-content:center; min-width:220px; margin-top:14px; padding:13px 20px; background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff !important; border-radius:14px; text-decoration:none; font-weight:700; font-size:14px; letter-spacing:.02em; box-shadow:0 8px 18px rgba(37,99,235,0.22); }
+  .contact-btn:hover { transform:translateY(-2px); opacity:.96; box-shadow:0 12px 22px rgba(37,99,235,0.28); }
+  .contact-btn:active { transform:scale(.98); }
+  .contact-note { font-size:11px !important; color:#6b7280 !important; margin-top:10px !important; }
+  .bottom-nav { position:fixed; left:0; right:0; bottom:0; z-index:30; width:100%; max-width:520px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom)); background:rgba(255,255,255,0.9); backdrop-filter:blur(16px); border-top:1px solid rgba(50,60,90,0.08); box-shadow:0 -8px 30px rgba(43,53,88,0.06); }
+  .nav-item { min-height:58px; border-radius:18px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#5f6475; transition:background .18s ease, color .18s ease, transform .18s ease; }
+  .nav-item.active { background:var(--primary-soft); color:var(--primary); font-weight:800; }
+  .nav-item:active { transform:scale(0.97); }
+  .nav-icon { font-size:20px; line-height:1; }
+  .nav-text { font-size:12px; line-height:1; letter-spacing:0.01em; }
+  .hidden { display:none !important; }
+  :focus-visible { outline:3px solid rgba(79,141,247,0.35); outline-offset:3px; border-radius:18px; }
+  @media (max-width:480px){ .setting-row { grid-template-columns:minmax(0,1fr) 140px; column-gap:10px; } .setting-row select { width:140px; min-width:100px; font-size:13px; } .setting-action-btn { min-width:96px; font-size:13px; padding:9px 12px; } }
+  @media (max-width:360px){ .brand h1 { font-size:20px; } .setting-row { grid-template-columns:minmax(0,1fr) 120px; } .setting-row > span:first-child { font-size:13px; } .contact-btn { min-width:100%; width:100%; } }
+  @media (min-width:768px){ body { padding:18px 0; font-size:16px; } .app-shell { border-radius:34px; overflow:hidden; min-height:calc(100vh - 36px); box-shadow:0 18px 60px rgba(43,53,88,0.14); } .main-content { padding:10px 20px 24px; } .bottom-nav { border-radius:22px 22px 0 0; } }
+</style>

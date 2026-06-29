@@ -1,0 +1,173 @@
+---
+import Layout from '../../layouts/wbgt1/Layout.astro';
+---
+// 📊 HTMLの冗長な記述を1回にするためのデータ定義（DRY原則）
+const actionsData = [
+  { type: 'water', label: '💧 水分補給' },
+  { type: 'cool', label: '🧊 体を冷やす' },
+  { type: 'shade', label: '🌳 日陰へ移動' },
+  { type: 'rest', label: '😴 休憩する' }
+];
+---
+
+<Layout title="熱中症対策">
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="site-logo">
+          <img src="/wbgt/icons/favicon-192-v2.png" alt="ロゴ" />
+        </div>
+        <div class="header-text">
+          <h1>💧 熱中症対策</h1>
+          <p class="lead">今すぐできる対策を選んで行動しよう</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <p class="label">すぐにできる対策</p>
+        
+        <div class="action-grid">
+          {actionsData.map((item) => (
+            <button class="action-btn" data-type={item.type}>{item.label}</button>
+          ))}
+        </div>
+        
+        <div id="actionResult" class="action-result">
+          ボタンを押すと対策が表示されます
+        </div>
+      </section>
+
+      <section class="card">
+        <p class="label">おすすめの使い方</p>
+        <ul class="advice-list">
+          <li>暑いと感じたらまず水分補給</li>
+          <li>違和感があればすぐ休憩</li>
+          <li>屋外では日陰を優先</li>
+          <li>無理をしないのが最重要</li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <h2>🔍 注意</h2>
+        <p>
+          めまい・吐き気・強いだるさがある場合は、<br />
+          <strong>すぐに休み、周囲の人に知らせてください。</strong>
+        </p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <a href="/wbgt/" class="nav-item">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-text">ホーム</div>
+      </a>
+      <a href="/wbgt/prevention/" class="nav-item active">
+        <div class="nav-icon">💧</div>
+        <div class="nav-text">熱中症対策</div>
+      </a>
+      <a href="/wbgt/features/" class="nav-item">
+        <div class="nav-icon">📋</div>
+        <div class="nav-text">機能表</div>
+      </a>
+    </nav>
+  </div>
+</Layout>
+
+<script>
+  const ACTIONS: Record<string, string> = {
+    water: `
+      <strong>💧 水分補給</strong><br><br>
+      ・20〜30分ごとに飲む<br>
+      ・のどが渇く前に飲む
+    `,
+    cool: `
+      <strong>🧊 冷やす</strong><br><br>
+      ・首、わきを冷やす<br>
+      ・風を当てると効果UP
+    `,
+    shade: `
+      <strong>🌳 日陰へ</strong><br><br>
+      ・直射日光を避ける<br>
+      ・屋内に入れるなら入る
+    `,
+    rest: `
+      <strong>😴 休憩</strong><br><br>
+      ・無理せず止まる<br>
+      ・座る・横になる
+    `
+  };
+
+  const buttons = document.querySelectorAll('.action-btn');
+  const result = document.getElementById('actionResult');
+
+  if (result) {
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLButtonElement;
+        const type = target.dataset.type || '';
+        
+        result.innerHTML = ACTIONS[type] || 'ボタンを押すと対策が表示されます';
+        
+        buttons.forEach((b) => b.classList.remove('is-active'));
+        target.classList.add('is-active');
+      });
+    });
+  }
+</script>
+
+<style is:global>
+  :root {
+    --bg: #f7fbff;
+    --bg-grad-top: #e0f2fe;
+    --bg-grad-bottom: #f8fbff;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #dbeafe;
+    --primary: #2563eb;
+    --primary-soft: #dbeafe;
+    --primary-soft-2: #eff6ff;
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --radius: 16px;
+    --max: 640px;
+    --nav-height: 86px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif; color: var(--text); background: linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%); }
+  img { display: block; max-width: 100%; }
+  button, input, textarea { font: inherit; }
+  .app-shell { min-height: 100vh; padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 18px); }
+  .site-header { padding: 16px 14px; background: rgba(255, 255, 255, 0.88); border-bottom: 1px solid #cfe4ff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .header-inner { max-width: var(--max); margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .site-logo { flex-shrink: 0; }
+  .site-logo img { width: 64px; height: 64px; object-fit: contain; border-radius: 16px; }
+  .header-text { min-width: 0; }
+  .header-text h1 { margin: 0 0 4px; font-size: 1.4rem; line-height: 1.35; }
+  .header-text .lead { margin: 0; font-size: 0.92rem; line-height: 1.65; color: #4b5563; }
+  .container { max-width: var(--max); margin: 16px auto 0; padding: 0 12px 24px; }
+  .card { background: var(--card); border: 1px solid rgba(191, 219, 254, 0.9); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+  .label { margin: 0 0 10px; font-size: 0.85rem; font-weight: 800; color: #0369a1; letter-spacing: 0.01em; }
+  .action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 14px; }
+  .action-btn { appearance: none; border: none; border-radius: 14px; padding: 14px 12px; font-size: 14px; font-weight: 800; color: #1d4ed8; background: var(--primary-soft); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08); cursor: pointer; transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; }
+  .action-btn:hover { background: #bfdbfe; }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.22); outline-offset: 2px; }
+  .action-btn.is-active { background: var(--primary); color: #ffffff; box-shadow: 0 10px 18px rgba(37, 99, 235, 0.22); }
+  .action-result { min-height: 120px; margin-top: 14px; padding: 14px; border-radius: 14px; background: var(--primary-soft-2); border: 1px solid #cfe4ff; font-size: 14px; line-height: 1.8; color: #0f172a; }
+  .advice-list { margin: 4px 0 0; padding-left: 1.2rem; font-size: 0.92rem; line-height: 1.8; }
+  .advice-list li { margin-bottom: 6px; }
+  .note { margin-top: 16px; padding: 14px; background: #f0f9ff; border: 1px solid #d9ecff; border-radius: 14px; font-size: 0.88rem; line-height: 1.8; color: #0f172a; }
+  .note h2 { margin: 0 0 8px; font-size: 1rem; line-height: 1.4; }
+  .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; width: 100%; max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.94); border-top: 1px solid rgba(59, 130, 246, 0.12); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06); }
+  .nav-item { min-height: 58px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: #64748b; transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease; }
+  .nav-item:visited, .nav-item:hover, .nav-item:active { text-decoration: none; }
+  .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 800; }
+  .nav-item:active { transform: scale(0.97); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-text { font-size: 12px; line-height: 1; letter-spacing: 0.01em; }
+  .site-footer { text-align: center; font-size: 0.75rem; color: #667085; padding: 8px 0 18px; }
+  @media (max-width: 480px) { .site-header { padding: 14px 12px; } .header-inner { gap: 10px; align-items: center; } .site-logo img { width: 52px; height: 52px; } .header-text h1 { font-size: 1.2rem; } .header-text .lead { font-size: 0.85rem; line-height: 1.6; } .container { padding: 0 10px 24px; } .card { padding: 14px; border-radius: 14px; } .action-grid { grid-template-columns: 1fr; } .action-btn { padding: 13px 12px; } .action-result { min-height: 140px; font-size: 13px; } .nav-text { font-size: 11px; } }
+</style>

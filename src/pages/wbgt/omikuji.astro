@@ -1,0 +1,286 @@
+---
+import Layout from '../../layouts/wbgt1/Layout.astro';
+---
+<Layout title="熱中症おみくじ">
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="site-logo">
+          <img src="/wbgt/icons/favicon-512-v2.png" alt="熱中症おみくじロゴ" />
+        </div>
+        <div class="header-text">
+          <h1>🌞 熱中症おみくじ 🌞</h1>
+          <p class="lead">
+            現在地の気温から<strong>暑さ運</strong>をチェックして、
+            <strong>熱中症予防</strong>のヒントを見てみよう！
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <p class="label">現在地付近のコンディション</p>
+        <p id="locationInfo" class="location-info">位置情報を取得中...</p>
+        <p id="tempInfo" class="temp-info">気温を取得中...</p>
+      </section>
+      
+      <section class="card">
+        <button id="omikujiBtn" class="btn-main" disabled>おみくじを引く 🎲</button>
+        <h2 class="label">今日のおすすめの過ごし方</h2>
+        <p id="levelLabel">---</p>
+        <p id="levelDesc">データ取得後に表示されます。</p>
+        <ul id="adviceList"></ul>
+        <div class="food-box">
+          <p class="sub-label">今日おすすめの飲みもの・食べもの</p>
+          <ul id="foodList"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>データ出典：Open-Meteo</p>
+      <p>© 熱中症おみくじプロジェクト</p>
+    </footer>
+
+    <nav class="bottom-nav">
+      <a href="/wbgt/" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        ホーム
+      </a>
+      <a href="/wbgt/omikuji/" class="nav-item active">
+        <span class="nav-icon">🎲</span>
+        おみくじ
+      </a>
+      <a href="/wbgt/features/" class="nav-item">
+        <span class="nav-icon">📋</span>
+        機能表
+      </a>
+    </nav>
+  </div>
+</Layout>
+
+<script>
+  let currentTemp: number | null = null;
+  let currentAppTemp: number | null = null;
+
+  const locationInfo = document.getElementById("locationInfo");
+  const tempInfo = document.getElementById("tempInfo");
+  const omikujiBtn = document.getElementById("omikujiBtn") as HTMLButtonElement;
+
+  window.addEventListener("load", () => {
+    if (confirm("位置情報を使用しますか？")) {
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        if (locationInfo) locationInfo.textContent = "現在地取得OK";
+        
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature`;
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        currentTemp = data.current.temperature_2m;
+        currentAppTemp = data.current.apparent_temperature;
+        
+        if (tempInfo) tempInfo.textContent = `気温 ${currentTemp}℃ / 体感 ${currentAppTemp}℃`;
+        if (omikujiBtn) omikujiBtn.disabled = false;
+      });
+    } else {
+      if (omikujiBtn) omikujiBtn.disabled = false;
+    }
+  });
+
+  function judgeHeatLevel(temp: number) {
+    if (temp < 20) return "cool";
+    if (temp < 26) return "warm";
+    if (temp < 30) return "hot";
+    return "very_hot";
+  }
+
+  const levelLabel = document.getElementById("levelLabel");
+  const levelDesc = document.getElementById("levelDesc");
+
+  omikujiBtn?.addEventListener("click", () => {
+    const t = currentAppTemp ?? currentTemp ?? 25;
+    const level = judgeHeatLevel(t);
+
+    if (levelLabel && levelDesc) {
+      if (level === "cool") {
+        levelLabel.textContent = "さわやか大吉";
+        levelDesc.textContent = "過ごしやすい日！";
+      } else if (level === "warm") {
+        levelLabel.textContent = "注意中吉";
+        levelDesc.textContent = "水分補給を忘れずに";
+      } else if (level === "hot") {
+        levelLabel.textContent = "あつい小吉";
+        levelDesc.textContent = "かなり暑日";
+      } else {
+        levelLabel.textContent = "危険凶";
+        levelDesc.textContent = "外出注意レベル";
+      }
+    }
+  });
+</script>
+
+<style is:global>
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(180deg, #e0f3ff, #ffffff);
+    color: #333;
+    padding-bottom: 90px;
+  }
+  .site-header {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid #cfe4ff;
+  }
+  .header-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .site-logo img {
+    display: block;
+    width: 64px;
+    height: 64px;
+  }
+  .header-text h1 {
+    margin: 0 0 4px;
+    font-size: 1.4rem;
+  }
+  .header-text .lead {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .container {
+    max-width: 600px;
+    margin: 16px auto;
+    padding: 0 12px 24px;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 80, 160, 0.08);
+    margin-bottom: 12px;
+  }
+  .location-info, .temp-info {
+    font-size: 0.9rem;
+    margin: 4px 0;
+  }
+  .btn-main {
+    display: block;
+    width: 80%;
+    max-width: 320px;
+    margin: 0 auto 16px;
+    padding: 14px 24px;
+    font-size: 1.15rem;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    background: #4daaf5;
+    color: #fff;
+    font-weight: bold;
+  }
+  .btn-main:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .btn-main:active {
+    transform: scale(0.97);
+  }
+  .result-box {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed #b3d7ff;
+    text-align: center;
+  }
+  .label {
+    font-size: 0.85rem;
+    color: #0070c9;
+    margin-bottom: 4px;
+  }
+  .result-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin: 4px 0 8px;
+  }
+  .advice-box {
+    margin-top: 8px;
+    text-align: left;
+  }
+  .advice-list {
+    padding-left: 1.2rem;
+    margin: 4px 0;
+    font-size: 0.9rem;
+  }
+  .advice-list li {
+    margin-bottom: 4px;
+  }
+  .note {
+    margin-top: 16px;
+    padding: 12px;
+    background: #f2f8ff;
+    border-radius: 10px;
+    font-size: 0.85rem;
+  }
+  .note h2 {
+    margin-top: 0;
+    font-size: 1rem;
+  }
+  .site-footer {
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 8px 0 16px;
+    color: #666;
+  }
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 520px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    padding: 10px;
+    background: rgba(255,255,255,0.95);
+    border-top: 1px solid #ddd;
+    z-index: 100;
+  }
+  .nav-item {
+    text-align: center;
+    text-decoration: none;
+    color: #666;
+    font-size: 12px;
+  }
+  .nav-item.active {
+    color: #2563eb;
+    font-weight: bold;
+  }
+  .nav-icon {
+    font-size: 20px;
+    display: block;
+  }
+  .hidden {
+    display: none;
+  }
+  @media (max-width: 480px) {
+    .header-inner {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 8px;
+    }
+    .site-logo img {
+      width: 52px;
+      height: 52px;
+    }
+    .header-text h1 {
+      font-size: 1.2rem;
+    }
+  }
+</style>
