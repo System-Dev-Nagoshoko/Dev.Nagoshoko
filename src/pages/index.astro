@@ -14,7 +14,7 @@ const portalMenus = [
     title: "熱中症対策ナビ",
     description: "現在の暑さ指数(WBGT)や、校内の水分補給スポットをリアルタイム案内。",
     icon: "☀️", 
-    link: "./wbgt/index.html",
+    link: "./wbgt/", // 💡 Astro化(移植)を見据えてモダンなパスへ変更
     accent: "#ff9800", // 警戒
     status: "OPEN"
   },
@@ -36,9 +36,9 @@ const portalMenus = [
   },
   {
     title: "商工祭インフォ",
-    description: "落とし物、休憩所案内や、運営からの緊急アナウンスを即座に配信。",
+    description: "ご案内、駐車場の場所、来場ルールやよくある質問(FAQ)を網羅。",
     icon: "📢",
-    link: "#",
+    link: "./info/", // 💡 先ほど作成したインフォページへしっかりとリンク！
     accent: "#32c5ff", // 商業科
     status: "INFO"
   }
@@ -128,10 +128,9 @@ const portalMenus = [
   body {
     position: relative;
     overflow-x: hidden;
-    background-color: #fafbfd; /* 青みのある清潔感のあるベース白 */
+    background-color: #fafbfd;
   }
   
-  /* 薄いデジタルの網の目を敷く */
   .cyber-bg-grid {
     position: fixed;
     top: 0;
@@ -146,7 +145,6 @@ const portalMenus = [
     pointer-events: none;
   }
 
-  /* 画面左上のネオンライト効果 */
   .cyber-bg-glow-1 {
     position: fixed;
     top: -200px;
@@ -159,7 +157,6 @@ const portalMenus = [
     pointer-events: none;
   }
 
-  /* 画面右下のネオンライト効果 */
   .cyber-bg-glow-2 {
     position: fixed;
     bottom: -150px;
@@ -218,25 +215,33 @@ const portalMenus = [
     font-size: 0.9rem;
   }
 
-  /* 📊 パッと見やすい大きめの2列カードグリッド */
+  /* 📊 カードグリッド */
   .menu-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
   
+  /* 💡 奇数個(5個)のカードがあるとき、最後の「商工祭インフォ」が綺麗に横いっぱいに広がるように設定 */
+  .portal-card:last-child {
+    grid-column: span 2;
+  }
+  
   @media (max-width: 440px) {
     .menu-grid {
       grid-template-columns: 1fr;
     }
+    .portal-card:last-child {
+      grid-column: span 1;
+    }
   }
 
-  /* 🃏 大きくて押しやすいタイル型サイバーカード (少し透けるガラス質感) */
+  /* 🃏 タイル型サイバーカード */
   .portal-card {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(8px);
     border-radius: 18px;
-    padding: 24px; /* 💡 余白を広げてボタンをサイズアップ */
+    padding: 24px;
     text-decoration: none;
     color: inherit;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.02);
@@ -248,7 +253,6 @@ const portalMenus = [
     position: relative;
   }
 
-  /* 左側に学科カラーの細い縦ラインを通す */
   .portal-card::before {
     content: '';
     position: absolute;
