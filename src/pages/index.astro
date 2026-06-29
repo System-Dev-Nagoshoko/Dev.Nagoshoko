@@ -36,13 +36,6 @@ const portalMenus = [
     link: "./info/",
     accent: "#ff9900", // オレンジ
     status: "INFO"
-  },
-  {
-    title: "公式記録",
-    icon: "📸",
-    link: "#",
-    accent: "#ffffff", // ホワイト
-    status: "GALLERY"
   }
 ];
 ---
@@ -91,12 +84,11 @@ const portalMenus = [
     setTimeout(() => {
       splash.style.opacity = '0';
       setTimeout(() => splash.style.display = 'none', 600);
-    }, 2200); // 2.2秒間ローディング演出
+    }, 2200);
   });
 </script>
 
 <style is:global>
-  /* 共通レイアウトの背景をサイバーに変更 */
   body {
     background-color: #0a0e17 !important;
     overflow-x: hidden;
@@ -104,7 +96,6 @@ const portalMenus = [
 </style>
 
 <style>
-  /* 🌌 背景演出：デジタルグリッド & ネオングラデーション */
   .cyber-portal {
     position: relative;
     min-height: 100vh;
@@ -129,7 +120,6 @@ const portalMenus = [
     z-index: -1;
   }
 
-  /* 🛰️ スプラッシュ画面 */
   .cyber-splash {
     position: fixed;
     inset: 0; background: #0a0e17;
@@ -153,14 +143,12 @@ const portalMenus = [
   }
   @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-  /* 🏗️ ヘッダー */
   .cyber-header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
   .header-line { width: 40px; height: 4px; background: #00f2ff; margin: 0 auto 15px; box-shadow: 0 0 10px #00f2ff; }
   .cyber-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: 0.05em; }
   .ver { font-size: 0.8rem; vertical-align: top; color: #00f2ff; }
   .cyber-subtitle { font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.2em; margin-top: 5px; }
 
-  /* 📱 2列のタイル風ボタンUI */
   .tile-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
