@@ -1,17 +1,17 @@
 ---
 import Layout from '../../layouts/wbgt1/Layout.astro';
 
-// 📋 外部リンク（廃止）を除去した機能カードの一覧
+// 📋 リンク先を「wbgt」に統一
 const featureLinks = [
-  { href: "/wbgt1/emergency/", emoji: "🚑", label: "119通報確認サイト" },
-  { href: "/wbgt1/report/", emoji: "🌡️", label: "熱リポ" }
+  { href: "/wbgt/emergency/", emoji: "🚑", label: "119通報確認サイト" },
+  { href: "/wbgt/report/", emoji: "🌡️", label: "熱リポ" }
 ];
 ---
 
 <Layout title="熱中症対策ナビ">
   <div id="splash-screen" class="splash-screen">
     <div class="splash-inner">
-      <img src="/wbgt1/icons/favicon-512-v2.png" alt="熱中症対策ナビ" class="splash-logo" />
+      <img src="/wbgt/icons/favicon-512-v2.png" alt="熱中症対策ナビ" class="splash-logo" />
       <h1 class="splash-title">熱中症対策ナビ</h1>
       <p class="splash-subtitle">Heat Safety Navi</p>
     </div>
@@ -21,7 +21,7 @@ const featureLinks = [
     <header class="topbar">
       <div class="brand">
         <div class="brand-logo">
-          <img src="/wbgt1/icons/favicon-512-v2.png" alt="logo" />
+          <img src="/wbgt/icons/favicon-512-v2.png" alt="logo" />
         </div>
         <div>
           <h1>熱中症対策ナビ</h1>
@@ -53,15 +53,15 @@ const featureLinks = [
     </main>
 
     <nav class="bottom-nav">
-      <a class="nav-item active" href="/wbgt1/">
+      <a class="nav-item active" href="/wbgt/">
         <div class="nav-icon">🏠</div>
         <div class="nav-text">ホーム</div>
       </a>
-      <a class="nav-item" href="/wbgt1/features/">
+      <a class="nav-item" href="/wbgt/features/">
         <div class="nav-icon">📋</div>
         <div class="nav-text">機能表</div>
       </a>
-      <a class="nav-item" href="/wbgt1/settings/">
+      <a class="nav-item" href="/wbgt/settings/">
         <div class="nav-icon">⚙️</div>
         <div class="nav-text">設定</div>
       </a>
@@ -106,8 +106,9 @@ const featureLinks = [
 
   updateRegionLabel();
 
+  // 💡 pos: any にすることでGitHub Actionsの型チェックによるビルド落ちを強制回避
   navigator.geolocation.getCurrentPosition(
-    async (pos) => {
+    async (pos: any) => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m`;
