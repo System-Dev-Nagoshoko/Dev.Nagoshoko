@@ -3,14 +3,6 @@ import Layout from '../../layouts/wbgt1/layouts/Layout.astro';
 ---
 
 <Layout title="熱中症対策ナビ">
-  <div id="splash-screen" class="splash-screen">
-    <div class="splash-inner">
-      <img src="/wbgt/icons/favicon-512-v2.png" alt="熱中症対策ナビ" class="splash-logo" />
-      <h1 class="splash-title">熱中症対策ナビ</h1>
-      <p class="splash-subtitle">Heat Safety Navi</p>
-    </div>
-  </div>
-
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
@@ -130,41 +122,5 @@ import Layout from '../../layouts/wbgt1/layouts/Layout.astro';
     }, () => {
       document.getElementById("weatherBox").textContent = "位置情報の取得に失敗しました";
     });
-
-    window.addEventListener("load", () => {
-      const splash = document.getElementById("splash-screen");
-      if (!splash) return;
-      setTimeout(() => {
-        splash.classList.add("hide");
-      }, 1000);
-    });
   </script>
 </Layout>
-
-<style is:global>
-  /* ===== スプラッシュ画面の挙動スタイル（ここを修正・追記しました） ===== */
-  .splash-screen { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100vw; 
-    height: 100vh; 
-    background: #6c63ff; 
-    color: #fff; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    z-index: 9999; 
-    transition: opacity 0.5s ease, visibility 0.5s; 
-    text-align: center; 
-  }
-  /* hideクラスが付与されたら透明にして完全に消し去る設定 */
-  .splash-screen.hide { 
-    opacity: 0; 
-    visibility: hidden; 
-    pointer-events: none;
-  }
-  .splash-logo { width: 120px; height: 120px; margin-bottom: 16px; }
-  .splash-title { margin: 0; font-size: 1.8rem; }
-  .splash-subtitle { margin: 4px 0 0; opacity: 0.8; font-size: 1rem; }
-</style>
