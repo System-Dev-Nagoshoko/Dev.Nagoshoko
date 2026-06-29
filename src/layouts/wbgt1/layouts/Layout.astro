@@ -1,36 +1,72 @@
 ---
-// src/layouts/wbgt1/Layout.astro
 interface Props {
   title: string;
-  activeNav: 'home' | 'report' | 'omikuji' | 'features';
 }
 
-const { title, activeNav } = Astro.props;
+const { title } = Astro.props;
 ---
 
 <!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>{title} | 熱中症対策ナビ</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#6c63ff" />
+    <link rel="icon" type="image/png" href="icons/favicon-192-v2.png" />
+    <link rel="shortcut icon" href="icons/favicon-192-v2.png" />
+    <link rel="apple-touch-icon" href="icons/favicon-512-v2.png" />
+    
+    <style is:global>
+      :root {
+        --bg-grad-top: #e0f2fe;
+        --bg-grad-bottom: #f8fbff;
+        --card: #ffffff;
+        --text: #1f2937;
+        --primary: #6c63ff;
+        --primary-soft: #eef2ff;
+        --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        --radius: 16px;
+        --max: 640px;
+        --nav-height: 86px;
+      }
+      * { box-sizing: border-box; }
+      body { 
+        margin: 0; 
+        font-family: system-ui, sans-serif; 
+        color: var(--text); 
+        background: linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%); 
+        min-height: 100vh;
+      }
+      
+      .app-shell { min-height: 100vh; padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 18px); }
+      .topbar { padding: 16px 14px; background: rgba(255, 255, 255, 0.88); border-bottom: 1px solid #cfe4ff; backdrop-filter: blur(10px); }
+      .brand { max-width: var(--max); margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+      .brand-logo img { width: 48px; height: 48px; object-fit: contain; border-radius: 12px; }
+      .brand h1 { margin: 0; font-size: 1.3rem; color: #1e3a8a; }
+      .brand p { margin: 2px 0 0; font-size: 0.85rem; color: #4b5563; font-weight: 600; }
+      
+      .main-content { max-width: var(--max); margin: 16px auto 0; padding: 0 12px 24px; }
+      .hero-card { background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%); text-align: center; border-left: 5px solid var(--primary); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 16px; }
+      .hero-badge { display: inline-block; padding: 4px 12px; background: var(--primary); color: #fff; font-size: 0.75rem; font-weight: bold; border-radius: 999px; margin-bottom: 10px; }
+      .hero-time { font-size: 1.1rem; font-weight: bold; color: #4b5563; margin-bottom: 6px; }
+      .hero-region { font-size: 0.9rem; color: #4b5563; font-weight: bold; margin-bottom: 8px; }
+      
+      .card-list { display: flex; flex-direction: column; gap: 12px; }
+      .feature-wide-card { display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: var(--card); border: 1px solid rgba(191, 219, 254, 0.9); border-radius: 12px; text-decoration: none; color: var(--text); box-shadow: var(--shadow); transition: background 0.2s; }
+      .feature-wide-card:hover { background: #f8fafc; }
+      .feature-wide-card .emoji { font-size: 24px; }
+      .feature-wide-card .label { font-size: 1rem; font-weight: bold; color: #1e3a8a; }
+
+      .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; width: 100%; max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.94); border-top: 1px solid rgba(59, 130, 246, 0.12); box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06); }
+      .nav-item { min-height: 58px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: #64748b; }
+      .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 800; }
+      .nav-icon { font-size: 20px; line-height: 1; }
+      .nav-text { font-size: 12px; }
+    </style>
   </head>
   <body>
     <slot />
-
-    <nav class="bottom-nav">
-      <a href="/wbgt/" class={activeNav === 'home' ? 'nav-item active' : 'nav-item'}>
-        <div class="nav-icon">🏠</div><div class="nav-text">ホーム</div>
-      </a>
-      <a href="/wbgt/report/" class={activeNav === 'report' ? 'nav-item active' : 'nav-item'}>
-        <div class="nav-icon">💬</div><div class="nav-text">熱リポ</div>
-      </a>
-      <a href="/wbgt/omikuji/" class={activeNav === 'omikuji' ? 'nav-item active' : 'nav-item'}>
-        <div class="nav-icon">🎲</div><div class="nav-text">おみくじ</div>
-      </a>
-      <a href="/wbgt/features/" class={activeNav === 'features' ? 'nav-item active' : 'nav-item'}>
-        <div class="nav-icon">📋</div><div class="nav-text">機能表</div>
-      </a>
-    </nav>
   </body>
 </html>
