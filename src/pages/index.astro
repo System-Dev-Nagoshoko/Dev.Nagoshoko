@@ -3,44 +3,209 @@ import Layout from '../layouts/Layout.astro';
 
 const portalMenus = [
   {
-    title: "企画・クラス検索",
-    description: "展示や体験企画を、場所やリアルタイムの混雑状況からスマートに検索。",
+    title: "企画・検索",
     icon: "🔍",
     link: "./search/",
-    accent: "#ff4d20", // 機械科
+    accent: "#00f2ff", // シアン
     status: "OPEN"
   },
   {
-    title: "熱中症対策ナビ",
-    description: "現在の暑さ指数(WBGT)や、校内の水分補給スポットをリアルタイム案内。",
+    title: "熱中症ナビ",
     icon: "☀️", 
-    link: "/wbgt/", // ⭕「./wbgt/」から「/wbgt/」へ修正してパスを確定！
-    accent: "#ff9800", // 警戒
-    status: "OPEN"
+    link: "./wbgt/",
+    accent: "#ff0055", // ネオンピンク
+    status: "LIVE"
   },
   {
-    title: "タイムスケジュール",
-    description: "体育館のステージ発表や中庭イベントのタイムラインを網羅。",
+    title: "進行予定",
     icon: "🕒",
     link: "#",
-    accent: "#ffaa1d", // 建築科
+    accent: "#adff00", // ライム
     status: "COMING"
   },
   {
-    title: "デジタル校内マップ",
-    description: "広い実習棟や教室の配置をスマホで確認。現在地からのルート表示。",
+    title: "会場マップ",
     icon: "🗺️",
     link: "#",
-    accent: "#59ce5d", // 総合情報科
-    status: "COMING"
+    accent: "#7000ff", // パープル
+    status: "MAP"
   },
   {
-    title: "商工祭インフォ",
-    description: "ご案内、駐車場の場所、来場ルールやよくある質問(FAQ)を網羅。",
+    title: "案内・Q&A",
     icon: "📢",
     link: "./info/",
-    accent: "#32c5ff", // 商業科
+    accent: "#ff9900", // オレンジ
     status: "INFO"
+  },
+  {
+    title: "公式記録",
+    icon: "📸",
+    link: "#",
+    accent: "#ffffff", // ホワイト
+    status: "GALLERY"
   }
 ];
 ---
+
+<Layout title="商工祭案内システム v2.0">
+  <div id="cyber-splash" class="cyber-splash">
+    <div class="loader-content">
+      <div class="glitch-title" data-text="SHOKOSAI">SHOKOSAI</div>
+      <div class="system-status">
+        <span class="scanning">SYSTEM SCANNING...</span>
+        <div class="progress-bar"><div class="progress-inner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cyber-portal">
+    <div class="digital-bg"></div>
+    <div class="neon-glow"></div>
+
+    <header class="cyber-header">
+      <div class="header-line"></div>
+      <h1>商工祭案内システム <span class="ver">v2.0</span></h1>
+      <p class="cyber-subtitle">NAGO SHOKO FESTIVAL PORTAL</p>
+    </header>
+
+    <main class="portal-container">
+      <div class="tile-grid">
+        {portalMenus.map((menu) => (
+          <a href={menu.link} class="tile-card" style={`--tile-color: ${menu.accent}`}>
+            <div class="tile-edge"></div>
+            <div class="tile-icon">{menu.icon}</div>
+            <div class="tile-info">
+              <span class="tile-status">{menu.status}</span>
+              <h2 class="tile-title">{menu.title}</h2>
+            </div>
+          </a>
+        ))}
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script is:inline>
+  window.addEventListener('load', () => {
+    const splash = document.getElementById('cyber-splash');
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      setTimeout(() => splash.style.display = 'none', 600);
+    }, 2200); // 2.2秒間ローディング演出
+  });
+</script>
+
+<style is:global>
+  /* 共通レイアウトの背景をサイバーに変更 */
+  body {
+    background-color: #0a0e17 !important;
+    overflow-x: hidden;
+  }
+</style>
+
+<style>
+  /* 🌌 背景演出：デジタルグリッド & ネオングラデーション */
+  .cyber-portal {
+    position: relative;
+    min-height: 100vh;
+    color: #fff;
+    padding: 20px 16px 100px;
+  }
+
+  .digital-bg {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: -2;
+  }
+
+  .neon-glow {
+    position: fixed;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(37, 130, 209, 0.1) 0%, transparent 70%);
+    z-index: -1;
+  }
+
+  /* 🛰️ スプラッシュ画面 */
+  .cyber-splash {
+    position: fixed;
+    inset: 0; background: #0a0e17;
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.6s ease;
+  }
+  .loader-content { text-align: center; width: 280px; }
+  .glitch-title {
+    font-size: 2.5rem; font-weight: 900; letter-spacing: 0.3em;
+    color: #00f2ff; position: relative; margin-bottom: 20px;
+  }
+  .system-status { font-family: monospace; color: #00f2ff; font-size: 0.8rem; }
+  .progress-bar { 
+    height: 2px; background: rgba(0, 242, 255, 0.2); 
+    margin-top: 10px; position: relative; overflow: hidden;
+  }
+  .progress-inner {
+    position: absolute; left: 0; top: 0; height: 100%; width: 100%;
+    background: #00f2ff; animation: load 2s infinite ease-in-out;
+  }
+  @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+  /* 🏗️ ヘッダー */
+  .cyber-header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
+  .header-line { width: 40px; height: 4px; background: #00f2ff; margin: 0 auto 15px; box-shadow: 0 0 10px #00f2ff; }
+  .cyber-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: 0.05em; }
+  .ver { font-size: 0.8rem; vertical-align: top; color: #00f2ff; }
+  .cyber-subtitle { font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.2em; margin-top: 5px; }
+
+  /* 📱 2列のタイル風ボタンUI */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .tile-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .tile-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--tile-color);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 15px var(--tile-color);
+    transform: scale(1.02);
+  }
+
+  .tile-edge {
+    position: absolute;
+    top: 0; left: 0; width: 10px; height: 10px;
+    border-top: 2px solid var(--tile-color);
+    border-left: 2px solid var(--tile-color);
+  }
+
+  .tile-icon { font-size: 2.5rem; margin-bottom: 10px; filter: drop-shadow(0 0 8px var(--tile-color)); }
+  .tile-info { text-align: center; }
+  .tile-status { font-size: 0.6rem; font-weight: 900; color: var(--tile-color); text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .tile-title { margin: 0; font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; }
+
+  @media (max-width: 350px) {
+    .tile-grid { grid-template-columns: 1fr; }
+    .tile-card { aspect-ratio: 16 / 9; }
+  }
+</style>

@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  // GitHub Pagesの公開フォルダ名およびアプリのルートに合わせて '/wbgt/' に修正
-  base: '/wbgt/', 
+  // 商工祭案内システム全体を正しく表示するため、ベースをルート（'/'）に戻します
+  base: '/', 
   outDir: 'dist',
 });
