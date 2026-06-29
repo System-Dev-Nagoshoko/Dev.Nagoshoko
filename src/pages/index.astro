@@ -7,40 +7,45 @@ const portalMenus = [
     icon: "🔍",
     link: "./search/",
     accent: "#00f2ff", // シアン
-    status: "OPEN"
+    status: "OPEN",
+    wide: false
   },
   {
     title: "熱中症ナビ",
     icon: "☀️", 
     link: "./wbgt/",
     accent: "#ff0055", // ネオンピンク
-    status: "LIVE"
+    status: "LIVE",
+    wide: false
   },
   {
     title: "進行予定",
     icon: "🕒",
     link: "#",
     accent: "#adff00", // ライム
-    status: "COMING"
+    status: "COMING",
+    wide: false
   },
   {
     title: "会場マップ",
     icon: "🗺️",
     link: "#",
     accent: "#7000ff", // パープル
-    status: "MAP"
+    status: "MAP",
+    wide: false
   },
   {
     title: "案内・Q&A",
     icon: "📢",
     link: "./info/",
     accent: "#ff9900", // オレンジ
-    status: "INFO"
+    status: "INFO",
+    wide: true // 横長フラグ
   }
 ];
 ---
 
-<Layout title="商工祭案内システム v2.0">
+<Layout title="商工祭案内システム">
   <div id="cyber-splash" class="cyber-splash">
     <div class="loader-content">
       <div class="glitch-title" data-text="SHOKOSAI">SHOKOSAI</div>
@@ -64,7 +69,7 @@ const portalMenus = [
     <main class="portal-container">
       <div class="tile-grid">
         {portalMenus.map((menu) => (
-          <a href={menu.link} class="tile-card" style={`--tile-color: ${menu.accent}`}>
+          <a href={menu.link} class={`tile-card ${menu.wide ? 'wide-card' : ''}`} style={`--tile-color: ${menu.accent}`}>
             <div class="tile-edge"></div>
             <div class="tile-icon">{menu.icon}</div>
             <div class="tile-info">
@@ -173,6 +178,25 @@ const portalMenus = [
     transition: all 0.3s;
   }
 
+  /* 📢 案内システム用の横長レイアウト設定 */
+  .tile-card.wide-card {
+    grid-column: span 2;
+    aspect-ratio: unset;
+    height: 90px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 0 24px;
+    gap: 20px;
+  }
+
+  .tile-card.wide-card .tile-info {
+    text-align: left;
+  }
+
+  .tile-card.wide-card .tile-icon {
+    margin-bottom: 0;
+  }
+
   .tile-card:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--tile-color);
@@ -195,5 +219,6 @@ const portalMenus = [
   @media (max-width: 350px) {
     .tile-grid { grid-template-columns: 1fr; }
     .tile-card { aspect-ratio: 16 / 9; }
+    .tile-card.wide-card { grid-column: span 1; }
   }
 </style>
