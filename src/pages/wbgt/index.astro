@@ -1,30 +1,95 @@
 ---
 import Layout from '../../layouts/wbgt1/layouts/Layout.astro';
 
-// HTML側で使われている変数を定義
 const portalMenus = [
   { link: "/wbgt/emergency/", icon: "🚑", title: "119通報確認サイト" },
-  { link: "/wbgt/report/", icon: "🌡️", title: "熱リポ" }
+  { link: "/wbgt/report/", icon: "🌡️", title: "熱リポ" },
+  { link: "/wbgt/prevention/", icon: "💧", title: "熱中症対策" },
+  { link: "/wbgt/features/", icon: "📋", title: "機能表" },
+  { link: "/wbgt/omikuji/", icon: "🎲", title: "おみくじ" }
 ];
 ---
 
-<Layout title="熱中症対策ナビ" activeNav="home">
+<Layout title="熱中症対策ナビ">
   <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <h1>熱中症対策ナビ</h1>
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="site-logo">
+          <img src="/wbgt/icons/favicon-192-v2.png" alt="ロゴ" />
+        </div>
+        <div class="header-text">
+          <h1>🏠 熱中症対策ナビ</h1>
+          <p class="lead">トップポータル画面</p>
+        </div>
       </div>
     </header>
 
-    <main class="main-content">
-      <div class="card-list">
-        {portalMenus.map((item) => (
-          <a href={item.link} class="feature-wide-card">
-            <div class="emoji">{item.icon}</div>
-            <div class="label">{item.title}</div>
-          </a>
-        ))}
-      </div>
+    <main class="container">
+      <section class="card">
+        <p class="label">メインメニュー</p>
+        <div class="portal-grid">
+          {portalMenus.map((item) => (
+            <a href={item.link} class="portal-card">
+              <div class="portal-icon">{item.icon}</div>
+              <div class="portal-title">{item.title}</div>
+            </a>
+          ))}
+        </div>
+      </section>
     </main>
+
+    <nav class="bottom-nav">
+      <a href="/wbgt/" class="nav-item active">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-text">ホーム</div>
+      </a>
+      <a href="/wbgt/prevention/" class="nav-item">
+        <div class="nav-icon">💧</div>
+        <div class="nav-text">熱中症対策</div>
+      </a>
+      <a href="/wbgt/features/" class="nav-item">
+        <div class="nav-icon">📋</div>
+        <div class="nav-text">機能表</div>
+      </a>
+    </nav>
   </div>
 </Layout>
+
+<style is:global>
+  :root {
+    --bg-grad-top: #e0f2fe;
+    --bg-grad-bottom: #f8fbff;
+    --card: #ffffff;
+    --text: #1f2937;
+    --primary: #2563eb;
+    --primary-soft: #dbeafe;
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --radius: 16px;
+    --max: 640px;
+    --nav-height: 86px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; color: var(--text); background: linear-gradient(180deg, var(--bg-grad-top) 0%, var(--bg-grad-bottom) 100%); }
+  .app-shell { min-height: 100vh; padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 18px); }
+  .site-header { padding: 16px 14px; background: rgba(255, 255, 255, 0.88); border-bottom: 1px solid #cfe4ff; backdrop-filter: blur(10px); }
+  .header-inner { max-width: var(--max); margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .site-logo img { width: 64px; height: 64px; object-fit: contain; border-radius: 16px; }
+  .header-text h1 { margin: 0 0 4px; font-size: 1.4rem; }
+  .header-text .lead { margin: 0; font-size: 0.92rem; color: #4b5563; }
+  .container { max-width: var(--max); margin: 16px auto 0; padding: 0 12px 24px; }
+  .card { background: var(--card); border: 1px solid rgba(191, 219, 254, 0.9); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+  .label { margin: 0 0 14px; font-size: 0.85rem; font-weight: 800; color: #0369a1; }
+  
+  /* ポータル画面用のメニューカードスタイル */
+  .portal-grid { display: flex; flex-direction: column; gap: 12px; }
+  .portal-card { display: flex; align-items: center; gap: 16px; padding: 14px 18px; background: #f0f7ff; border: 1px solid #dbeafe; border-radius: 12px; text-decoration: none; color: var(--text); transition: background 0.2s; }
+  .portal-card:hover { background: #e0effe; }
+  .portal-icon { font-size: 24px; }
+  .portal-title { font-size: 1rem; font-weight: bold; color: #1e3a8a; }
+
+  .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; width: 100%; max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, 0.94); border-top: 1px solid rgba(59, 130, 246, 0.12); box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06); }
+  .nav-item { min-height: 58px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: #64748b; }
+  .nav-item.active { background: var(--primary-soft); color: var(--primary); font-weight: 800; }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-text { font-size: 12px; }
+</style>
