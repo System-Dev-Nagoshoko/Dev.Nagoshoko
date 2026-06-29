@@ -1,8 +1,8 @@
 ---
-// src/layouts/Layout.astro
+// src/layouts/wbgt1/Layout.astro
 interface Props {
   title: string;
-  activeNav: 'home' | 'game' | 'features' | 'prevention';
+  activeNav: 'home' | 'report' | 'omikuji' | 'features';
 }
 
 const { title, activeNav } = Astro.props;
@@ -14,23 +14,23 @@ const { title, activeNav } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | 熱中症対策ナビ</title>
-    <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <slot />
+    <slot />
 
-      <nav class="bottom-nav">
-        <a href="/wbgt/" class={activeNav === 'home' ? 'nav-item active' : 'nav-item'}>
-          <div class="nav-icon">🏠</div><div class="nav-text">ホーム</div>
-        </a>
-        <a href="/wbgt/simulation/" class={activeNav === 'game' ? 'nav-item active' : 'nav-item'}>
-          <div class="nav-icon">🎮</div><div class="nav-text">ゲーム</div>
-        </a>
-        <a href="/wbgt/features/" class={activeNav === 'features' ? 'nav-item active' : 'nav-item'}>
-          <div class="nav-icon">📋</div><div class="nav-text">機能表</div>
-        </a>
-      </nav>
-    </div>
+    <nav class="bottom-nav">
+      <a href="/wbgt/" class={activeNav === 'home' ? 'nav-item active' : 'nav-item'}>
+        <div class="nav-icon">🏠</div><div class="nav-text">ホーム</div>
+      </a>
+      <a href="/wbgt/report/" class={activeNav === 'report' ? 'nav-item active' : 'nav-item'}>
+        <div class="nav-icon">💬</div><div class="nav-text">熱リポ</div>
+      </a>
+      <a href="/wbgt/omikuji/" class={activeNav === 'omikuji' ? 'nav-item active' : 'nav-item'}>
+        <div class="nav-icon">🎲</div><div class="nav-text">おみくじ</div>
+      </a>
+      <a href="/wbgt/features/" class={activeNav === 'features' ? 'nav-item active' : 'nav-item'}>
+        <div class="nav-icon">📋</div><div class="nav-text">機能表</div>
+      </a>
+    </nav>
   </body>
 </html>

@@ -1,5 +1,5 @@
 ---
-import Layout from '/src/layouts/wbgt1/Layout.astro';
+import Layout from '../../layouts/wbgt1/layouts/Layout.astro';
 ---
 <Layout title="熱中症おみくじ">
   <div class="app-shell">
@@ -60,13 +60,13 @@ import Layout from '/src/layouts/wbgt1/Layout.astro';
   </div>
 </Layout>
 
-<script>
-  let currentTemp: number | null = null;
-  let currentAppTemp: number | null = null;
+<script is:inline>
+  let currentTemp = null;
+  let currentAppTemp = null;
 
   const locationInfo = document.getElementById("locationInfo");
   const tempInfo = document.getElementById("tempInfo");
-  const omikujiBtn = document.getElementById("omikujiBtn") as HTMLButtonElement;
+  const omikujiBtn = document.getElementById("omikujiBtn");
 
   window.addEventListener("load", () => {
     if (confirm("位置情報を使用しますか？")) {
@@ -90,7 +90,7 @@ import Layout from '/src/layouts/wbgt1/Layout.astro';
     }
   });
 
-  function judgeHeatLevel(temp: number) {
+  function judgeHeatLevel(temp) {
     if (temp < 20) return "cool";
     if (temp < 26) return "warm";
     if (temp < 30) return "hot";
@@ -113,7 +113,7 @@ import Layout from '/src/layouts/wbgt1/Layout.astro';
         levelDesc.textContent = "水分補給を忘れずに";
       } else if (level === "hot") {
         levelLabel.textContent = "あつい小吉";
-        levelDesc.textContent = "かなり暑日";
+        levelDesc.textContent = "かなり暑い日";
       } else {
         levelLabel.textContent = "危険凶";
         levelDesc.textContent = "外出注意レベル";
