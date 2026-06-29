@@ -1,0 +1,243 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="商工祭インフォメーション">
+  <div class="cyber-bg-grid"></div>
+  <div class="cyber-bg-glow-1"></div>
+  <div class="cyber-bg-glow-2"></div>
+
+  <div class="portal-container">
+    <header class="hero">
+      <div class="hero-top-row">
+        <span class="badge-online">● INFORMATION</span>
+        <span class="version-tag">第7回商工祭</span>
+      </div>
+      <h2 class="hero-title">商工祭 <span>インフォ</span></h2>
+      <p class="hero-subtitle">ご来場にあたってのご案内・よくある質問</p>
+    </header>
+
+    <section class="info-section">
+      <div class="section-title">
+        <span class="section-icon">🚗</span>
+        <h3>駐車場の場所</h3>
+      </div>
+      <div class="info-card map-card">
+        <p class="map-desc">校内の<strong>指定駐車スペース（運動場など）</strong>をご利用ください。台数に限りがあるため、できるだけ公共交通機関や乗り合わせでのご来場をお願いいたします。</p>
+        
+        <div class="parking-guide">
+          <div class="guide-item">
+            <span class="step">1</span>
+            <p>正門より進入後、誘導員の指示に従ってください。</p>
+          </div>
+          <div class="guide-item">
+            <span class="step">2</span>
+            <p>雨天時は運動場の状態により、駐車場所が変更になる場合があります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-section">
+      <div class="section-title">
+        <span class="section-icon">⚠️</span>
+        <h3>ご来場時の注意事項</h3>
+      </div>
+      <div class="info-card alert-card">
+        <ul class="notice-list">
+          <li><strong>校内土足厳禁：</strong>スリッパ等の上履きと、外履きを入れる袋をご持参ください。</li>
+          <li><strong>全面禁煙：</strong>敷地内はすべて禁煙（電子タバコ含む）となっております。</li>
+          <li><strong>ゴミの持ち帰り：</strong>模擬店等で購入された飲食のゴミは、各売店のゴミ箱に捨てるか、お持ち帰りにご協力ください。</li>
+          <li><strong>撮影について：</strong>展示やステージの撮影は可能ですが、他の来場者のプライバシーにご配慮ください。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="info-section">
+      <div class="section-title">
+        <span class="section-icon">❓</span>
+        <h3>よくある質問 (FAQ)</h3>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <div class="faq-q"><span>Q.</span> 入場料はかかりますか？</div>
+          <div class="faq-a"><span>A.</span> どなたでも無料でご入場いただけます。事前のチケット予約なども必要ありません。</div>
+        </div>
+        
+        <div class="faq-item">
+          <div class="faq-q"><span>Q.</span> 金券の購入は必要ですか？</div>
+          <div class="faq-a"><span>A.</span> 各売店や企画での決済方法はクラスによって異なります。基本的には現金のご用意をお願いいたします。</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q"><span>Q.</span> 気分が悪くなった場合は？</div>
+          <div class="faq-a"><span>A.</span> 校内に<strong>救護室</strong>を設置しています。近くのスタッフ（腕章をつけた生徒または教員）にすぐにお声がけください。</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style is:global>
+  /* 🌌 背景演出スタイル（トップと統一して馴染ませる） */
+  body {
+    position: relative;
+    overflow-x: hidden;
+    background-color: #fafbfd;
+  }
+  .cyber-bg-grid {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+    background-image: linear-gradient(rgba(226, 232, 240, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(226, 232, 240, 0.5) 1px, transparent 1px);
+    background-size: 30px 30px; pointer-events: none;
+  }
+  .cyber-bg-glow-1 { position: fixed; top: -200px; left: -200px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(37, 130, 209, 0.07) 0%, transparent 70%); z-index: -1; pointer-events: none; }
+  .cyber-bg-glow-2 { position: fixed; bottom: -150px; right: -150px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%); z-index: -1; pointer-events: none; }
+
+  /* 💻 レイアウト */
+  .portal-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 32px 16px 100px;
+  }
+  .hero {
+    margin-bottom: 32px;
+    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 16px;
+  }
+  .hero-title { font-size: 2.2rem; font-weight: 800; color: #0f172a; margin: 0; }
+  .hero-title span { color: #2582d1; }
+  .hero-subtitle { margin: 4px 0 0 0; color: #64748b; font-size: 0.9rem; }
+  .hero-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .badge-online { font-family: monospace; font-size: 0.7rem; font-weight: 700; color: #32c5ff; letter-spacing: 0.05em; }
+  .version-tag { font-family: monospace; font-size: 0.7rem; color: #94a3b8; }
+
+  /* 📂 セクション共通スタイル */
+  .info-section {
+    margin-bottom: 32px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .section-icon {
+    font-size: 1.2rem;
+  }
+  .section-title h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  /* 🃏 情報カードのベース */
+  .info-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+  }
+
+  /* 🚗 駐車場用スタイル */
+  .map-desc {
+    margin: 0 0 16px 0;
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.6;
+  }
+  .parking-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .guide-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .guide-item .step {
+    width: 22px;
+    height: 22px;
+    background: #32c5ff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+  .guide-item p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #334155;
+    font-weight: 600;
+  }
+
+  /* ⚠️ 注意事項リスト */
+  .notice-list {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .notice-list li {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 14px;
+  }
+  .notice-list li::before {
+    content: '■';
+    color: #ff4d20;
+    font-size: 0.6rem;
+    position: absolute;
+    left: 0;
+    top: 2px;
+  }
+
+  /* ❓ FAQリスト */
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .faq-item {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+  }
+  .faq-q {
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 6px;
+  }
+  .faq-q span { color: #ff9800; }
+  .faq-a {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.5;
+    display: flex;
+    gap: 6px;
+    padding-left: 2px;
+  }
+  .faq-a span { color: #2582d1; font-weight: 800; }
+</style>
