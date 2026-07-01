@@ -1,3 +1,4 @@
+cat << 'EOF' > src/pages/index.astro
 ---
 import Layout from '../layouts/Layout.astro';
 
@@ -132,14 +133,76 @@ const portalMenus = [
     z-index: -1;
   }
 
-  /* 💎 クリスタルの構造と無限浮遊（CSSアニメーション） */
+  /* 🛰️ スプラッシュの配置ズレを完全修正（中央絶対キープ） */
+  .cyber-splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0e17;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease;
+    box-sizing: border-box;
+  }
+  
+  .loader-content {
+    text-align: center;
+    width: 280px;
+    margin: 0 auto;
+    display: block;
+  }
+  
+  .glitch-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: #00f2ff;
+    position: relative;
+    margin: 0 0 20px 0;
+    text-align: center;
+  }
+  
+  .system-status {
+    font-family: monospace;
+    color: #00f2ff;
+    font-size: 0.8rem;
+    text-align: center;
+    display: block;
+  }
+  
+  .progress-bar { 
+    height: 2px;
+    background: rgba(0, 242, 255, 0.2); 
+    margin-top: 10px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+  
+  .progress-inner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: #00f2ff;
+    animation: load 2s infinite ease-in-out;
+  }
+  @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+  /* 💎 クリスタル */
   .crystal {
     position: fixed;
     top: 30%;
     width: 40px;
     height: 70px;
     z-index: 5;
-    pointer-events: none; /* ボタン操作の邪魔をしない */
+    pointer-events: none;
   }
 
   .crystal-left {
@@ -152,7 +215,6 @@ const portalMenus = [
     animation: floatRight 4.5s infinite ease-in-out;
   }
 
-  /* 立体的なひし形クリスタルをCSSで表現 */
   .crystal-core {
     width: 100%;
     height: 100%;
@@ -163,14 +225,12 @@ const portalMenus = [
     box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
   }
 
-  /* 左クリスタルの浮遊＆回転モーション */
   @keyframes floatLeft {
     0% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(0,180,216,0.2)); }
     50% { transform: translateY(-15px) rotate(5deg) scale(1.05); filter: drop-shadow(0 20px 20px rgba(0,180,216,0.4)); }
     100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(0,180,216,0.2)); }
   }
 
-  /* 右クリスタルの浮遊＆回転モーション（周期をずらして自然に） */
   @keyframes floatRight {
     0% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(114,9,183,0.2)); }
     50% { transform: translateY(-20px) rotate(-5deg) scale(1.03); filter: drop-shadow(0 22px 22px rgba(114,9,183,0.4)); }
@@ -245,7 +305,6 @@ const portalMenus = [
   .tile-status { font-size: 0.65rem; font-weight: 800; color: var(--tile-color); text-transform: uppercase; display: block; margin-bottom: 2px; letter-spacing: 0.05em; }
   .tile-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; }
 
-  /* タブレット・PCなど、画面幅が広いときはクリスタルが邪魔にならないよう外側へ逃がす */
   @media (min-width: 768px) {
     .crystal-left { left: calc(50% - 320px); }
     .crystal-right { right: calc(50% - 320px); }
@@ -257,3 +316,7 @@ const portalMenus = [
     .tile-card.wide-card { grid-column: span 1; height: 80px; }
   }
 </style>
+EOF
+
+# ローカルビルドテスト
+npx astro clean && npm run build
