@@ -1,9 +1,13 @@
+cat << 'EOF' > src/layouts/Layout.astro
 ---
-// src/layouts/Layout.astro
 interface Props {
   title: string;
 }
 const { title } = Astro.props;
+
+// 💡 現在のURLパスを取得し、ホーム画面（"/"）か判定する
+const pathname = Astro.url.pathname;
+const isHome = pathname === "/" || pathname === "/index.html";
 ---
 <!DOCTYPE html>
 <html lang="ja">
@@ -15,10 +19,12 @@ const { title } = Astro.props;
   <body>
     <slot />
 
-    <a href="/" class="home-back-btn" title="ホームに戻る">
-      <span class="home-icon">🏠</span>
-      <span class="home-text">ホームへ戻る</span>
-    </a>
+    {!isHome && (
+      <a href="/" class="home-back-btn" title="ホームに戻る">
+        <span class="home-icon">🏠</span>
+        <span class="home-text">ホームへ戻る</span>
+      </a>
+    )}
 
     <footer class="site-footer">
       <p>Created by <a href="https://nagoyc.stki.org/" target="_blank" rel="noopener noreferrer">NYC</a></p>
@@ -46,28 +52,28 @@ const { title } = Astro.props;
   /* 🏠 画面右下に固定するホームボタンのデザイン */
   .home-back-btn {
     position: fixed;
-    bottom: 24px; /* 画面の下から 24px */
-    right: 24px;  /* 画面の右から 24px */
+    bottom: 24px;
+    right: 24px;
     z-index: 100;
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 12px 20px;
-    background-color: var(--nago-blue); /* 目立つように名護商工ブルーに */
+    background-color: var(--nago-blue);
     color: var(--white);
     border: none;
-    border-radius: 30px; /* 丸みのある押しやすいカプセル形状 */
+    border-radius: 30px;
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 700;
-    box-shadow: 0 4px 16px rgba(37, 130, 209, 0.3); /* 青い影をふんわりつけて立体的に */
+    box-shadow: 0 4px 16px rgba(37, 130, 209, 0.3);
     transition: all 0.2s ease;
   }
 
   .home-back-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(37, 130, 209, 0.4);
-    background-color: #1e6bb3; /* ホバー時に少し濃い青に */
+    background-color: #1e6bb3;
   }
 
   .home-icon {
@@ -77,7 +83,7 @@ const { title } = Astro.props;
   /* クレジット用のデザイン */
   .site-footer {
     margin-top: auto;
-    padding: 24px 16px 80px; /* 💡 ボタンと被らないように下の余白を広げました */
+    padding: 24px 16px 80px;
     text-align: center;
     background-color: transparent;
   }
@@ -99,3 +105,7 @@ const { title } = Astro.props;
     color: var(--nago-blue);
   }
 </style>
+EOF
+
+# ビルドチェック
+npx astro clean && npm run build
