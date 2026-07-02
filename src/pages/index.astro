@@ -61,13 +61,6 @@ const portalMenus = [
     <div class="digital-bg"></div>
     <div class="neon-glow"></div>
 
-    <div class="crystal crystal-left">
-      <div class="crystal-core"></div>
-    </div>
-    <div class="crystal crystal-right">
-      <div class="crystal-core"></div>
-    </div>
-
     <header class="cyber-header">
       <div class="header-line"></div>
       <h1>第7回商工祭案内システム <span class="ver">v2.0</span></h1>
@@ -75,6 +68,11 @@ const portalMenus = [
     </header>
 
     <main class="portal-container">
+      <div class="crystal c-1"><div class="crystal-core"></div></div>
+      <div class="crystal c-2"><div class="crystal-core shadow-core"></div></div>
+      <div class="crystal c-3"><div class="crystal-core"></div></div>
+      <div class="crystal c-4"><div class="crystal-core shadow-core"></div></div>
+
       <div class="tile-grid">
         {portalMenus.map((menu) => (
           <a href={menu.link} class={`tile-card ${menu.wide ? 'wide-card' : ''}`} style={`--tile-color: ${menu.accent}`}>
@@ -133,13 +131,9 @@ const portalMenus = [
     z-index: -1;
   }
 
-  /* 🛰️ スプラッシュの配置ズレを完全修正（中央絶対キープ） */
   .cyber-splash {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0; width: 100%; height: 100%;
     background: #0a0e17;
     z-index: 10000;
     display: flex;
@@ -147,97 +141,78 @@ const portalMenus = [
     align-items: center;
     justify-content: center;
     transition: opacity 0.6s ease;
-    box-sizing: border-box;
   }
   
-  .loader-content {
-    text-align: center;
-    width: 280px;
-    margin: 0 auto;
-    display: block;
-  }
-  
+  .loader-content { text-align: center; width: 280px; }
   .glitch-title {
-    font-size: 2.5rem;
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    color: #00f2ff;
-    position: relative;
-    margin: 0 0 20px 0;
-    text-align: center;
+    font-size: 2.5rem; font-weight: 900; letter-spacing: 0.3em;
+    color: #00f2ff; position: relative; margin: 0 0 20px 0;
   }
-  
-  .system-status {
-    font-family: monospace;
-    color: #00f2ff;
-    font-size: 0.8rem;
-    text-align: center;
-    display: block;
-  }
-  
-  .progress-bar { 
-    height: 2px;
-    background: rgba(0, 242, 255, 0.2); 
-    margin-top: 10px;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-  }
-  
-  .progress-inner {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
-    background: #00f2ff;
-    animation: load 2s infinite ease-in-out;
-  }
+  .system-status { font-family: monospace; color: #00f2ff; font-size: 0.8rem; }
+  .progress-bar { height: 2px; background: rgba(0, 242, 255, 0.2); margin-top: 10px; position: relative; overflow: hidden; }
+  .progress-inner { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: #00f2ff; animation: load 2s infinite ease-in-out; }
   @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-  /* 💎 クリスタル */
+  /* 🏗️ スクリプト位置固定解除の土台 */
+  .portal-container {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* 💎 自由に動くクリスタル（スクロール連動型） */
   .crystal {
-    position: fixed;
-    top: 30%;
-    width: 40px;
-    height: 70px;
-    z-index: 5;
+    position: absolute;
+    z-index: 1;
     pointer-events: none;
   }
 
-  .crystal-left {
-    left: 4%;
-    animation: floatLeft 4s infinite ease-in-out;
+  /* 4つの位置と浮遊モーションの個別設定 */
+  .c-1 {
+    top: -30px; left: -45px; width: 34px; height: 58px;
+    animation: float1 4s infinite ease-in-out;
   }
-
-  .crystal-right {
-    right: 4%;
-    animation: floatRight 4.5s infinite ease-in-out;
+  .c-2 {
+    top: 160px; right: -50px; width: 24px; height: 42px; opacity: 0.7;
+    animation: float2 5s infinite ease-in-out;
+  }
+  .c-3 {
+    bottom: 140px; left: -55px; width: 26px; height: 46px; opacity: 0.75;
+    animation: float3 4.5s infinite ease-in-out;
+  }
+  .c-4 {
+    bottom: -20px; right: -40px; width: 32px; height: 54px;
+    animation: float4 4.2s infinite ease-in-out;
   }
 
   .crystal-core {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.7) 0%, rgba(114, 9, 183, 0.6) 100%);
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(0, 180, 216, 0.6) 0%, rgba(114, 9, 183, 0.5) 100%);
     clip-path: polygon(50% 0%, 100% 35%, 100% 65%, 50% 100%, 0% 65%, 0% 35%);
-    backdrop-filter: blur(2px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  
+  .shadow-core {
+    background: linear-gradient(135deg, rgba(114, 9, 183, 0.55) 0%, rgba(255, 51, 102, 0.45) 100%);
   }
 
-  @keyframes floatLeft {
-    0% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(0,180,216,0.2)); }
-    50% { transform: translateY(-15px) rotate(5deg) scale(1.05); filter: drop-shadow(0 20px 20px rgba(0,180,216,0.4)); }
-    100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(0,180,216,0.2)); }
+  @keyframes float1 {
+    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 4px 8px rgba(0,180,216,0.15)); }
+    50% { transform: translateY(-12px) rotate(4deg); filter: drop-shadow(0 12px 12px rgba(0,180,216,0.25)); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 3px 6px rgba(114,9,183,0.1)); }
+    50% { transform: translateY(10px) rotate(-6deg); filter: drop-shadow(0 8px 10px rgba(114,9,183,0.2)); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 4px 8px rgba(114,9,183,0.15)); }
+    50% { transform: translateY(-14px) rotate(-4deg); filter: drop-shadow(0 14px 14px rgba(114,9,183,0.25)); }
+  }
+  @keyframes float4 {
+    0%, 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 3px 6px rgba(255,51,102,0.1)); }
+    50% { transform: translateY(8px) rotate(5deg); filter: drop-shadow(0 8px 10px rgba(255,51,102,0.15)); }
   }
 
-  @keyframes floatRight {
-    0% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(114,9,183,0.2)); }
-    50% { transform: translateY(-20px) rotate(-5deg) scale(1.03); filter: drop-shadow(0 22px 22px rgba(114,9,183,0.4)); }
-    100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 5px 10px rgba(114,9,183,0.2)); }
-  }
-
-  /* 🏗️ ヘッダー */
   .cyber-header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
   .header-line { width: 40px; height: 4px; background: #1e3a8a; margin: 0 auto 15px; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.2); }
   .cyber-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: 0.05em; color: #1e3a8a; }
@@ -250,6 +225,8 @@ const portalMenus = [
     gap: 14px;
     max-width: 500px;
     margin: 0 auto;
+    position: relative;
+    z-index: 2;
   }
 
   .tile-card {
@@ -305,9 +282,12 @@ const portalMenus = [
   .tile-status { font-size: 0.65rem; font-weight: 800; color: var(--tile-color); text-transform: uppercase; display: block; margin-bottom: 2px; letter-spacing: 0.05em; }
   .tile-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; }
 
-  @media (min-width: 768px) {
-    .crystal-left { left: calc(50% - 320px); }
-    .crystal-right { right: calc(50% - 320px); }
+  /* 📱 モバイル表示で画面外にハミ出さないようにマージン調整 */
+  @media (max-width: 600px) {
+    .c-1 { left: -10px; }
+    .c-2 { right: -15px; }
+    .c-3 { left: -15px; }
+    .c-4 { right: -10px; }
   }
 
   @media (max-width: 350px) {
@@ -318,5 +298,5 @@ const portalMenus = [
 </style>
 EOF
 
-# ローカルビルドテスト
+# ビルド検証
 npx astro clean && npm run build
