@@ -4,6 +4,7 @@ interface Props {
 }
 const { title } = Astro.props;
 
+// 💡 現在のURLパスを取得し、ホーム画面（"/"）か判定する
 const pathname = Astro.url.pathname;
 const isHome = pathname === "/" || pathname === "/index.html";
 ---
@@ -47,6 +48,7 @@ const isHome = pathname === "/" || pathname === "/index.html";
     position: relative;
   }
 
+  /* 🏠 画面右下に固定するホームボタンのデザイン */
   .home-back-btn {
     position: fixed;
     bottom: 24px;
@@ -77,6 +79,7 @@ const isHome = pathname === "/" || pathname === "/index.html";
     font-size: 1.1rem;
   }
 
+  /* クレジット用のデザイン */
   .site-footer {
     margin-top: auto;
     padding: 24px 16px 80px;
