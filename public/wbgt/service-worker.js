@@ -4,7 +4,7 @@ const CACHE_NAME = "heat-safety-shell-v6";
 const urlsToCache = [
   "/wbgt/",
   "/wbgt/index.html",
-  "/wbgt/manifest.webmanifest" // パスがルート直下なら "/manifest.webmanifest" に変更してください
+  "/wbgt/manifest.webmanifest"
 ];
 
 // インストール時にコアファイルをキャッシュ
@@ -33,8 +33,12 @@ self.addEventListener("activate", (event) => {
 
 // ネットワーク優先（オンライン時は最新を取得し、キャッシュを更新。オフライン時はキャッシュを返す）
 self.addEventListener("fetch", (event) => {
-  // 外部APIやスキーマ（chrome-extension等）はキャッシュ対象外にする
-  if (!event.request.url.startsWith(self.location.origin)) return;
+  // ⭕【修正ポイント】
+  // 外部APIや拡張機能（chrome-extension等）はService Workerで介入せず、
+  // そのまま通常のブラウザの通信（直接ネットワークへ送信）に流します。
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return; // ここで早期リターンすることで、ブラウザが直接通信を制御しエラーを防ぎます
+  }
 
   event.respondWith(
     fetch(event.request)
@@ -43,7 +47,10 @@ self.addEventListener("fetch", (event) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+            // ⚠️ cache.put が何らかの理由で失敗してもクラッシュしないよう.catchを追加
+            cache.put(event.request, responseToCache).catch((err) => {
+              console.warn("キャッシュの保存に失敗:", err);
+            });
           });
         }
         return response;
