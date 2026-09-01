@@ -28,7 +28,7 @@ const DEPARTMENTS = [
 const projectData: ClassProject[] = [];
 
 DEPARTMENTS.forEach(d => {
-  [3, 2, 1].forEach(grade => {
+  [1, 2, 3].forEach(grade => {
     let displayName = `${d.name} ${grade}年 案内企画`;
     if (d.name === "機械科") displayName = `工業技術科 機械コース ${grade}年`;
     if (d.name === "電気科") displayName = `工業技術科 電気コース ${grade}年`;
@@ -53,17 +53,18 @@ DEPARTMENTS.forEach(d => {
     <input type="text" id="search-input" placeholder="企画名・学科・場所などで検索..." autocomplete="off" />
   </div>
 
+  <!-- 学年ナビゲーション（1年・2年・3年の順に変更） -->
   <div class="grade-nav">
-    <button class="grade-btn active" data-grade="3">3年生</button>
+    <button class="grade-btn active" data-grade="1">1年生</button>
     <button class="grade-btn" data-grade="2">2年生</button>
-    <button class="grade-btn" data-grade="1">1年生</button>
+    <button class="grade-btn" data-grade="3">3年生</button>
   </div>
 
   <div class="event-list" id="project-container"></div>
 </Layout>
 
 <script define:vars={{ projectData }}>
-  let currentGrade = 3;
+  let currentGrade = 1; // 初期表示を1年生に変更
   let searchQuery = "";
 
   const container = document.getElementById('project-container');
@@ -174,7 +175,7 @@ DEPARTMENTS.forEach(d => {
   .dept-badge { 
     background: var(--dept-color); 
     color: white; 
-    font-size: 0.75rem;
+    font-size: 0.75rem; 
   }
   
   .badge.loc { background: #e3f2fd; color: #1976d2; }
@@ -195,7 +196,7 @@ DEPARTMENTS.forEach(d => {
     font-weight: bold; 
     font-size: 0.88rem; 
     cursor: pointer; 
-    transition: all 0.2s;
+    transition: all 0.2s; 
   }
   .detail-btn:hover {
     background: var(--dept-color);
