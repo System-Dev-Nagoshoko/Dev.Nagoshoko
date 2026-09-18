@@ -1,0 +1,204 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="スタッフ管理画面 | 整理券システム">
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="tag">STAFF ONLY</div>
+      <h1>整理券 運行・呼出ダッシュボード</h1>
+      <button id="btn-refresh" class="btn-refresh">🔄 データ更新</button>
+    </header>
+
+    <!-- 📊 統計カード -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">総発券数</span>
+        <span id="stat-total" class="stat-val">0</span>
+      </div>
+      <div class="stat-card highlight-waiting">
+        <span class="stat-label">待機中 (列)</span>
+        <span id="stat-waiting" class="stat-val">0</span>
+      </div>
+      <div class="stat-card highlight-called">
+        <span class="stat-label">呼出中 (案内待ち)</span>
+        <span id="stat-called" class="stat-val">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">案内完了</span>
+        <span id="stat-admitted" class="stat-val">0</span>
+      </div>
+    </div>
+
+    <!-- ⚡ クイック呼出バー -->
+    <div class="quick-call-box">
+      <h3>🚀 先頭の番号を呼出</h3>
+      <div class="quick-action">
+        <p id="next-calling-info">次の待機者: 読み込み中...</p>
+        <button id="btn-call-next" class="btn-call-primary" disabled>次の1人を呼出</button>
+      </div>
+    </div>
+
+    <!-- 📋 整理券一覧テーブル -->
+    <div class="table-container">
+      <h2>整理券一覧</h2>
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>番号</th>
+            <th>発行時刻</th>
+            <th>状態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="ticket-list-body">
+          <tr><td colspan="4" style="text-align:center;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Layout>
+
+<script is:inline>
+  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
+
+  const totalEl = document.getElementById("stat-total");
+  const waitingEl = document.getElementById("stat-waiting");
+  const calledEl = document.getElementById("stat-called");
+  const admittedEl = document.getElementById("stat-admitted");
+  const listBody = document.getElementById("ticket-list-body");
+  const nextInfoEl = document.getElementById("next-calling-info");
+  const callNextBtn = document.getElementById("btn-call-next");
+  const refreshBtn = document.getElementById("btn-refresh");
+
+  async function loadData() {
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/admin/list`);
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.message);
+
+      totalEl.textContent = data.stats.total;
+      waitingEl.textContent = data.stats.waiting;
+      calledEl.textContent = data.stats.called;
+      admittedEl.textContent = data.stats.admitted;
+
+      renderTable(data.tickets);
+      updateQuickCall(data.tickets);
+    } catch (e) {
+      console.error(e);
+      listBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+    }
+  }
+
+  function updateQuickCall(tickets) {
+    const nextWaiting = tickets.find(t => t.status === "WAITING");
+    if (nextWaiting) {
+      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong> です`;
+      callNextBtn.disabled = false;
+      callNextBtn.onclick = () => updateStatus(nextWaiting.ticket_number, "CALLED");
+    } else {
+      nextInfoEl.textContent = "待機中の来場者はいません";
+      callNextBtn.disabled = true;
+    }
+  }
+
+  function renderTable(tickets) {
+    if (!tickets || tickets.length === 0) {
+      listBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
+      return;
+    }
+
+    listBody.innerHTML = tickets.map(t => {
+      const time = t.created_at ? new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--";
+      
+      let badge = `<span class="badge waiting">待機中</span>`;
+      let actionBtns = `
+        <button class="btn-sm btn-call" onclick="updateStatus(${t.ticket_number}, 'CALLED')">呼出</button>
+      `;
+
+      if (t.status === "CALLED") {
+        badge = `<span class="badge called">呼出中</span>`;
+        actionBtns = `
+          <button class="btn-sm btn-admit" onclick="updateStatus(${t.ticket_number}, 'ADMITTED')">入場完了</button>
+        `;
+      } else if (t.status === "ADMITTED") {
+        badge = `<span class="badge admitted">入場済</span>`;
+        actionBtns = `<span style="color:#94a3b8;font-size:0.8rem;">完了</span>`;
+      }
+
+      return `
+        <tr>
+          <td><strong>No.${t.ticket_number}</strong></td>
+          <td>${time}</td>
+          <td>${badge}</td>
+          <td>${actionBtns}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  window.updateStatus = async function(ticketNumber, status) {
+    const actionName = status === "CALLED" ? "お呼び出し" : "入場完了";
+    if (!confirm(`No.${ticketNumber} を「${actionName}」にしますか？`)) return;
+
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/admin/update-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketNumber, status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        loadData();
+      } else {
+        alert("更新に失敗しました: " + (data.message || ""));
+      }
+    } catch (e) {
+      alert("通信エラーが発生しました");
+    }
+  };
+
+  refreshBtn.addEventListener("click", loadData);
+
+  // 10秒おきに自動更新
+  setInterval(loadData, 10000);
+  window.addEventListener("load", loadData);
+</script>
+
+<style>
+  .admin-container { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
+  .admin-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .admin-header .tag { font-size: 0.7rem; font-weight: 900; background: #fee2e2; color: #dc2626; width: fit-content; padding: 2px 8px; border-radius: 4px; }
+  .admin-header h1 { font-size: 1.3rem; margin: 0; color: #0f172a; }
+  .btn-refresh { align-self: flex-start; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+  
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+  @media(min-width: 600px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
+  .stat-label { font-size: 0.75rem; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
+  .stat-val { font-size: 1.8rem; font-weight: 900; color: #0f172a; }
+  .highlight-waiting .stat-val { color: #0284c7; }
+  .highlight-called .stat-val { color: #d97706; }
+
+  .quick-call-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+  .quick-call-box h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #1e3a8a; }
+  .quick-action { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn-call-primary { background: #0284c7; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .btn-call-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+  .table-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow-x: auto; }
+  .table-container h2 { font-size: 1.05rem; margin: 0 0 14px 0; }
+  .ticket-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+  .ticket-table th { padding: 10px 8px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.8rem; }
+  .ticket-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; }
+
+  .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+  .badge.waiting { background: #e0f2fe; color: #0369a1; }
+  .badge.called { background: #fef3c7; color: #b45309; }
+  .badge.admitted { background: #f1f5f9; color: #64748b; }
+
+  .btn-sm { border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+  .btn-call { background: #f59e0b; color: white; }
+  .btn-admit { background: #10b981; color: white; }
+</style>
