@@ -33,7 +33,7 @@ import Layout from '../layouts/Layout.astro';
 
         <!-- ② 未発券状態（発券ボタン） -->
         <div id="status-unissued" class="panel-section" style="display: none;">
-          <div class="status-badge">TICKET SYSTEM</div>
+          <div class="status-badge" id="mode-badge">TICKET SYSTEM</div>
           <h2 class="card-headline">アトラクション整理券</h2>
           
           <div class="guide-box">
@@ -96,7 +96,13 @@ import Layout from '../layouts/Layout.astro';
 
 <script is:inline>
   const LIFF_ID = "YOUR_LIFF_ID"; // LINE DevelopersのLIFF ID
-  const BACKEND_ENDPOINT = "https://YOUR_BACKEND_ENDPOINT/issue"; // GAS等のAPIエンドポイント
+  const BACKEND_ENDPOINT = "https://ticket-api.xxxx.workers.dev"; // WorkersのURL
+
+  // 🛠️ 学校端末やローカルテスト用のバイパス判定（localhost、127.0.0.1、またはURLに ?dev=true）
+  const isDevMode = 
+    window.location.hostname === "localhost" || 
+    window.location.hostname === "127.0.0.1" || 
+    new URLSearchParams(window.location.search).has("dev");
 
   const loadingEl = document.getElementById("status-loading");
   const unissuedEl = document.getElementById("status-unissued");
@@ -106,8 +112,8 @@ import Layout from '../layouts/Layout.astro';
   const numberEl = document.getElementById("ticket-number");
   const issueBtn = document.getElementById("btn-issue");
   const clockEl = document.getElementById("live-clock");
+  const modeBadgeEl = document.getElementById("mode-badge");
 
-  // リアルタイム時計（スクショ不正防止）
   function startClock() {
     function update() {
       const now = new Date();
@@ -141,23 +147,35 @@ import Layout from '../layouts/Layout.astro';
   }
 
   async function init() {
+    // 既に発券済みの整理券がある場合は即時表示
+    const cachedNo = localStorage.getItem("shokosai_ticket_no");
+    if (cachedNo) {
+      displayTicket(cachedNo);
+      return;
+    }
+
+    // 🧪 開発・学校内テストモード（LIFF認証をバイパス）
+    if (isDevMode) {
+      console.warn("⚠️ [DEV MODE] 学校環境またはテスト実行のため、LIFF初期化をスキップします。");
+      if (modeBadgeEl) {
+        modeBadgeEl.textContent = "DEV TEST MODE";
+        modeBadgeEl.style.background = "#fef3c7";
+        modeBadgeEl.style.color = "#b45309";
+      }
+      loadingEl.style.display = "none";
+      unissuedEl.style.display = "block";
+      return;
+    }
+
+    // 🚀 本番モード（LIFFログイン実行）
     try {
       await liff.init({ liffId: LIFF_ID });
 
-      // 未ログイン（LINE内蔵ブラウザ以外から直接開いた場合）はLINE認証へリダイレクト
       if (!liff.isLoggedIn()) {
         liff.login();
         return;
       }
 
-      // すでに端末で発券済みかチェック（リロード・再アクセス対策）
-      const cachedNo = localStorage.getItem("shokosai_ticket_no");
-      if (cachedNo) {
-        displayTicket(cachedNo);
-        return;
-      }
-
-      // 未発券なら発券UIを表示
       loadingEl.style.display = "none";
       unissuedEl.style.display = "block";
 
@@ -167,19 +185,31 @@ import Layout from '../layouts/Layout.astro';
     }
   }
 
-  // 発券ボタン押下時
   issueBtn?.addEventListener("click", async () => {
     issueBtn.disabled = true;
     issueBtn.querySelector(".btn-title").innerText = "発券処理中...";
 
     try {
-      // 改ざん不能なIDトークン（JWT）を取得（個人情報は含みません）
-      const idToken = liff.getIDToken();
+      let payload = {};
+
+      if (isDevMode) {
+        // テスト用：端末ごとにダミーUIDを生成・保持
+        let mockUid = localStorage.getItem("mock_shoko_uid");
+        if (!mockUid) {
+          mockUid = "U_mock_" + Math.random().toString(36).substring(2, 10);
+          localStorage.setItem("mock_shoko_uid", mockUid);
+        }
+        payload = { mockUserId: mockUid };
+      } else {
+        // 本番：正規の暗号化IDトークン（JWT）
+        const idToken = liff.getIDToken();
+        payload = { idToken };
+      }
 
       const res = await fetch(BACKEND_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
@@ -227,7 +257,6 @@ import Layout from '../layouts/Layout.astro';
     z-index: -1;
   }
 
-  /* ヘッダー */
   .cyber-header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
   .header-line { width: 40px; height: 4px; background: #06c755; margin: 0 auto 15px; box-shadow: 0 2px 8px rgba(6, 199, 85, 0.3); }
   .cyber-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: 0.05em; color: #1e3a8a; }
@@ -240,7 +269,6 @@ import Layout from '../layouts/Layout.astro';
     margin: 0 auto;
   }
 
-  /* 💎 クリスタル（index.astroと完全一致） */
   .crystal { position: absolute; z-index: 1; pointer-events: none; }
   .c-1 { top: -20px; left: -25px; width: 30px; height: 50px; animation: float1 4s infinite ease-in-out; }
   .c-2 { top: 120px; right: -30px; width: 22px; height: 38px; opacity: 0.7; animation: float2 5s infinite ease-in-out; }
@@ -262,7 +290,6 @@ import Layout from '../layouts/Layout.astro';
   @keyframes float3 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
   @keyframes float4 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
 
-  /* メインチケットカード */
   .ticket-card {
     position: relative;
     background: #ffffff;
@@ -307,7 +334,6 @@ import Layout from '../layouts/Layout.astro';
   .live-badge { background: rgba(6, 199, 85, 0.1); color: #059669; }
   .error-badge { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
 
-  /* ガイドボックス */
   .guide-box {
     text-align: left;
     background: #f8fafc;
@@ -324,7 +350,6 @@ import Layout from '../layouts/Layout.astro';
   .guide-item strong { color: #0f172a; }
   .guide-bullet { font-size: 0.95rem; line-height: 1.2; }
 
-  /* 発券ボタン */
   .cyber-issue-btn {
     width: 100%;
     padding: 16px 20px;
@@ -346,7 +371,6 @@ import Layout from '../layouts/Layout.astro';
   .cyber-issue-btn:active { transform: translateY(1px); }
   .cyber-issue-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
 
-  /* 発券済み画面 */
   .ticket-sublabel { font-size: 0.85rem; font-weight: 700; color: #64748b; margin: 12px 0 0; }
   .number-wrapper {
     display: flex;
@@ -365,7 +389,6 @@ import Layout from '../layouts/Layout.astro';
     font-family: monospace, system-ui;
   }
 
-  /* 照合時計 */
   .live-clock-card {
     background: #0a0e17;
     border-radius: 8px;
@@ -377,7 +400,6 @@ import Layout from '../layouts/Layout.astro';
 
   .flow-message p { font-size: 0.78rem; color: #64748b; line-height: 1.45; margin: 0; }
 
-  /* スキャンローダー */
   .cyber-scanner {
     width: 60px; height: 60px;
     margin: 20px auto 16px;
@@ -396,7 +418,6 @@ import Layout from '../layouts/Layout.astro';
   @keyframes scanAnim { 0% { top: 0%; } 50% { top: 92%; } 100% { top: 0%; } }
   .scanning-text { font-family: monospace; font-size: 0.8rem; color: #64748b; }
 
-  /* 点滅ドット */
   .pulse-dot {
     width: 6px; height: 6px;
     background: #059669;
