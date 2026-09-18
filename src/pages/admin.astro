@@ -3,11 +3,32 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="スタッフ管理画面 | 整理券システム">
-  <div class="admin-container">
+  <!-- 🔒 合言葉認証画面（未入力・認証失敗時はこちらを表示） -->
+  <div id="auth-overlay" class="auth-box">
+    <div class="auth-card">
+      <div class="lock-icon">🔒</div>
+      <h2>スタッフ認証</h2>
+      <p class="auth-desc">関係者専用の合言葉を入力してください</p>
+      <input 
+        type="password" 
+        id="passcode-input" 
+        placeholder="合言葉を入力" 
+        autocomplete="off" 
+      />
+      <button id="btn-unlock" class="btn-unlock">ロック解除</button>
+      <p id="auth-error" class="auth-error" style="display: none;">合言葉が正しくありません</p>
+    </div>
+  </div>
+
+  <!-- 📊 管理ダッシュボード本体（認証成功時に表示） -->
+  <div id="admin-main" class="admin-container" style="display: none;">
     <header class="admin-header">
       <div class="tag">STAFF ONLY</div>
       <h1>整理券 運行・呼出ダッシュボード</h1>
-      <button id="btn-refresh" class="btn-refresh">🔄 データ更新</button>
+      <div class="header-actions">
+        <button id="btn-refresh" class="btn-refresh">🔄 データ更新</button>
+        <button id="btn-lock" class="btn-lock">再ロック</button>
+      </div>
     </header>
 
     <!-- 📊 統計カード -->
@@ -62,6 +83,13 @@ import Layout from '../layouts/Layout.astro';
 <script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
 
+  const authOverlay = document.getElementById("auth-overlay");
+  const adminMain = document.getElementById("admin-main");
+  const passInput = document.getElementById("passcode-input");
+  const unlockBtn = document.getElementById("btn-unlock");
+  const authError = document.getElementById("auth-error");
+  const lockBtn = document.getElementById("btn-lock");
+
   const totalEl = document.getElementById("stat-total");
   const waitingEl = document.getElementById("stat-waiting");
   const calledEl = document.getElementById("stat-called");
@@ -71,12 +99,37 @@ import Layout from '../layouts/Layout.astro';
   const callNextBtn = document.getElementById("btn-call-next");
   const refreshBtn = document.getElementById("btn-refresh");
 
-  async function loadData() {
-    try {
-      const res = await fetch(`${BACKEND_ENDPOINT}/admin/list`);
-      const data = await res.json();
+  function getStaffKey() {
+    return sessionStorage.getItem("staff_key") || "";
+  }
 
+  async function loadData() {
+    const staffKey = getStaffKey();
+    if (!staffKey) {
+      authOverlay.style.display = "flex";
+      adminMain.style.display = "none";
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/admin/list`, {
+        headers: { "X-Admin-Key": staffKey }
+      });
+
+      if (res.status === 403) {
+        sessionStorage.removeItem("staff_key");
+        authOverlay.style.display = "flex";
+        adminMain.style.display = "none";
+        authError.style.display = "block";
+        return;
+      }
+
+      const data = await res.json();
       if (!data.success) throw new Error(data.message);
+
+      authOverlay.style.display = "none";
+      adminMain.style.display = "block";
+      authError.style.display = "none";
 
       totalEl.textContent = data.stats.total;
       waitingEl.textContent = data.stats.waiting;
@@ -90,6 +143,23 @@ import Layout from '../layouts/Layout.astro';
       listBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
     }
   }
+
+  unlockBtn.addEventListener("click", () => {
+    const enteredKey = passInput.value.trim();
+    if (!enteredKey) return;
+    sessionStorage.setItem("staff_key", enteredKey);
+    passInput.value = "";
+    loadData();
+  });
+
+  passInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") unlockBtn.click();
+  });
+
+  lockBtn.addEventListener("click", () => {
+    sessionStorage.removeItem("staff_key");
+    location.reload();
+  });
 
   function updateQuickCall(tickets) {
     const nextWaiting = tickets.find(t => t.status === "WAITING");
@@ -110,7 +180,6 @@ import Layout from '../layouts/Layout.astro';
     }
 
     listBody.innerHTML = tickets.map(t => {
-      // 💡 UTC表記（YYYY-MM-DD HH:MM:SS）を明示的にISO形式（...Z）に直し、日本時間でフォーマット
       let time = "--:--";
       if (t.created_at) {
         const utcIsoString = t.created_at.includes("T") ? t.created_at : t.created_at.replace(" ", "T") + "Z";
@@ -150,9 +219,20 @@ import Layout from '../layouts/Layout.astro';
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/admin/update-status`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Key": getStaffKey()
+        },
         body: JSON.stringify({ ticketNumber, status })
       });
+
+      if (res.status === 403) {
+        alert("合言葉が無効です。再度ロック解除してください。");
+        sessionStorage.removeItem("staff_key");
+        location.reload();
+        return;
+      }
+
       const data = await res.json();
       if (data.success) {
         loadData();
@@ -166,18 +246,34 @@ import Layout from '../layouts/Layout.astro';
 
   refreshBtn.addEventListener("click", loadData);
 
-  // 10秒おきに自動更新
-  setInterval(loadData, 10000);
+  setInterval(() => {
+    if (getStaffKey()) loadData();
+  }, 10000);
+
   window.addEventListener("load", loadData);
 </script>
 
 <style>
+  /* 認証オーバーレイ */
+  .auth-box { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+  .auth-card { background: white; border-radius: 16px; padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+  .lock-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .auth-card h2 { margin: 0 0 8px; font-size: 1.25rem; color: #0f172a; }
+  .auth-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+  .auth-card input { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; margin-bottom: 14px; }
+  .auth-card input:focus { outline: none; border-color: #0284c7; }
+  .btn-unlock { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+  .auth-error { color: #ef4444; font-size: 0.8rem; margin-top: 10px; font-weight: bold; }
+
+  /* ダッシュボード本体 */
   .admin-container { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
   .admin-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
   .admin-header .tag { font-size: 0.7rem; font-weight: 900; background: #fee2e2; color: #dc2626; width: fit-content; padding: 2px 8px; border-radius: 4px; }
   .admin-header h1 { font-size: 1.3rem; margin: 0; color: #0f172a; }
-  .btn-refresh { align-self: flex-start; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-  
+  .header-actions { display: flex; gap: 10px; }
+  .btn-refresh { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+  .btn-lock { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
   .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
   @media(min-width: 600px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
   .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
