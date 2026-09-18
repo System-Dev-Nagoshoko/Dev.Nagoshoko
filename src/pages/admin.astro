@@ -110,7 +110,12 @@ import Layout from '../layouts/Layout.astro';
     }
 
     listBody.innerHTML = tickets.map(t => {
-      const time = t.created_at ? new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "--:--";
+      // 💡 UTC表記（YYYY-MM-DD HH:MM:SS）を明示的にISO形式（...Z）に直し、日本時間でフォーマット
+      let time = "--:--";
+      if (t.created_at) {
+        const utcIsoString = t.created_at.includes("T") ? t.created_at : t.created_at.replace(" ", "T") + "Z";
+        time = new Date(utcIsoString).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+      }
       
       let badge = `<span class="badge waiting">待機中</span>`;
       let actionBtns = `
