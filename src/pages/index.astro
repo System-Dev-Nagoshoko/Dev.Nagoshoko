@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 
 const portalMenus = [
-  // 🎟️ 追加: 整理券発行（LINEカラーの緑 #06c755 をアクセントに横長で一番上に配置）
   {
     title: "整理券発行",
     icon: "🎟️",
@@ -50,13 +49,13 @@ const portalMenus = [
     accent: "#f77f00",
     status: "INFO",
     wide: true
-  }
+  },
   {
     title: "スタッフ管理",
     icon: "🛠️",
     link: "./admin/",
-    accent: "#64748b", // 落ち着いたスレートグレー
-    status: "STAFF",
+    accent: "#475569",
+    status: "STAFF ONLY",
     wide: true
   }
 ];
@@ -169,21 +168,18 @@ const portalMenus = [
   .progress-inner { position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: #00f2ff; animation: load 2s infinite ease-in-out; }
   @keyframes load { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-  /* 🏗️ スクリプト位置固定解除の土台 */
   .portal-container {
     position: relative;
     max-width: 500px;
     margin: 0 auto;
   }
 
-  /* 💎 自由に動くクリスタル（スクロール連動型） */
   .crystal {
     position: absolute;
     z-index: 1;
     pointer-events: none;
   }
 
-  /* 4つの位置と浮遊モーションの個別設定 */
   .c-1 {
     top: -30px; left: -45px; width: 34px; height: 58px;
     animation: float1 4s infinite ease-in-out;
@@ -298,7 +294,6 @@ const portalMenus = [
   .tile-status { font-size: 0.65rem; font-weight: 800; color: var(--tile-color); text-transform: uppercase; display: block; margin-bottom: 2px; letter-spacing: 0.05em; }
   .tile-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; letter-spacing: -0.01em; }
 
-  /* 📱 モバイル表示で画面外にハミ出さないようにマージン調整 */
   @media (max-width: 600px) {
     .c-1 { left: -10px; }
     .c-2 { right: -15px; }
