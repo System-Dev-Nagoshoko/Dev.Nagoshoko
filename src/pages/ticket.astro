@@ -50,7 +50,7 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
 
-          <!-- Cloudflare Turnstile -->
+          <!-- Cloudflare Turnstile コンテナ -->
           <div
             id="turnstile-container"
             class="turnstile-container"
@@ -97,13 +97,10 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script is:inline>
-  const LIFF_ID = "2011672035-MlQEQgzQ"; // LINE DevelopersのLIFF ID
-  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev"; // あなたのWorker URL
-
-  // Cloudflare Turnstile Site Key（公開キー）
+  const LIFF_ID = "2011672035-MlQEQgzQ";
+  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
 
-  // 💡 URLに ?dev=true があるか、またはローカル環境かを判別
   const urlParams = new URLSearchParams(window.location.search);
   const isDevMode = 
     urlParams.get("dev") === "true" || 
@@ -151,7 +148,6 @@ import Layout from '../layouts/Layout.astro';
     startClock();
   }
 
-  // 本番時のみ動的にLIFF SDKをロード（学校環境での不要なSSLエラーを完全遮断）
   function loadLiffSdk() {
     return new Promise((resolve, reject) => {
       if (window.liff) return resolve(window.liff);
@@ -171,8 +167,7 @@ import Layout from '../layouts/Layout.astro';
       }
 
       const script = document.createElement("script");
-      script.src =
-        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
 
@@ -193,65 +188,62 @@ import Layout from '../layouts/Layout.astro';
   }
 
   async function initTurnstile() {
-    // 開発時はTurnstileを使用しない
     if (isDevMode) {
       turnstileToken = "DEV_MODE";
       return;
     }
 
-    if (
-      !TURNSTILE_SITE_KEY ||
-      TURNSTILE_SITE_KEY === "YOUR_TURNSTILE_SITE_KEY"
-    ) {
-      throw new Error("Turnstile Site Key is not configured");
-    }
-
-    if (!turnstileContainer) {
-      throw new Error("Turnstile container not found");
-    }
-
+    if (!turnstileContainer) return;
     turnstileContainer.style.display = "block";
 
-    const turnstile = await loadTurnstileSdk();
+    try {
+      const turnstile = await loadTurnstileSdk();
 
-    turnstileWidgetId = turnstile.render(
-      turnstileContainer,
-      {
+      // 既存のレンダリングがあればリセット
+      if (turnstileWidgetId !== null) {
+        turnstile.reset(turnstileWidgetId);
+        return;
+      }
+
+      turnstileWidgetId = turnstile.render(turnstileContainer, {
         sitekey: TURNSTILE_SITE_KEY,
         action: "issue_ticket",
-
         callback: (token) => {
           turnstileToken = token;
-
           if (issueBtn && lineReady) {
             issueBtn.disabled = false;
           }
         },
-
         "expired-callback": () => {
           turnstileToken = null;
           if (issueBtn) issueBtn.disabled = true;
         },
-
-        "error-callback": () => {
+        "error-callback": (errorCode) => {
+          console.warn("Turnstile Error Occurred:", errorCode);
           turnstileToken = null;
           if (issueBtn) issueBtn.disabled = true;
+          
+          // 600010 などの一時的なブラウザ障害時は1.5秒後にリセットして再試行
+          setTimeout(() => {
+            if (window.turnstile && turnstileWidgetId !== null) {
+              window.turnstile.reset(turnstileWidgetId);
+            }
+          }, 1500);
         }
-      }
-    );
+      });
+    } catch (e) {
+      console.error("Turnstile Init Error:", e);
+    }
   }
 
   async function init() {
-    // 既に発券済みの番号があれば即表示
     const cachedNo = localStorage.getItem("shokosai_ticket_no");
     if (cachedNo) {
       displayTicket(cachedNo);
       return;
     }
 
-    // 🧪 1. ?dev=true の場合：LINEを完全に無視して即時Web発券画面へ
     if (isDevMode) {
-      console.warn("⚠️ [DEV MODE] ?dev=true 検知：LIFFをスキップしてWebモードで起動します。");
       if (modeBadgeEl) {
         modeBadgeEl.textContent = "DIRECT WEB MODE";
         modeBadgeEl.style.background = "#e0f2fe";
@@ -266,7 +258,6 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
-    // 🚀 2. 本番通常アクセスの場合：LIFF初期化を実行
     try {
       loadingTextEl.textContent = "LINE AUTHENTICATING...";
       const liffObj = await loadLiffSdk();
@@ -289,11 +280,10 @@ import Layout from '../layouts/Layout.astro';
       if (turnstileToken && issueBtn) {
         issueBtn.disabled = false;
       }
-
     } catch (err) {
       console.error("LIFF Init Error:", err);
       loadingEl.style.display = "none";
-      errorMsgEl.innerText = "LINE認証または安全確認の初期化に失敗しました。";
+      errorMsgEl.innerText = "初期化に失敗しました。時間をおいて再読み込みしてください。";
       errorEl.style.display = "block";
     }
   }
@@ -306,7 +296,6 @@ import Layout from '../layouts/Layout.astro';
       let payload = {};
 
       if (isDevMode) {
-        // テスト用：端末ごとにダミーIDを保持
         let mockUid = localStorage.getItem("mock_shoko_uid");
         if (!mockUid) {
           mockUid = "web_" + crypto.randomUUID();
@@ -314,7 +303,6 @@ import Layout from '../layouts/Layout.astro';
         }
         payload = { mockUserId: mockUid };
       } else {
-        // 本番：LINE ID Token + Turnstile Token
         const idToken = window.liff.getIDToken();
 
         if (!idToken) {
@@ -346,39 +334,25 @@ import Layout from '../layouts/Layout.astro';
       } else {
         alert(data.message || "発券に失敗しました。");
 
-        if (
-          !isDevMode &&
-          window.turnstile &&
-          turnstileWidgetId !== null
-        ) {
+        if (!isDevMode && window.turnstile && turnstileWidgetId !== null) {
           window.turnstile.reset(turnstileWidgetId);
           turnstileToken = null;
         }
 
         issueBtn.disabled = !isDevMode;
-        btnTitleText.innerText =
-          isDevMode
-            ? "整理券を発行する"
-            : "LINEで整理券を取得";
+        btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
       }
     } catch (err) {
       console.error("Ticket issue error:", err);
       alert("通信エラーが発生しました。");
 
-      if (
-        !isDevMode &&
-        window.turnstile &&
-        turnstileWidgetId !== null
-      ) {
+      if (!isDevMode && window.turnstile && turnstileWidgetId !== null) {
         window.turnstile.reset(turnstileWidgetId);
         turnstileToken = null;
       }
 
       issueBtn.disabled = !isDevMode;
-      btnTitleText.innerText =
-        isDevMode
-          ? "整理券を発行する"
-          : "LINEで整理券を取得";
+      btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
     }
   });
 
@@ -423,7 +397,6 @@ import Layout from '../layouts/Layout.astro';
     display: flex;
     justify-content: center;
   }
-
   .cyber-issue-btn { width: 100%; padding: 16px 20px; background: linear-gradient(135deg, #06c755 0%, #05a746 100%); color: #ffffff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(6, 199, 85, 0.35); display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
   .cyber-issue-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 199, 85, 0.45); }
   .cyber-issue-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
