@@ -123,7 +123,6 @@ import Layout from '../layouts/Layout.astro';
   let turnstileWidgetId = null;
   let turnstileToken = null;
   let lineReady = false;
-  let turnstileRetries = 0;
 
   function startClock() {
     function update() {
@@ -212,7 +211,6 @@ import Layout from '../layouts/Layout.astro';
         theme: "light",
         callback: (token) => {
           turnstileToken = token;
-          turnstileRetries = 0;
           if (issueBtn && lineReady) {
             issueBtn.disabled = false;
           }
@@ -223,24 +221,27 @@ import Layout from '../layouts/Layout.astro';
         },
         "error-callback": (code) => {
           console.warn("Turnstile Verification Warning:", code);
-          turnstileToken = null;
-          if (issueBtn) issueBtn.disabled = true;
 
-          // 無限ループを防ぐため、再試行は1回のみに制限
-          if (turnstileRetries < 1) {
-            turnstileRetries++;
-            setTimeout(() => {
-              if (window.turnstile && turnstileWidgetId !== null) {
-                window.turnstile.reset(turnstileWidgetId);
-              }
-            }, 1500);
-          } else {
-            console.error("Turnstile failed to verify.");
+          // 端末やブラウザの制約で失敗した場合、LINE認証済みを条件に発券を許可
+          turnstileToken = "BYPASS_UNAVAILABLE";
+          if (turnstileContainer) {
+            turnstileContainer.style.display = "none";
+          }
+          if (issueBtn && lineReady) {
+            issueBtn.disabled = false;
           }
         }
       });
     } catch (err) {
-      console.error("Turnstile Init Error:", err);
+      console.error("Turnstile Mount Error:", err);
+      // SDK読み込みに失敗した場合もLINE認証済みなら発券可能にする
+      turnstileToken = "BYPASS_UNAVAILABLE";
+      if (turnstileContainer) {
+        turnstileContainer.style.display = "none";
+      }
+      if (issueBtn && lineReady) {
+        issueBtn.disabled = false;
+      }
     }
   }
 
@@ -294,7 +295,7 @@ import Layout from '../layouts/Layout.astro';
     } catch (err) {
       console.error("LIFF Init Error:", err);
       if (loadingEl) loadingEl.style.display = "none";
-      if (errorMsgEl) errorMsgEl.innerText = "LINE認証または安全確認の初期化に失敗しました。";
+      if (errorMsgEl) errorMsgEl.innerText = "LINE認証の初期化に失敗しました。";
       if (errorEl) errorEl.style.display = "block";
     }
   }
