@@ -30,59 +30,46 @@ import Layout from '../layouts/Layout.astro';
           <p id="loading-text" class="scanning-text">CONNECTING...</p>
         </div>
 
-        <!-- ② 未発券状態 -->
+        <!-- ② 未発券状態（発券ボタン） -->
         <div id="status-unissued" class="panel-section" style="display: none;">
           <div class="status-badge" id="mode-badge">TICKET SYSTEM</div>
           <h2 class="card-headline">整理券</h2>
-
+          
           <div class="guide-box">
             <div class="guide-item">
               <span class="guide-bullet">🛡️</span>
               <p>氏名・電話番号等の<strong>個人情報は一切取得しません</strong>。</p>
             </div>
-
             <div class="guide-item">
               <span class="guide-bullet">📱</span>
-              <p id="guide-notice-text">
-                順番が近づきましたら画面上（または公式LINE）でお知らせします。
-              </p>
+              <p id="guide-notice-text">順番が近づきましたら画面上（または公式LINE）でお知らせします。</p>
             </div>
-
             <div class="guide-item">
               <span class="guide-bullet">🚶</span>
-              <p>
-                整理券取得後は、お呼び出しまで校内をご自由にお回りいただけます。
-              </p>
+              <p>整理券取得後は、お呼び出しまで校内をご自由にお回りいただけます。</p>
             </div>
           </div>
 
-          <!-- Turnstile：本番時のみ表示 -->
+          <!-- Cloudflare Turnstile -->
           <div
             id="turnstile-container"
             class="turnstile-container"
             style="display: none;"
           ></div>
 
-          <button
-            id="btn-issue"
-            class="cyber-issue-btn"
-            disabled
-          >
+          <button id="btn-issue" class="cyber-issue-btn" disabled>
             <span class="btn-icon">🎟️</span>
-            <span id="btn-title-text" class="btn-title">
-              整理券を取得する
-            </span>
+            <span id="btn-title-text" class="btn-title">整理券を取得する</span>
           </button>
         </div>
 
-        <!-- ③ 発券完了状態 -->
+        <!-- ③ 発券完了状態（番号 ＆ 照合時計） -->
         <div id="status-issued" class="panel-section" style="display: none;">
           <div class="status-badge live-badge">
             <span class="pulse-dot"></span> TICKET VERIFIED
           </div>
 
           <p class="ticket-sublabel">あなたの整理券番号</p>
-
           <div class="number-wrapper">
             <span class="num-prefix">No.</span>
             <span id="ticket-number" class="ticket-num">--</span>
@@ -94,25 +81,15 @@ import Layout from '../layouts/Layout.astro';
           </div>
 
           <div class="flow-message">
-            <p>
-              ※順番になりましたら、入口受付にてこの画面をご提示ください。
-            </p>
+            <p>※順番になりましたら、入口受付にてこの画面をご提示ください。</p>
           </div>
         </div>
 
         <!-- エラー表示 -->
         <div id="status-error" class="panel-section" style="display: none;">
           <div class="status-badge error-badge">ERROR</div>
-          <p id="error-message" class="error-text">
-            通信エラーが発生しました。
-          </p>
-
-          <button
-            class="cyber-retry-btn"
-            onclick="location.reload()"
-          >
-            再読み込み
-          </button>
+          <p id="error-message" class="error-text">通信エラーが発生しました。</p>
+          <button class="cyber-retry-btn" onclick="location.reload()">再読み込み</button>
         </div>
       </div>
     </main>
@@ -120,27 +97,19 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script is:inline>
-  const LIFF_ID = "2011672035-MlQEQgzQ";
-  const BACKEND_ENDPOINT =
-    "https://ticket-api.zinn1019t.workers.dev";
+  const LIFF_ID = "2011672035-MlQEQgzQ"; // LINE DevelopersのLIFF ID
+  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev"; // あなたのWorker URL
 
-  // Cloudflare Turnstile Site Key
-  // Cloudflare Dashboardで発行したSite Keyに置き換えてください。
-  const TURNSTILE_SITE_KEY = "YOUR_TURNSTILE_SITE_KEY";
+  // Cloudflare Turnstile Site Key（公開キー）
+  const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
 
-  // ==========================================
-  // 開発モード判定
-  // ==========================================
+  // 💡 URLに ?dev=true があるか、またはローカル環境かを判別
   const urlParams = new URLSearchParams(window.location.search);
-
-  const isDevMode =
-    urlParams.get("dev") === "true" ||
-    window.location.hostname === "localhost" ||
+  const isDevMode = 
+    urlParams.get("dev") === "true" || 
+    window.location.hostname === "localhost" || 
     window.location.hostname === "127.0.0.1";
 
-  // ==========================================
-  // DOM
-  // ==========================================
   const loadingEl = document.getElementById("status-loading");
   const loadingTextEl = document.getElementById("loading-text");
   const unissuedEl = document.getElementById("status-unissued");
@@ -152,86 +121,48 @@ import Layout from '../layouts/Layout.astro';
   const btnTitleText = document.getElementById("btn-title-text");
   const clockEl = document.getElementById("live-clock");
   const modeBadgeEl = document.getElementById("mode-badge");
-  const turnstileContainer = document.getElementById(
-    "turnstile-container"
-  );
+  const turnstileContainer = document.getElementById("turnstile-container");
 
   let turnstileWidgetId = null;
   let turnstileToken = null;
   let lineReady = false;
 
-  // ==========================================
-  // 時計
-  // ==========================================
   function startClock() {
     function update() {
       const now = new Date();
-
-      const h = String(now.getHours()).padStart(2, "0");
-      const m = String(now.getMinutes()).padStart(2, "0");
-      const s = String(now.getSeconds()).padStart(2, "0");
-      const ms = String(
-        Math.floor(now.getMilliseconds() / 100)
-      );
-
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(Math.floor(now.getMilliseconds() / 100));
       if (clockEl) {
         clockEl.textContent = `${h}:${m}:${s}.${ms}`;
       }
-
       requestAnimationFrame(update);
     }
-
     requestAnimationFrame(update);
   }
 
-  // ==========================================
-  // 発券番号表示
-  // ==========================================
   function displayTicket(ticketNo) {
     numberEl.innerText = ticketNo;
-
     loadingEl.style.display = "none";
     unissuedEl.style.display = "none";
     errorEl.style.display = "none";
     issuedEl.style.display = "block";
-
     startClock();
   }
 
-  // ==========================================
-  // LIFF SDK
-  // ==========================================
+  // 本番時のみ動的にLIFF SDKをロード（学校環境での不要なSSLエラーを完全遮断）
   function loadLiffSdk() {
     return new Promise((resolve, reject) => {
-      if (window.liff) {
-        resolve(window.liff);
-        return;
-      }
-
+      if (window.liff) return resolve(window.liff);
       const script = document.createElement("script");
-
-      script.src =
-        "https://static.line-scdn.net/liff/edge/2/sdk.js";
-
-      script.onload = () => {
-        if (window.liff) {
-          resolve(window.liff);
-        } else {
-          reject(new Error("LIFF SDK unavailable"));
-        }
-      };
-
-      script.onerror = () => {
-        reject(new Error("LIFF SDK Load Error"));
-      };
-
+      script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      script.onload = () => resolve(window.liff);
+      script.onerror = () => reject(new Error("LIFF SDK Load Error"));
       document.head.appendChild(script);
     });
   }
 
-  // ==========================================
-  // Turnstile SDK
-  // ==========================================
   function loadTurnstileSdk() {
     return new Promise((resolve, reject) => {
       if (window.turnstile) {
@@ -240,10 +171,8 @@ import Layout from '../layouts/Layout.astro';
       }
 
       const script = document.createElement("script");
-
       script.src =
         "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-
       script.async = true;
       script.defer = true;
 
@@ -263,17 +192,17 @@ import Layout from '../layouts/Layout.astro';
     });
   }
 
-  // ==========================================
-  // Turnstile表示
-  // ==========================================
   async function initTurnstile() {
+    // 開発時はTurnstileを使用しない
     if (isDevMode) {
       turnstileToken = "DEV_MODE";
       return;
     }
 
-    if (!TURNSTILE_SITE_KEY ||
-        TURNSTILE_SITE_KEY === "0x4AAAAAAE82keLXX6udcUpX") {
+    if (
+      !TURNSTILE_SITE_KEY ||
+      TURNSTILE_SITE_KEY === "YOUR_TURNSTILE_SITE_KEY"
+    ) {
       throw new Error("Turnstile Site Key is not configured");
     }
 
@@ -289,106 +218,59 @@ import Layout from '../layouts/Layout.astro';
       turnstileContainer,
       {
         sitekey: TURNSTILE_SITE_KEY,
-
-        // Worker側でactionも検証できるようにする
         action: "issue_ticket",
 
         callback: (token) => {
           turnstileToken = token;
 
-          if (issueBtn && (isDevMode || lineReady)) {
+          if (issueBtn && lineReady) {
             issueBtn.disabled = false;
           }
         },
 
         "expired-callback": () => {
           turnstileToken = null;
-
-          if (issueBtn) {
-            issueBtn.disabled = true;
-          }
-
-          if (btnTitleText) {
-            btnTitleText.innerText =
-              "確認をもう一度お願いします";
-          }
+          if (issueBtn) issueBtn.disabled = true;
         },
 
         "error-callback": () => {
           turnstileToken = null;
-
-          if (issueBtn) {
-            issueBtn.disabled = true;
-          }
-
-          if (btnTitleText) {
-            btnTitleText.innerText =
-              "確認に失敗しました";
-          }
+          if (issueBtn) issueBtn.disabled = true;
         }
       }
     );
   }
 
-  // ==========================================
-  // メイン初期化
-  // ==========================================
   async function init() {
-    // ------------------------------------------
-    // 既に発券済みなら番号を表示
-    // ------------------------------------------
-    const cachedNo =
-      localStorage.getItem("shokosai_ticket_no");
-
+    // 既に発券済みの番号があれば即表示
+    const cachedNo = localStorage.getItem("shokosai_ticket_no");
     if (cachedNo) {
       displayTicket(cachedNo);
       return;
     }
 
-    // ------------------------------------------
-    // 開発モード
-    // ------------------------------------------
+    // 🧪 1. ?dev=true の場合：LINEを完全に無視して即時Web発券画面へ
     if (isDevMode) {
-      console.warn(
-        "⚠️ [DEV MODE] ?dev=true detected"
-      );
-
+      console.warn("⚠️ [DEV MODE] ?dev=true 検知：LIFFをスキップしてWebモードで起動します。");
       if (modeBadgeEl) {
         modeBadgeEl.textContent = "DIRECT WEB MODE";
         modeBadgeEl.style.background = "#e0f2fe";
         modeBadgeEl.style.color = "#0369a1";
       }
-
-      if (btnTitleText) {
-        btnTitleText.textContent =
-          "整理券を発行する";
-      }
-
+      if (btnTitleText) btnTitleText.textContent = "整理券を発行する";
       loadingEl.style.display = "none";
       unissuedEl.style.display = "block";
 
-      // 開発時はTurnstile不要
       turnstileToken = "DEV_MODE";
-
-      if (issueBtn) {
-        issueBtn.disabled = false;
-      }
-
+      issueBtn.disabled = false;
       return;
     }
 
-    // ------------------------------------------
-    // 本番：LINE Login
-    // ------------------------------------------
+    // 🚀 2. 本番通常アクセスの場合：LIFF初期化を実行
     try {
-      loadingTextEl.textContent =
-        "LINE AUTHENTICATING...";
-
+      loadingTextEl.textContent = "LINE AUTHENTICATING...";
       const liffObj = await loadLiffSdk();
-
-      await liffObj.init({
-        liffId: LIFF_ID
-      });
+      await liffObj.init({ liffId: LIFF_ID });
 
       if (!liffObj.isLoggedIn()) {
         liffObj.login();
@@ -397,685 +279,168 @@ import Layout from '../layouts/Layout.astro';
 
       lineReady = true;
 
-      if (modeBadgeEl) {
-        modeBadgeEl.textContent = "LINE CONNECTED";
-      }
-
-      if (btnTitleText) {
-        btnTitleText.textContent =
-          "LINEで整理券を取得";
-      }
-
+      if (modeBadgeEl) modeBadgeEl.textContent = "LINE CONNECTED";
+      if (btnTitleText) btnTitleText.textContent = "LINEで整理券を取得";
       loadingEl.style.display = "none";
       unissuedEl.style.display = "block";
 
-      // Turnstile開始
       await initTurnstile();
 
-      // Turnstileが成功済みなら有効化
-      if (
-        issueBtn &&
-        turnstileToken
-      ) {
+      if (turnstileToken && issueBtn) {
         issueBtn.disabled = false;
       }
 
     } catch (err) {
-      console.error(
-        "Initialization Error:",
-        err
-      );
-
+      console.error("LIFF Init Error:", err);
       loadingEl.style.display = "none";
-
-      errorMsgEl.innerText =
-        "LINE認証または安全確認の初期化に失敗しました。";
-
+      errorMsgEl.innerText = "LINE認証または安全確認の初期化に失敗しました。";
       errorEl.style.display = "block";
     }
   }
 
-  // ==========================================
-  // 発券
-  // ==========================================
-  issueBtn?.addEventListener(
-    "click",
-    async () => {
-      if (issueBtn.disabled) {
-        return;
+  issueBtn?.addEventListener("click", async () => {
+    issueBtn.disabled = true;
+    btnTitleText.innerText = "発券処理中...";
+
+    try {
+      let payload = {};
+
+      if (isDevMode) {
+        // テスト用：端末ごとにダミーIDを保持
+        let mockUid = localStorage.getItem("mock_shoko_uid");
+        if (!mockUid) {
+          mockUid = "web_" + crypto.randomUUID();
+          localStorage.setItem("mock_shoko_uid", mockUid);
+        }
+        payload = { mockUserId: mockUid };
+      } else {
+        // 本番：LINE ID Token + Turnstile Token
+        const idToken = window.liff.getIDToken();
+
+        if (!idToken) {
+          throw new Error("LINE ID Token unavailable");
+        }
+
+        if (!turnstileToken) {
+          throw new Error("Turnstile verification required");
+        }
+
+        payload = {
+          idToken,
+          turnstileToken
+        };
       }
 
-      issueBtn.disabled = true;
+      const res = await fetch(BACKEND_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-      if (btnTitleText) {
-        btnTitleText.innerText =
-          "発券処理中...";
-      }
+      const data = await res.json();
 
-      try {
-        let payload = {};
-
-        // --------------------------------------
-        // 開発
-        // --------------------------------------
-        if (isDevMode) {
-          let mockUid =
-            localStorage.getItem(
-              "mock_shoko_uid"
-            );
-
-          if (!mockUid) {
-            mockUid =
-              "web_" +
-              crypto.randomUUID();
-
-            localStorage.setItem(
-              "mock_shoko_uid",
-              mockUid
-            );
-          }
-
-          payload = {
-            mockUserId: mockUid
-          };
-        }
-
-        // --------------------------------------
-        // 本番
-        // --------------------------------------
-        else {
-          if (!window.liff) {
-            throw new Error(
-              "LIFF is not initialized"
-            );
-          }
-
-          const idToken =
-            window.liff.getIDToken();
-
-          if (!idToken) {
-            throw new Error(
-              "LINE ID Token unavailable"
-            );
-          }
-
-          if (!turnstileToken) {
-            throw new Error(
-              "Turnstile verification required"
-            );
-          }
-
-          payload = {
-            idToken,
-            turnstileToken
-          };
-        }
-
-        // --------------------------------------
-        // Worker
-        // --------------------------------------
-        const res = await fetch(
-          BACKEND_ENDPOINT,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify(payload)
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.success) {
-          localStorage.setItem(
-            "shokosai_ticket_no",
-            data.ticketNumber
-          );
-
-          displayTicket(
-            data.ticketNumber
-          );
-
-          // Turnstileは1回使用したら終了
-          turnstileToken = null;
-        } else {
-          alert(
-            data.message ||
-            "発券に失敗しました。"
-          );
-
-          // Turnstileを再生成
-          if (
-            !isDevMode &&
-            window.turnstile &&
-            turnstileWidgetId !== null
-          ) {
-            window.turnstile.reset(
-              turnstileWidgetId
-            );
-
-            turnstileToken = null;
-          }
-
-          issueBtn.disabled =
-            !isDevMode;
-
-          if (btnTitleText) {
-            btnTitleText.innerText =
-              isDevMode
-                ? "整理券を発行する"
-                : "LINEで整理券を取得";
-          }
-        }
-      } catch (err) {
-        console.error(
-          "Ticket issue error:",
-          err
-        );
-
-        alert(
-          "通信エラーが発生しました。"
-        );
+      if (data.success) {
+        localStorage.setItem("shokosai_ticket_no", data.ticketNumber);
+        displayTicket(data.ticketNumber);
+        turnstileToken = null;
+      } else {
+        alert(data.message || "発券に失敗しました。");
 
         if (
           !isDevMode &&
           window.turnstile &&
           turnstileWidgetId !== null
         ) {
-          window.turnstile.reset(
-            turnstileWidgetId
-          );
-
+          window.turnstile.reset(turnstileWidgetId);
           turnstileToken = null;
         }
 
-        issueBtn.disabled =
-          !isDevMode;
-
-        if (btnTitleText) {
-          btnTitleText.innerText =
-            isDevMode
-              ? "整理券を発行する"
-              : "LINEで整理券を取得";
-        }
+        issueBtn.disabled = !isDevMode;
+        btnTitleText.innerText =
+          isDevMode
+            ? "整理券を発行する"
+            : "LINEで整理券を取得";
       }
-    }
-  );
+    } catch (err) {
+      console.error("Ticket issue error:", err);
+      alert("通信エラーが発生しました。");
 
-  // ==========================================
-  // 起動
-  // ==========================================
-  window.addEventListener(
-    "load",
-    init
-  );
+      if (
+        !isDevMode &&
+        window.turnstile &&
+        turnstileWidgetId !== null
+      ) {
+        window.turnstile.reset(turnstileWidgetId);
+        turnstileToken = null;
+      }
+
+      issueBtn.disabled = !isDevMode;
+      btnTitleText.innerText =
+        isDevMode
+          ? "整理券を発行する"
+          : "LINEで整理券を取得";
+    }
+  });
+
+  window.addEventListener("load", init);
 </script>
 
 <style>
-  .cyber-portal {
-    position: relative;
-    min-height: 100vh;
-    padding: 20px 16px 100px;
-  }
-
-  .digital-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image:
-      linear-gradient(
-        rgba(15, 23, 42, 0.03) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        rgba(15, 23, 42, 0.03) 1px,
-        transparent 1px
-      );
-    background-size: 30px 30px;
-    z-index: -2;
-  }
-
-  .neon-glow {
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background:
-      radial-gradient(
-        circle at center,
-        rgba(6, 199, 85, 0.05) 0%,
-        transparent 60%
-      );
-    z-index: -1;
-  }
-
-  .cyber-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-top: 20px;
-  }
-
-  .header-line {
-    width: 40px;
-    height: 4px;
-    background: #06c755;
-    margin: 0 auto 15px;
-    box-shadow: 0 2px 8px rgba(6, 199, 85, 0.3);
-  }
-
-  .cyber-header h1 {
-    font-size: 1.4rem;
-    font-weight: 900;
-    margin: 0;
-    letter-spacing: 0.05em;
-    color: #1e3a8a;
-  }
-
-  .ver {
-    font-size: 0.8rem;
-    vertical-align: top;
-    color: #06c755;
-  }
-
-  .cyber-subtitle {
-    font-size: 0.75rem;
-    color: #64748b;
-    opacity: 0.8;
-    letter-spacing: 0.15em;
-    margin-top: 5px;
-    font-weight: 600;
-  }
-
-  .portal-container {
-    position: relative;
-    max-width: 440px;
-    margin: 0 auto;
-  }
-
-  .crystal {
-    position: absolute;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .c-1 {
-    top: -20px;
-    left: -25px;
-    width: 30px;
-    height: 50px;
-    animation: float1 4s infinite ease-in-out;
-  }
-
-  .c-2 {
-    top: 120px;
-    right: -30px;
-    width: 22px;
-    height: 38px;
-    opacity: 0.7;
-    animation: float2 5s infinite ease-in-out;
-  }
-
-  .c-3 {
-    bottom: 80px;
-    left: -30px;
-    width: 24px;
-    height: 42px;
-    opacity: 0.75;
-    animation: float3 4.5s infinite ease-in-out;
-  }
-
-  .c-4 {
-    bottom: -10px;
-    right: -25px;
-    width: 28px;
-    height: 48px;
-    animation: float4 4.2s infinite ease-in-out;
-  }
-
-  .crystal-core {
-    width: 100%;
-    height: 100%;
-    background:
-      linear-gradient(
-        135deg,
-        rgba(6, 199, 85, 0.6) 0%,
-        rgba(0, 180, 216, 0.5) 100%
-      );
-    clip-path: polygon(
-      50% 0%,
-      100% 35%,
-      100% 65%,
-      50% 100%,
-      0% 65%,
-      0% 35%
-    );
-    border: 1px solid rgba(255, 255, 255, 0.4);
-  }
-
-  .shadow-core {
-    background:
-      linear-gradient(
-        135deg,
-        rgba(0, 180, 216, 0.5) 0%,
-        rgba(114, 9, 183, 0.45) 100%
-      );
-  }
-
-  @keyframes float1 {
-    0%, 100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes float2 {
-    0%, 100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(8px);
-    }
-  }
-
-  @keyframes float3 {
-    0%, 100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-12px);
-    }
-  }
-
-  @keyframes float4 {
-    0%, 100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(7px);
-    }
-  }
-
-  .ticket-card {
-    position: relative;
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 16px;
-    padding: 36px 24px 28px;
-    box-shadow:
-      0 10px 30px rgba(15, 23, 42, 0.04);
-    z-index: 2;
-    text-align: center;
-    box-sizing: border-box;
-  }
-
-  .tile-edge {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 14px;
-    height: 14px;
-    border-top: 3px solid #06c755;
-    border-left: 3px solid #06c755;
-    border-top-left-radius: 4px;
-  }
-
-  .card-headline {
-    margin: 8px 0 16px;
-    font-size: 1.25rem;
-    font-weight: 900;
-    color: #0f172a;
-    letter-spacing: -0.01em;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    border-radius: 20px;
-    background: #f1f5f9;
-    color: #475569;
-    margin-bottom: 8px;
-  }
-
-  .live-badge {
-    background: rgba(6, 199, 85, 0.1);
-    color: #059669;
-  }
-
-  .error-badge {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-  }
-
-  .guide-box {
-    text-align: left;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 16px 14px;
-    margin-bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .guide-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: 0.83rem;
-    line-height: 1.45;
-    color: #475569;
-  }
-
-  .guide-item p {
-    margin: 0;
-  }
-
-  .guide-item strong {
-    color: #0f172a;
-  }
-
-  .guide-bullet {
-    font-size: 0.95rem;
-    line-height: 1.2;
-  }
-
+  .cyber-portal { position: relative; min-height: 100vh; padding: 20px 16px 100px; }
+  .digital-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px); background-size: 30px 30px; z-index: -2; }
+  .neon-glow { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at center, rgba(6, 199, 85, 0.05) 0%, transparent 60%); z-index: -1; }
+  .cyber-header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
+  .header-line { width: 40px; height: 4px; background: #06c755; margin: 0 auto 15px; box-shadow: 0 2px 8px rgba(6, 199, 85, 0.3); }
+  .cyber-header h1 { font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: 0.05em; color: #1e3a8a; }
+  .ver { font-size: 0.8rem; vertical-align: top; color: #06c755; }
+  .cyber-subtitle { font-size: 0.75rem; color: #64748b; opacity: 0.8; letter-spacing: 0.15em; margin-top: 5px; font-weight: 600; }
+  .portal-container { position: relative; max-width: 440px; margin: 0 auto; }
+  .crystal { position: absolute; z-index: 1; pointer-events: none; }
+  .c-1 { top: -20px; left: -25px; width: 30px; height: 50px; animation: float1 4s infinite ease-in-out; }
+  .c-2 { top: 120px; right: -30px; width: 22px; height: 38px; opacity: 0.7; animation: float2 5s infinite ease-in-out; }
+  .c-3 { bottom: 80px; left: -30px; width: 24px; height: 42px; opacity: 0.75; animation: float3 4.5s infinite ease-in-out; }
+  .c-4 { bottom: -10px; right: -25px; width: 28px; height: 48px; animation: float4 4.2s infinite ease-in-out; }
+  .crystal-core { width: 100%; height: 100%; background: linear-gradient(135deg, rgba(6, 199, 85, 0.6) 0%, rgba(0, 180, 216, 0.5) 100%); clip-path: polygon(50% 0%, 100% 35%, 100% 65%, 50% 100%, 0% 65%, 0% 35%); border: 1px solid rgba(255, 255, 255, 0.4); }
+  .shadow-core { background: linear-gradient(135deg, rgba(0, 180, 216, 0.5) 0%, rgba(114, 9, 183, 0.45) 100%); }
+  @keyframes float1 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes float2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+  @keyframes float3 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  @keyframes float4 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+  .ticket-card { position: relative; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 16px; padding: 36px 24px 28px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04); z-index: 2; text-align: center; box-sizing: border-box; }
+  .tile-edge { position: absolute; top: 0; left: 0; width: 14px; height: 14px; border-top: 3px solid #06c755; border-left: 3px solid #06c755; border-top-left-radius: 4px; }
+  .card-headline { margin: 8px 0 16px; font-size: 1.25rem; font-weight: 900; color: #0f172a; letter-spacing: -0.01em; }
+  .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; border-radius: 20px; background: #f1f5f9; color: #475569; margin-bottom: 8px; }
+  .live-badge { background: rgba(6, 199, 85, 0.1); color: #059669; }
+  .error-badge { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
+  .guide-box { text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 14px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .guide-item { display: flex; align-items: flex-start; gap: 8px; font-size: 0.83rem; line-height: 1.45; color: #475569; }
+  .guide-item p { margin: 0; }
+  .guide-item strong { color: #0f172a; }
+  .guide-bullet { font-size: 0.95rem; line-height: 1.2; }
   .turnstile-container {
     margin: 0 auto 18px;
     min-height: 65px;
-  }
-
-  .cyber-issue-btn {
-    width: 100%;
-    padding: 16px 20px;
-    background:
-      linear-gradient(
-        135deg,
-        #06c755 0%,
-        #05a746 100%
-      );
-    color: #ffffff;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.05rem;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow:
-      0 6px 20px rgba(6, 199, 85, 0.35);
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 10px;
-    transition:
-      all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .cyber-issue-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow:
-      0 8px 24px rgba(6, 199, 85, 0.45);
-  }
-
-  .cyber-issue-btn:disabled {
-    background: #94a3b8;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.9;
-  }
-
-  .ticket-sublabel {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #64748b;
-    margin: 12px 0 0;
-  }
-
-  .number-wrapper {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 6px;
-    margin: 8px 0 16px;
-  }
-
-  .num-prefix {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #64748b;
-  }
-
-  .ticket-num {
-    font-size: 4.4rem;
-    font-weight: 900;
-    color: #06c755;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    font-family: monospace, system-ui;
-  }
-
-  .live-clock-card {
-    background: #0a0e17;
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 16px;
-  }
-
-  .clock-label {
-    font-size: 0.65rem;
-    color: #64748b;
-    font-family: monospace;
-    display: block;
-    margin-bottom: 2px;
-  }
-
-  .clock-display {
-    font-size: 1.25rem;
-    font-family: monospace;
-    font-weight: 700;
-    color: #00f2ff;
-    letter-spacing: 0.08em;
-  }
-
-  .flow-message p {
-    font-size: 0.78rem;
-    color: #64748b;
-    line-height: 1.45;
-    margin: 0;
-  }
-
-  .cyber-scanner {
-    width: 60px;
-    height: 60px;
-    margin: 20px auto 16px;
-    border: 2px solid rgba(6, 199, 85, 0.2);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .scan-beam {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: #06c755;
-    box-shadow: 0 0 10px #06c755;
-    animation:
-      scanAnim 1.6s infinite ease-in-out;
-  }
-
-  @keyframes scanAnim {
-    0% {
-      top: 0%;
-    }
-
-    50% {
-      top: 92%;
-    }
-
-    100% {
-      top: 0%;
-    }
-  }
-
-  .scanning-text {
-    font-family: monospace;
-    font-size: 0.8rem;
-    color: #64748b;
-  }
-
-  .pulse-dot {
-    width: 6px;
-    height: 6px;
-    background: #059669;
-    border-radius: 50%;
-    animation:
-      pulse 1.4s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.3;
-    }
-  }
-
-  .cyber-retry-btn {
-    margin-top: 14px;
-    padding: 8px 18px;
-    background: #e2e8f0;
-    border: none;
-    border-radius: 6px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .error-text {
-    color: #dc2626;
-    font-size: 0.85rem;
-  }
+  .cyber-issue-btn { width: 100%; padding: 16px 20px; background: linear-gradient(135deg, #06c755 0%, #05a746 100%); color: #ffffff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 800; cursor: pointer; box-shadow: 0 6px 20px rgba(6, 199, 85, 0.35); display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+  .cyber-issue-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 199, 85, 0.45); }
+  .cyber-issue-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+  .ticket-sublabel { font-size: 0.85rem; font-weight: 700; color: #64748b; margin: 12px 0 0; }
+  .number-wrapper { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 8px 0 16px; }
+  .num-prefix { font-size: 1.6rem; font-weight: 800; color: #64748b; }
+  .ticket-num { font-size: 4.4rem; font-weight: 900; color: #06c755; letter-spacing: -0.03em; line-height: 1; font-family: monospace, system-ui; }
+  .live-clock-card { background: #0a0e17; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; }
+  .clock-label { font-size: 0.65rem; color: #64748b; font-family: monospace; display: block; margin-bottom: 2px; }
+  .clock-display { font-size: 1.25rem; font-family: monospace; font-weight: 700; color: #00f2ff; letter-spacing: 0.08em; }
+  .flow-message p { font-size: 0.78rem; color: #64748b; line-height: 1.45; margin: 0; }
+  .cyber-scanner { width: 60px; height: 60px; margin: 20px auto 16px; border: 2px solid rgba(6, 199, 85, 0.2); border-radius: 8px; position: relative; overflow: hidden; }
+  .scan-beam { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #06c755; box-shadow: 0 0 10px #06c755; animation: scanAnim 1.6s infinite ease-in-out; }
+  @keyframes scanAnim { 0% { top: 0%; } 50% { top: 92%; } 100% { top: 0%; } }
+  .scanning-text { font-family: monospace; font-size: 0.8rem; color: #64748b; }
+  .pulse-dot { width: 6px; height: 6px; background: #059669; border-radius: 50%; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .cyber-retry-btn { margin-top: 14px; padding: 8px 18px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+  .error-text { color: #dc2626; font-size: 0.85rem; }
 </style>
