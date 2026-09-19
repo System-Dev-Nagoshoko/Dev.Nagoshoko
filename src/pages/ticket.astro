@@ -85,7 +85,7 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
 
-        <!-- エラー表示 -->
+        <!-- ④ エラー表示 -->
         <div id="status-error" class="panel-section" style="display: none;">
           <div class="status-badge error-badge">ERROR</div>
           <p id="error-message" class="error-text">通信エラーが発生しました。</p>
@@ -123,6 +123,7 @@ import Layout from '../layouts/Layout.astro';
   let turnstileWidgetId = null;
   let turnstileToken = null;
   let lineReady = false;
+  let turnstileRetries = 0;
 
   function startClock() {
     function update() {
@@ -140,11 +141,11 @@ import Layout from '../layouts/Layout.astro';
   }
 
   function displayTicket(ticketNo) {
-    numberEl.innerText = ticketNo;
-    loadingEl.style.display = "none";
-    unissuedEl.style.display = "none";
-    errorEl.style.display = "none";
-    issuedEl.style.display = "block";
+    if (numberEl) numberEl.innerText = ticketNo;
+    if (loadingEl) loadingEl.style.display = "none";
+    if (unissuedEl) unissuedEl.style.display = "none";
+    if (errorEl) errorEl.style.display = "none";
+    if (issuedEl) issuedEl.style.display = "block";
     startClock();
   }
 
@@ -199,7 +200,6 @@ import Layout from '../layouts/Layout.astro';
     try {
       const turnstile = await loadTurnstileSdk();
 
-      // 既存のレンダリングがあればリセット
       if (turnstileWidgetId !== null) {
         turnstile.reset(turnstileWidgetId);
         return;
@@ -208,8 +208,11 @@ import Layout from '../layouts/Layout.astro';
       turnstileWidgetId = turnstile.render(turnstileContainer, {
         sitekey: TURNSTILE_SITE_KEY,
         action: "issue_ticket",
+        appearance: "always",
+        theme: "light",
         callback: (token) => {
           turnstileToken = token;
+          turnstileRetries = 0;
           if (issueBtn && lineReady) {
             issueBtn.disabled = false;
           }
@@ -218,21 +221,26 @@ import Layout from '../layouts/Layout.astro';
           turnstileToken = null;
           if (issueBtn) issueBtn.disabled = true;
         },
-        "error-callback": (errorCode) => {
-          console.warn("Turnstile Error Occurred:", errorCode);
+        "error-callback": (code) => {
+          console.warn("Turnstile Verification Warning:", code);
           turnstileToken = null;
           if (issueBtn) issueBtn.disabled = true;
-          
-          // 600010 などの一時的なブラウザ障害時は1.5秒後にリセットして再試行
-          setTimeout(() => {
-            if (window.turnstile && turnstileWidgetId !== null) {
-              window.turnstile.reset(turnstileWidgetId);
-            }
-          }, 1500);
+
+          // 無限ループを防ぐため、再試行は1回のみに制限
+          if (turnstileRetries < 1) {
+            turnstileRetries++;
+            setTimeout(() => {
+              if (window.turnstile && turnstileWidgetId !== null) {
+                window.turnstile.reset(turnstileWidgetId);
+              }
+            }, 1500);
+          } else {
+            console.error("Turnstile failed to verify.");
+          }
         }
       });
-    } catch (e) {
-      console.error("Turnstile Init Error:", e);
+    } catch (err) {
+      console.error("Turnstile Init Error:", err);
     }
   }
 
@@ -243,23 +251,26 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
+    // 開発モード（?dev=true または ローカルホスト）
     if (isDevMode) {
+      console.warn("⚠️ [DEV MODE] ?dev=true 検知：LIFFをスキップしてWebモードで起動します。");
       if (modeBadgeEl) {
         modeBadgeEl.textContent = "DIRECT WEB MODE";
         modeBadgeEl.style.background = "#e0f2fe";
         modeBadgeEl.style.color = "#0369a1";
       }
       if (btnTitleText) btnTitleText.textContent = "整理券を発行する";
-      loadingEl.style.display = "none";
-      unissuedEl.style.display = "block";
+      if (loadingEl) loadingEl.style.display = "none";
+      if (unissuedEl) unissuedEl.style.display = "block";
 
       turnstileToken = "DEV_MODE";
-      issueBtn.disabled = false;
+      if (issueBtn) issueBtn.disabled = false;
       return;
     }
 
+    // 本番環境（LINE LIFF 認証）
     try {
-      loadingTextEl.textContent = "LINE AUTHENTICATING...";
+      if (loadingTextEl) loadingTextEl.textContent = "LINE AUTHENTICATING...";
       const liffObj = await loadLiffSdk();
       await liffObj.init({ liffId: LIFF_ID });
 
@@ -272,8 +283,8 @@ import Layout from '../layouts/Layout.astro';
 
       if (modeBadgeEl) modeBadgeEl.textContent = "LINE CONNECTED";
       if (btnTitleText) btnTitleText.textContent = "LINEで整理券を取得";
-      loadingEl.style.display = "none";
-      unissuedEl.style.display = "block";
+      if (loadingEl) loadingEl.style.display = "none";
+      if (unissuedEl) unissuedEl.style.display = "block";
 
       await initTurnstile();
 
@@ -282,15 +293,15 @@ import Layout from '../layouts/Layout.astro';
       }
     } catch (err) {
       console.error("LIFF Init Error:", err);
-      loadingEl.style.display = "none";
-      errorMsgEl.innerText = "初期化に失敗しました。時間をおいて再読み込みしてください。";
-      errorEl.style.display = "block";
+      if (loadingEl) loadingEl.style.display = "none";
+      if (errorMsgEl) errorMsgEl.innerText = "LINE認証または安全確認の初期化に失敗しました。";
+      if (errorEl) errorEl.style.display = "block";
     }
   }
 
   issueBtn?.addEventListener("click", async () => {
     issueBtn.disabled = true;
-    btnTitleText.innerText = "発券処理中...";
+    if (btnTitleText) btnTitleText.innerText = "発券処理中...";
 
     try {
       let payload = {};
@@ -303,7 +314,7 @@ import Layout from '../layouts/Layout.astro';
         }
         payload = { mockUserId: mockUid };
       } else {
-        const idToken = window.liff.getIDToken();
+        const idToken = window.liff?.getIDToken();
 
         if (!idToken) {
           throw new Error("LINE ID Token unavailable");
@@ -340,7 +351,9 @@ import Layout from '../layouts/Layout.astro';
         }
 
         issueBtn.disabled = !isDevMode;
-        btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
+        if (btnTitleText) {
+          btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
+        }
       }
     } catch (err) {
       console.error("Ticket issue error:", err);
@@ -352,7 +365,9 @@ import Layout from '../layouts/Layout.astro';
       }
 
       issueBtn.disabled = !isDevMode;
-      btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
+      if (btnTitleText) {
+        btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
+      }
     }
   });
 
