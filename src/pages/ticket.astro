@@ -199,11 +199,6 @@ import Layout from '../layouts/Layout.astro';
     try {
       const turnstile = await loadTurnstileSdk();
 
-      if (turnstileWidgetId !== null) {
-        turnstile.reset(turnstileWidgetId);
-        return;
-      }
-
       turnstileWidgetId = turnstile.render(turnstileContainer, {
         sitekey: TURNSTILE_SITE_KEY,
         action: "issue_ticket",
@@ -220,24 +215,34 @@ import Layout from '../layouts/Layout.astro';
           if (issueBtn) issueBtn.disabled = true;
         },
         "error-callback": (code) => {
-          console.warn("Turnstile Verification Warning:", code);
+          console.warn("Turnstile Verification Warning (Bypassing):", code);
 
-          // 端末やブラウザの制約で失敗した場合、LINE認証済みを条件に発券を許可
+          // エラーが発生した場合は再試行ループを止めるためウィジェットを破棄
+          try {
+            if (turnstileWidgetId !== null && window.turnstile) {
+              window.turnstile.remove(turnstileWidgetId);
+              turnstileWidgetId = null;
+            }
+          } catch (e) {}
+
           turnstileToken = "BYPASS_UNAVAILABLE";
           if (turnstileContainer) {
             turnstileContainer.style.display = "none";
+            turnstileContainer.innerHTML = "";
           }
+
+          // LINE認証が完了していれば発券ボタンを有効化
           if (issueBtn && lineReady) {
             issueBtn.disabled = false;
           }
         }
       });
     } catch (err) {
-      console.error("Turnstile Mount Error:", err);
-      // SDK読み込みに失敗した場合もLINE認証済みなら発券可能にする
+      console.warn("Turnstile Mount Error (Bypassing):", err);
       turnstileToken = "BYPASS_UNAVAILABLE";
       if (turnstileContainer) {
         turnstileContainer.style.display = "none";
+        turnstileContainer.innerHTML = "";
       }
       if (issueBtn && lineReady) {
         issueBtn.disabled = false;
@@ -347,11 +352,13 @@ import Layout from '../layouts/Layout.astro';
         alert(data.message || "発券に失敗しました。");
 
         if (!isDevMode && window.turnstile && turnstileWidgetId !== null) {
-          window.turnstile.reset(turnstileWidgetId);
+          try {
+            window.turnstile.reset(turnstileWidgetId);
+          } catch (e) {}
           turnstileToken = null;
         }
 
-        issueBtn.disabled = !isDevMode;
+        issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
         if (btnTitleText) {
           btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
         }
@@ -361,11 +368,13 @@ import Layout from '../layouts/Layout.astro';
       alert("通信エラーが発生しました。");
 
       if (!isDevMode && window.turnstile && turnstileWidgetId !== null) {
-        window.turnstile.reset(turnstileWidgetId);
+        try {
+          window.turnstile.reset(turnstileWidgetId);
+        } catch (e) {}
         turnstileToken = null;
       }
 
-      issueBtn.disabled = !isDevMode;
+      issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
       if (btnTitleText) {
         btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
       }
@@ -799,7 +808,7 @@ import Layout from '../layouts/Layout.astro';
     line-height: 1.45;
   }
 
-  /* 極小スクリーン（iPhone SE 1stや幅340px以下）向けの微調整 */
+  /* 極小スクリーン向けの微調整 */
   @media (max-width: 350px) {
     .crystal {
       display: none;
