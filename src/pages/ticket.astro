@@ -33,7 +33,7 @@ import Layout from '../layouts/Layout.astro';
         <!-- ② 未発券状態（発券ボタン） -->
         <div id="status-unissued" class="panel-section" style="display: none;">
           <div class="status-badge" id="mode-badge">TICKET SYSTEM</div>
-          <h2 class="card-headline">アトラクション整理券</h2>
+          <h2 class="card-headline">整理券</h2>
           
           <div class="guide-box">
             <div class="guide-item">
@@ -90,7 +90,7 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script is:inline>
-  const LIFF_ID = "YOUR_LIFF_ID"; // LINE DevelopersのLIFF ID
+  const LIFF_ID = "2011672035-MlQEQgzQ"; // LINE DevelopersのLIFF ID
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev"; // あなたのWorker URL
 
   // 💡 URLに ?dev=true があるか、またはローカル環境かを判別
