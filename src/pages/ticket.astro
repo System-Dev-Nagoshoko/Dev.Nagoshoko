@@ -9,7 +9,7 @@ import Layout from '../layouts/Layout.astro';
 
     <header class="cyber-header">
       <div class="header-line"></div>
-      <h1>整理券発行システム <span class="ver">v2.0</span></h1>
+      <h1>整理券発行システム <span class="ver">v2.1</span></h1>
       <p class="cyber-subtitle">SMART TICKETING // NO PERSONAL DATA</p>
     </header>
 
@@ -30,7 +30,7 @@ import Layout from '../layouts/Layout.astro';
           <p id="loading-text" class="scanning-text">CONNECTING...</p>
         </div>
 
-        <!-- ② 未発券状態（発券ボタン） -->
+        <!-- ② 未発券状態（人数選択 ＆ 発券ボタン） -->
         <div id="status-unissued" class="panel-section" style="display: none;">
           <div class="status-badge" id="mode-badge">TICKET SYSTEM</div>
           <h2 class="card-headline">整理券</h2>
@@ -50,6 +50,18 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
 
+          <!-- 👥 ご利用人数選択セレクター -->
+          <div class="headcount-box">
+            <label class="headcount-label">ご利用人数を選択してください</label>
+            <div class="headcount-selector" id="headcount-selector">
+              <button type="button" class="btn-count active" data-count="1">1名</button>
+              <button type="button" class="btn-count" data-count="2">2名</button>
+              <button type="button" class="btn-count" data-count="3">3名</button>
+              <button type="button" class="btn-count" data-count="4">4名</button>
+              <button type="button" class="btn-count" data-count="5">5名〜</button>
+            </div>
+          </div>
+
           <!-- Cloudflare Turnstile コンテナ -->
           <div
             id="turnstile-container"
@@ -63,7 +75,7 @@ import Layout from '../layouts/Layout.astro';
           </button>
         </div>
 
-        <!-- ③ 発券完了状態（番号 ＆ 照合時計） -->
+        <!-- ③ 発券完了状態（番号 ＆ 人数 ＆ 照合時計） -->
         <div id="status-issued" class="panel-section" style="display: none;">
           <div class="status-badge live-badge">
             <span class="pulse-dot"></span> TICKET VERIFIED
@@ -73,6 +85,10 @@ import Layout from '../layouts/Layout.astro';
           <div class="number-wrapper">
             <span class="num-prefix">No.</span>
             <span id="ticket-number" class="ticket-num">--</span>
+          </div>
+
+          <div class="issued-headcount-badge">
+            ご案内人数：<strong id="ticket-headcount">1</strong>名様
           </div>
 
           <div class="live-clock-card">
@@ -114,6 +130,7 @@ import Layout from '../layouts/Layout.astro';
   const errorEl = document.getElementById("status-error");
   const errorMsgEl = document.getElementById("error-message");
   const numberEl = document.getElementById("ticket-number");
+  const headcountEl = document.getElementById("ticket-headcount");
   const issueBtn = document.getElementById("btn-issue");
   const btnTitleText = document.getElementById("btn-title-text");
   const clockEl = document.getElementById("live-clock");
@@ -123,6 +140,16 @@ import Layout from '../layouts/Layout.astro';
   let turnstileWidgetId = null;
   let turnstileToken = null;
   let lineReady = false;
+  let selectedHeadcount = 1;
+
+  // 人数選択ボタン制御
+  document.querySelectorAll(".btn-count").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".btn-count").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedHeadcount = parseInt(btn.dataset.count, 10);
+    });
+  });
 
   function startClock() {
     function update() {
@@ -139,8 +166,9 @@ import Layout from '../layouts/Layout.astro';
     requestAnimationFrame(update);
   }
 
-  function displayTicket(ticketNo) {
+  function displayTicket(ticketNo, headcount = 1) {
     if (numberEl) numberEl.innerText = ticketNo;
+    if (headcountEl) headcountEl.innerText = headcount;
     if (loadingEl) loadingEl.style.display = "none";
     if (unissuedEl) unissuedEl.style.display = "none";
     if (errorEl) errorEl.style.display = "none";
@@ -254,12 +282,12 @@ import Layout from '../layouts/Layout.astro';
 
   async function init() {
     const cachedNo = localStorage.getItem("shokosai_ticket_no");
+    const cachedHeadcount = localStorage.getItem("shokosai_ticket_headcount") || 1;
     if (cachedNo) {
-      displayTicket(cachedNo);
+      displayTicket(cachedNo, cachedHeadcount);
       return;
     }
 
-    // 開発モード（?dev=true または ローカルホスト）
     if (isDevMode) {
       console.warn("⚠️ [DEV MODE] ?dev=true 検知：LIFFをスキップしてWebモードで起動します。");
       if (modeBadgeEl) {
@@ -276,7 +304,6 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
-    // 本番環境（LINE LIFF 認証）
     try {
       if (loadingTextEl) loadingTextEl.textContent = "LINE AUTHENTICATING...";
       const liffObj = await loadLiffSdk();
@@ -312,7 +339,9 @@ import Layout from '../layouts/Layout.astro';
     if (btnTitleText) btnTitleText.innerText = "発券処理中...";
 
     try {
-      let payload = {};
+      let payload = {
+        headcount: selectedHeadcount
+      };
 
       if (isDevMode) {
         let mockUid = localStorage.getItem("mock_shoko_uid");
@@ -320,7 +349,7 @@ import Layout from '../layouts/Layout.astro';
           mockUid = "web_" + crypto.randomUUID();
           localStorage.setItem("mock_shoko_uid", mockUid);
         }
-        payload = { mockUserId: mockUid };
+        payload.mockUserId = mockUid;
       } else {
         const idToken = window.liff?.getIDToken();
 
@@ -332,10 +361,8 @@ import Layout from '../layouts/Layout.astro';
           throw new Error("Turnstile verification required");
         }
 
-        payload = {
-          idToken,
-          turnstileToken
-        };
+        payload.idToken = idToken;
+        payload.turnstileToken = turnstileToken;
       }
 
       const res = await fetch(BACKEND_ENDPOINT, {
@@ -347,13 +374,14 @@ import Layout from '../layouts/Layout.astro';
       const data = await res.json();
 
       if (data.success) {
+        const ticketHeadcount = data.headcount || selectedHeadcount;
         localStorage.setItem("shokosai_ticket_no", data.ticketNumber);
-        displayTicket(data.ticketNumber);
+        localStorage.setItem("shokosai_ticket_headcount", ticketHeadcount);
+        displayTicket(data.ticketNumber, ticketHeadcount);
         turnstileToken = null;
       } else {
         alert(data.message || "発券に失敗しました。");
 
-        // ウィジェットが存在し、バイパス時でない場合のみリセット
         if (
           !isDevMode &&
           window.turnstile &&
@@ -377,7 +405,6 @@ import Layout from '../layouts/Layout.astro';
       console.error("Ticket issue error:", err);
       alert("通信エラーが発生しました。");
 
-      // ウィジェットが存在し、バイパス時でない場合のみリセット
       if (
         !isDevMode &&
         window.turnstile &&
@@ -617,7 +644,7 @@ import Layout from '../layouts/Layout.astro';
     border: 1px solid #e2e8f0;
     border-radius: 10px;
     padding: clamp(12px, 3.5vw, 16px) clamp(10px, 3vw, 14px);
-    margin-bottom: clamp(16px, 4vh, 22px);
+    margin-bottom: 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -645,6 +672,73 @@ import Layout from '../layouts/Layout.astro';
     font-size: 0.9rem;
     line-height: 1.2;
     flex-shrink: 0;
+  }
+
+  /* 👥 人数選択用スタイル */
+  .headcount-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .headcount-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .headcount-selector {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .btn-count {
+    flex: 1;
+    min-width: 50px;
+    padding: 8px 0;
+    background: #ffffff;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #475569;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.15s ease;
+  }
+
+  .btn-count:hover {
+    border-color: #06c755;
+  }
+
+  .btn-count.active {
+    background: #06c755;
+    border-color: #06c755;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(6, 199, 85, 0.35);
+  }
+
+  .issued-headcount-badge {
+    display: inline-block;
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .issued-headcount-badge strong {
+    font-size: 1.1rem;
+    margin: 0 2px;
   }
 
   .turnstile-container {
@@ -713,7 +807,7 @@ import Layout from '../layouts/Layout.astro';
     align-items: baseline;
     justify-content: center;
     gap: 4px;
-    margin: 4px 0 12px;
+    margin: 4px 0 6px;
   }
 
   .num-prefix {
