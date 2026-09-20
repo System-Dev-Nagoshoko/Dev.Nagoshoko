@@ -3,31 +3,45 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="スタッフ管理画面 | 整理券システム">
-  <!-- 🔒 合言葉認証画面（未入力・認証失敗時はこちらを表示） -->
+  <!-- 🔒 認証画面（ID・合言葉入力） -->
   <div id="auth-overlay" class="auth-box">
     <div class="auth-card">
       <div class="lock-icon">🔒</div>
       <h2>スタッフ認証</h2>
-      <p class="auth-desc">関係者専用の合言葉を入力してください</p>
+      <p class="auth-desc">関係者専用のIDと合言葉を入力してください</p>
+      
+      <!-- 👤 追加: ログインID入力欄 -->
+      <input 
+        type="text" 
+        id="login-id-input" 
+        placeholder="ログインID" 
+        autocomplete="username" 
+      />
+
+      <!-- 🔑 合言葉（パスワード）入力欄 -->
       <input 
         type="password" 
         id="passcode-input" 
-        placeholder="合言葉を入力" 
-        autocomplete="off" 
+        placeholder="合言葉（パスワード）" 
+        autocomplete="current-password" 
       />
-      <button id="btn-unlock" class="btn-unlock">ロック解除</button>
-      <p id="auth-error" class="auth-error" style="display: none;">合言葉が正しくありません</p>
+
+      <button id="btn-unlock" class="btn-unlock">ログイン</button>
+      <p id="auth-error" class="auth-error" style="display: none;">IDまたは合言葉が正しくありません</p>
     </div>
   </div>
 
   <!-- 📊 管理ダッシュボード本体（認証成功時に表示） -->
   <div id="admin-main" class="admin-container" style="display: none;">
     <header class="admin-header">
-      <div class="tag">STAFF ONLY</div>
+      <div class="header-top">
+        <div class="tag">STAFF ONLY</div>
+        <span id="current-user-badge" class="user-badge">--</span>
+      </div>
       <h1>整理券 運行・呼出ダッシュボード</h1>
       <div class="header-actions">
         <button id="btn-refresh" class="btn-refresh">🔄 データ更新</button>
-        <button id="btn-lock" class="btn-lock">再ロック</button>
+        <button id="btn-lock" class="btn-lock">ログアウト</button>
       </div>
     </header>
 
@@ -85,10 +99,12 @@ import Layout from '../layouts/Layout.astro';
 
   const authOverlay = document.getElementById("auth-overlay");
   const adminMain = document.getElementById("admin-main");
+  const loginIdInput = document.getElementById("login-id-input");
   const passInput = document.getElementById("passcode-input");
   const unlockBtn = document.getElementById("btn-unlock");
   const authError = document.getElementById("auth-error");
   const lockBtn = document.getElementById("btn-lock");
+  const currentUserBadge = document.getElementById("current-user-badge");
 
   const totalEl = document.getElementById("stat-total");
   const waitingEl = document.getElementById("stat-waiting");
@@ -103,6 +119,10 @@ import Layout from '../layouts/Layout.astro';
     return sessionStorage.getItem("staff_key") || "";
   }
 
+  function getStaffId() {
+    return sessionStorage.getItem("staff_id") || "";
+  }
+
   async function loadData() {
     const staffKey = getStaffKey();
     if (!staffKey) {
@@ -113,11 +133,16 @@ import Layout from '../layouts/Layout.astro';
 
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/admin/list`, {
-        headers: { "X-Admin-Key": staffKey }
+        headers: { 
+          "X-Admin-Key": staffKey,
+          "X-Admin-User": getStaffId()
+        }
       });
 
-      if (res.status === 403) {
+      // 401 または 403 で認証失敗
+      if (res.status === 401 || res.status === 403) {
         sessionStorage.removeItem("staff_key");
+        sessionStorage.removeItem("staff_id");
         authOverlay.style.display = "flex";
         adminMain.style.display = "none";
         authError.style.display = "block";
@@ -130,6 +155,10 @@ import Layout from '../layouts/Layout.astro';
       authOverlay.style.display = "none";
       adminMain.style.display = "block";
       authError.style.display = "none";
+
+      if (currentUserBadge) {
+        currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
+      }
 
       totalEl.textContent = data.stats.total;
       waitingEl.textContent = data.stats.waiting;
@@ -145,11 +174,22 @@ import Layout from '../layouts/Layout.astro';
   }
 
   unlockBtn.addEventListener("click", () => {
+    const enteredId = loginIdInput.value.trim();
     const enteredKey = passInput.value.trim();
-    if (!enteredKey) return;
+    if (!enteredId || !enteredKey) {
+      authError.textContent = "IDと合言葉を両方入力してください";
+      authError.style.display = "block";
+      return;
+    }
+
+    sessionStorage.setItem("staff_id", enteredId);
     sessionStorage.setItem("staff_key", enteredKey);
     passInput.value = "";
     loadData();
+  });
+
+  loginIdInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") passInput.focus();
   });
 
   passInput.addEventListener("keydown", (e) => {
@@ -158,6 +198,7 @@ import Layout from '../layouts/Layout.astro';
 
   lockBtn.addEventListener("click", () => {
     sessionStorage.removeItem("staff_key");
+    sessionStorage.removeItem("staff_id");
     location.reload();
   });
 
@@ -221,14 +262,16 @@ import Layout from '../layouts/Layout.astro';
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "X-Admin-Key": getStaffKey()
+          "X-Admin-Key": getStaffKey(),
+          "X-Admin-User": getStaffId()
         },
         body: JSON.stringify({ ticketNumber, status })
       });
 
-      if (res.status === 403) {
-        alert("合言葉が無効です。再度ロック解除してください。");
+      if (res.status === 401 || res.status === 403) {
+        alert("認証が無効です。再度ログインしてください。");
         sessionStorage.removeItem("staff_key");
+        sessionStorage.removeItem("staff_id");
         location.reload();
         return;
       }
@@ -260,15 +303,18 @@ import Layout from '../layouts/Layout.astro';
   .lock-icon { font-size: 2.5rem; margin-bottom: 12px; }
   .auth-card h2 { margin: 0 0 8px; font-size: 1.25rem; color: #0f172a; }
   .auth-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
-  .auth-card input { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; margin-bottom: 14px; }
+  .auth-card input { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px; }
   .auth-card input:focus { outline: none; border-color: #0284c7; }
-  .btn-unlock { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+  .btn-unlock { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 4px; }
+  .btn-unlock:hover { background: #0369a1; }
   .auth-error { color: #ef4444; font-size: 0.8rem; margin-top: 10px; font-weight: bold; }
 
   /* ダッシュボード本体 */
   .admin-container { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
   .admin-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
   .admin-header .tag { font-size: 0.7rem; font-weight: 900; background: #fee2e2; color: #dc2626; width: fit-content; padding: 2px 8px; border-radius: 4px; }
+  .user-badge { font-size: 0.75rem; font-family: monospace; font-weight: 700; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; }
   .admin-header h1 { font-size: 1.3rem; margin: 0; color: #0f172a; }
   .header-actions { display: flex; gap: 10px; }
   .btn-refresh { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
