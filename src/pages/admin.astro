@@ -120,6 +120,23 @@ import Layout from '../layouts/Layout.astro';
   const callNextBtn = document.getElementById("btn-call-next");
   const refreshBtn = document.getElementById("btn-refresh");
 
+  let pollIntervalId = null;
+
+  function startPolling() {
+    if (!pollIntervalId) {
+      pollIntervalId = setInterval(() => {
+        if (getStaffKey()) loadData();
+      }, 10000);
+    }
+  }
+
+  function stopPolling() {
+    if (pollIntervalId) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+  }
+
   function getStaffKey() {
     return sessionStorage.getItem("staff_key") || "";
   }
@@ -131,6 +148,7 @@ import Layout from '../layouts/Layout.astro';
   async function loadData() {
     const staffKey = getStaffKey();
     if (!staffKey) {
+      stopPolling();
       authOverlay.style.display = "flex";
       adminMain.style.display = "none";
       return;
@@ -144,8 +162,9 @@ import Layout from '../layouts/Layout.astro';
         }
       });
 
-      // 401: 認証失敗（合言葉・IDの不一致）
+      // 401: 認証失敗（合言葉・ID不一致）
       if (res.status === 401) {
+        stopPolling();
         sessionStorage.removeItem("staff_key");
         sessionStorage.removeItem("staff_id");
         authOverlay.style.display = "flex";
@@ -155,15 +174,17 @@ import Layout from '../layouts/Layout.astro';
         return;
       }
 
-      // 403: システムOFF（GAS等で管理画面が一時停止されている状態）
+      // 403: システムOFF（GAS等で管理画面が停止中）
       if (res.status === 403) {
+        // 停止中は無駄な連続エラーを防ぐため自動更新を停止
+        stopPolling();
         const errorData = await res.json().catch(() => ({}));
         authOverlay.style.display = "none";
         adminMain.style.display = "block";
         if (currentUserBadge) {
           currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
         }
-        listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errorData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
+        listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errorData.message || "現在管理画面はメンテナンス停止中です"}<br><span style="font-size:0.8rem;color:#64748b;font-weight:normal;margin-top:6px;display:inline-block;">再開後は「🔄 データ更新」ボタンを押してください</span></td></tr>`;
         nextInfoEl.textContent = "システム停止中";
         callNextBtn.disabled = true;
         return;
@@ -171,6 +192,9 @@ import Layout from '../layouts/Layout.astro';
 
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
+
+      // 正常レスポンスが取れたらポーリングを維持/開始
+      startPolling();
 
       authOverlay.style.display = "none";
       adminMain.style.display = "block";
@@ -226,6 +250,7 @@ import Layout from '../layouts/Layout.astro';
   });
 
   lockBtn.addEventListener("click", () => {
+    stopPolling();
     sessionStorage.removeItem("staff_key");
     sessionStorage.removeItem("staff_id");
     location.reload();
@@ -299,8 +324,7 @@ import Layout from '../layouts/Layout.astro';
           "Content-Type": "application/json",
           "X-Admin-Key": getStaffKey(),
           "X-Admin-User": getStaffId()
-        }
-        ,
+        },
         body: JSON.stringify({ ticketNumber, status })
       });
 
@@ -328,11 +352,10 @@ import Layout from '../layouts/Layout.astro';
     }
   };
 
-  refreshBtn.addEventListener("click", loadData);
-
-  setInterval(() => {
-    if (getStaffKey()) loadData();
-  }, 10000);
+  // 手動更新ボタンを押した際はポーリング再開も兼ねる
+  refreshBtn.addEventListener("click", () => {
+    loadData();
+  });
 
   window.addEventListener("load", loadData);
 </script>
