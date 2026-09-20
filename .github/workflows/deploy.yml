@@ -1,28 +1,35 @@
 name: Deploy to GitHub Pages
+
 on:
   push:
     branches: ["main"] # mainブランチにPushされたら起動
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # LTS版に更新
           cache: 'npm'
+
       - run: npm ci
       - run: npm run build
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: './dist' # Astroの出力先「dist」をアップロード
+
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
     steps:
