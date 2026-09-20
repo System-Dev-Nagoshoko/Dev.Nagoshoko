@@ -144,12 +144,28 @@ import Layout from '../layouts/Layout.astro';
         }
       });
 
-      if (res.status === 401 || res.status === 403) {
+      // 401: 認証失敗（合言葉・IDの不一致）
+      if (res.status === 401) {
         sessionStorage.removeItem("staff_key");
         sessionStorage.removeItem("staff_id");
         authOverlay.style.display = "flex";
         adminMain.style.display = "none";
+        authError.textContent = "IDまたは合言葉が正しくありません";
         authError.style.display = "block";
+        return;
+      }
+
+      // 403: システムOFF（GAS等で管理画面が一時停止されている状態）
+      if (res.status === 403) {
+        const errorData = await res.json().catch(() => ({}));
+        authOverlay.style.display = "none";
+        adminMain.style.display = "block";
+        if (currentUserBadge) {
+          currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
+        }
+        listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errorData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
+        nextInfoEl.textContent = "システム停止中";
+        callNextBtn.disabled = true;
         return;
       }
 
@@ -283,11 +299,12 @@ import Layout from '../layouts/Layout.astro';
           "Content-Type": "application/json",
           "X-Admin-Key": getStaffKey(),
           "X-Admin-User": getStaffId()
-        },
+        }
+        ,
         body: JSON.stringify({ ticketNumber, status })
       });
 
-      if (res.status === 401 || res.status === 403) {
+      if (res.status === 401) {
         alert("認証が無効です。再度ログインしてください。");
         sessionStorage.removeItem("staff_key");
         sessionStorage.removeItem("staff_id");
@@ -296,6 +313,11 @@ import Layout from '../layouts/Layout.astro';
       }
 
       const data = await res.json();
+      if (res.status === 403) {
+        alert(data.message || "現在メンテナンス中のため操作できません。");
+        return;
+      }
+
       if (data.success) {
         loadData();
       } else {
