@@ -10,7 +10,7 @@ import Layout from '../layouts/Layout.astro';
       <h2>スタッフ認証</h2>
       <p class="auth-desc">関係者専用のIDと合言葉を入力してください</p>
       
-      <!-- 👤 追加: ログインID入力欄 -->
+      <!-- 👤 ログインID入力欄 -->
       <input 
         type="text" 
         id="login-id-input" 
@@ -45,15 +45,18 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </header>
 
-    <!-- 📊 統計カード -->
+    <!-- 📊 統計カード（組数 ＋ 待機人数） -->
     <div class="stats-grid">
       <div class="stat-card">
-        <span class="stat-label">総発券数</span>
+        <span class="stat-label">総発券組数</span>
         <span id="stat-total" class="stat-val">0</span>
       </div>
       <div class="stat-card highlight-waiting">
-        <span class="stat-label">待機中 (列)</span>
-        <span id="stat-waiting" class="stat-val">0</span>
+        <span class="stat-label">待機組数 (総人数)</span>
+        <div class="stat-val-group">
+          <span id="stat-waiting" class="stat-val">0</span>
+          <span class="stat-sub-val">(<strong id="stat-waiting-people">0</strong>名)</span>
+        </div>
       </div>
       <div class="stat-card highlight-called">
         <span class="stat-label">呼出中 (案内待ち)</span>
@@ -70,7 +73,7 @@ import Layout from '../layouts/Layout.astro';
       <h3>🚀 先頭の番号を呼出</h3>
       <div class="quick-action">
         <p id="next-calling-info">次の待機者: 読み込み中...</p>
-        <button id="btn-call-next" class="btn-call-primary" disabled>次の1人を呼出</button>
+        <button id="btn-call-next" class="btn-call-primary" disabled>次の組を呼出</button>
       </div>
     </div>
 
@@ -81,13 +84,14 @@ import Layout from '../layouts/Layout.astro';
         <thead>
           <tr>
             <th>番号</th>
+            <th>人数</th>
             <th>発行時刻</th>
             <th>状態</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="ticket-list-body">
-          <tr><td colspan="4" style="text-align:center;">読み込み中...</td></tr>
+          <tr><td colspan="5" style="text-align:center;">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -108,6 +112,7 @@ import Layout from '../layouts/Layout.astro';
 
   const totalEl = document.getElementById("stat-total");
   const waitingEl = document.getElementById("stat-waiting");
+  const waitingPeopleEl = document.getElementById("stat-waiting-people");
   const calledEl = document.getElementById("stat-called");
   const admittedEl = document.getElementById("stat-admitted");
   const listBody = document.getElementById("ticket-list-body");
@@ -139,7 +144,6 @@ import Layout from '../layouts/Layout.astro';
         }
       });
 
-      // 401 または 403 で認証失敗
       if (res.status === 401 || res.status === 403) {
         sessionStorage.removeItem("staff_key");
         sessionStorage.removeItem("staff_id");
@@ -160,16 +164,25 @@ import Layout from '../layouts/Layout.astro';
         currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
       }
 
+      // 統計カード更新
       totalEl.textContent = data.stats.total;
       waitingEl.textContent = data.stats.waiting;
       calledEl.textContent = data.stats.called;
       admittedEl.textContent = data.stats.admitted;
 
+      // 待機中の合計人数を計算
+      const waitingHeadcount = (data.tickets || [])
+        .filter(t => t.status === "WAITING")
+        .reduce((sum, t) => sum + (Number(t.headcount) || 1), 0);
+      if (waitingPeopleEl) {
+        waitingPeopleEl.textContent = waitingHeadcount;
+      }
+
       renderTable(data.tickets);
       updateQuickCall(data.tickets);
     } catch (e) {
       console.error(e);
-      listBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
     }
   }
 
@@ -203,11 +216,13 @@ import Layout from '../layouts/Layout.astro';
   });
 
   function updateQuickCall(tickets) {
-    const nextWaiting = tickets.find(t => t.status === "WAITING");
+    const nextWaiting = (tickets || []).slice().reverse().find(t => t.status === "WAITING") || tickets.find(t => t.status === "WAITING");
+    
     if (nextWaiting) {
-      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong> です`;
+      const count = nextWaiting.headcount || 1;
+      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">${count}名様</span>）です`;
       callNextBtn.disabled = false;
-      callNextBtn.onclick = () => updateStatus(nextWaiting.ticket_number, "CALLED");
+      callNextBtn.onclick = () => updateStatus(nextWaiting.ticket_number, "CALLED", count);
     } else {
       nextInfoEl.textContent = "待機中の来場者はいません";
       callNextBtn.disabled = true;
@@ -216,7 +231,7 @@ import Layout from '../layouts/Layout.astro';
 
   function renderTable(tickets) {
     if (!tickets || tickets.length === 0) {
-      listBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
       return;
     }
 
@@ -227,15 +242,18 @@ import Layout from '../layouts/Layout.astro';
         time = new Date(utcIsoString).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
       }
       
+      const count = t.headcount || 1;
+      const countBadge = `<span class="badge headcount-badge">${count}名</span>`;
+
       let badge = `<span class="badge waiting">待機中</span>`;
       let actionBtns = `
-        <button class="btn-sm btn-call" onclick="updateStatus(${t.ticket_number}, 'CALLED')">呼出</button>
+        <button class="btn-sm btn-call" onclick="updateStatus(${t.ticket_number}, 'CALLED', ${count})">呼出</button>
       `;
 
       if (t.status === "CALLED") {
         badge = `<span class="badge called">呼出中</span>`;
         actionBtns = `
-          <button class="btn-sm btn-admit" onclick="updateStatus(${t.ticket_number}, 'ADMITTED')">入場完了</button>
+          <button class="btn-sm btn-admit" onclick="updateStatus(${t.ticket_number}, 'ADMITTED', ${count})">入場完了</button>
         `;
       } else if (t.status === "ADMITTED") {
         badge = `<span class="badge admitted">入場済</span>`;
@@ -245,6 +263,7 @@ import Layout from '../layouts/Layout.astro';
       return `
         <tr>
           <td><strong>No.${t.ticket_number}</strong></td>
+          <td>${countBadge}</td>
           <td>${time}</td>
           <td>${badge}</td>
           <td>${actionBtns}</td>
@@ -253,8 +272,8 @@ import Layout from '../layouts/Layout.astro';
     }).join("");
   }
 
-  window.updateStatus = async function(ticketNumber, status) {
-    const actionName = status === "CALLED" ? "お呼び出し" : "入場完了";
+  window.updateStatus = async function(ticketNumber, status, count = 1) {
+    const actionName = status === "CALLED" ? `お呼び出し（${count}名様）` : "入場完了";
     if (!confirm(`No.${ticketNumber} を「${actionName}」にしますか？`)) return;
 
     try {
@@ -320,20 +339,26 @@ import Layout from '../layouts/Layout.astro';
   .btn-refresh { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
   .btn-lock { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
+  /* 統計カード */
   .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
   @media(min-width: 600px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
   .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
   .stat-label { font-size: 0.75rem; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
   .stat-val { font-size: 1.8rem; font-weight: 900; color: #0f172a; }
+  .stat-val-group { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
+  .stat-sub-val { font-size: 0.9rem; color: #0284c7; font-weight: 700; }
   .highlight-waiting .stat-val { color: #0284c7; }
   .highlight-called .stat-val { color: #d97706; }
 
+  /* クイック呼出 */
   .quick-call-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
   .quick-call-box h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #1e3a8a; }
   .quick-action { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .quick-headcount { background: #dbeafe; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
   .btn-call-primary { background: #0284c7; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   .btn-call-primary:disabled { background: #94a3b8; cursor: not-allowed; }
 
+  /* テーブル */
   .table-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow-x: auto; }
   .table-container h2 { font-size: 1.05rem; margin: 0 0 14px 0; }
   .ticket-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
@@ -344,6 +369,7 @@ import Layout from '../layouts/Layout.astro';
   .badge.waiting { background: #e0f2fe; color: #0369a1; }
   .badge.called { background: #fef3c7; color: #b45309; }
   .badge.admitted { background: #f1f5f9; color: #64748b; }
+  .headcount-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
 
   .btn-sm { border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
   .btn-call { background: #f59e0b; color: white; }
