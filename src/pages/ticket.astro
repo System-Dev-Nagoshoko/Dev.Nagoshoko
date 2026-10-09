@@ -2,110 +2,151 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="整理券発行 | 第7回商工祭">
-  <div class="cyber-portal">
-    <div class="digital-bg"></div>
-    <div class="neon-glow"></div>
+<Layout title="プログラミング体験会 整理券発行 | 第7回商工祭">
+  <div class="code-portal">
+    <div class="matrix-bg"></div>
 
-    <header class="cyber-header">
-      <div class="header-line"></div>
-      <h1>整理券発行システム <span class="ver">v2.1</span></h1>
-      <p class="cyber-subtitle">SMART TICKETING // NO PERSONAL DATA</p>
+    <header class="terminal-header">
+      <div class="header-badge">LIVE SESSION // 2026</div>
+      <h1>&lt;ProgramExperience /&gt;</h1>
+      <p class="terminal-subtitle">整理券発行システム // SMART DISPATCH</p>
     </header>
 
     <main class="portal-container">
-      <div class="crystal c-1"><div class="crystal-core"></div></div>
-      <div class="crystal c-2"><div class="crystal-core shadow-core"></div></div>
-      <div class="crystal c-3"><div class="crystal-core"></div></div>
-      <div class="crystal c-4"><div class="crystal-core shadow-core"></div></div>
-
-      <div class="ticket-card">
-        <div class="tile-edge"></div>
-
-        <!-- ① 初期読み込み中表示 -->
-        <div id="status-loading" class="panel-section">
-          <div class="cyber-scanner">
-            <div class="scan-beam"></div>
+      <div class="editor-window">
+        <!-- エディタウィンドウのタイトルバー -->
+        <div class="window-titlebar">
+          <div class="traffic-lights">
+            <span class="dot dot-close"></span>
+            <span class="dot dot-min"></span>
+            <span class="dot dot-max"></span>
           </div>
-          <p id="loading-text" class="scanning-text">CONNECTING...</p>
+          <span class="tab-title">ticket_reservation.ts</span>
+          <span class="mode-tag" id="mode-badge">CONNECTING</span>
         </div>
 
-        <!-- ② 未発券状態（人数選択 ＆ 発券ボタン） -->
-        <div id="status-unissued" class="panel-section" style="display: none;">
-          <div class="status-badge" id="mode-badge">TICKET SYSTEM</div>
-          <h2 class="card-headline">整理券</h2>
-          
-          <div class="guide-box">
-            <div class="guide-item">
-              <span class="guide-bullet">🛡️</span>
-              <p>氏名・電話番号等の<strong>個人情報は一切取得しません</strong>。</p>
-            </div>
-            <div class="guide-item">
-              <span class="guide-bullet">📱</span>
-              <p id="guide-notice-text">順番が近づきましたら公式LINEでお知らせします。</p>
-            </div>
-            <div class="guide-item">
-              <span class="guide-bullet">🚶</span>
-              <p>整理券取得後は、お呼び出しまで校内をご自由にお回りいただけます。</p>
+        <!-- ① 初期読み込み中表示 -->
+        <div id="status-loading" class="editor-body">
+          <div class="loader-terminal">
+            <div class="cursor-line">&gt; system.initialize()<span class="blink">_</span></div>
+            <p id="loading-text" class="status-console">FETCHING ENVIRONMENT...</p>
+          </div>
+        </div>
+
+        <!-- ② 未発券状態（入力フォーム） -->
+        <div id="status-unissued" class="editor-body" style="display: none;">
+          <div class="comment-box">
+            <div class="comment-line">// 1. 氏名・電話番号等の個人情報は一切取得しません</div>
+            <div class="comment-line">// 2. 順番が近づきましたら公式LINEでお知らせします</div>
+            <div class="comment-line">// 3. お呼び出しまで校内を自由にお回りいただけます</div>
+          </div>
+
+          <!-- 1. お子様の人数 -->
+          <div class="field-block">
+            <label class="code-label">
+              <span class="keyword">const</span> <span class="var-name">childrenCount</span>: <span class="type-name">number</span> =
+            </label>
+            <div class="selector-grid" id="child-selector">
+              <button type="button" class="btn-select active" data-count="1">1名</button>
+              <button type="button" class="btn-select" data-count="2">2名</button>
+              <button type="button" class="btn-select" data-count="3">3名</button>
+              <button type="button" class="btn-select" data-count="4">4名〜</button>
             </div>
           </div>
 
-          <!-- 👥 ご利用人数選択セレクター -->
-          <div class="headcount-box">
-            <label class="headcount-label">ご利用人数を選択してください</label>
-            <div class="headcount-selector" id="headcount-selector">
-              <button type="button" class="btn-count active" data-count="1">1名</button>
-              <button type="button" class="btn-count" data-count="2">2名</button>
-              <button type="button" class="btn-count" data-count="3">3名</button>
-              <button type="button" class="btn-count" data-count="4">4名</button>
-              <button type="button" class="btn-count" data-count="5">5名〜</button>
+          <!-- 2. 兄弟の別枠発券トグル（お子様2名以上で表示） -->
+          <div id="split-wrapper" class="field-block split-option" style="display: none;">
+            <label class="checkbox-container">
+              <input type="checkbox" id="split-ticket-checkbox" />
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">
+                兄弟で個別に呼出枠を分ける（連続2番号を発券）
+              </span>
+            </label>
+          </div>
+
+          <!-- 3. 保護者の人数 -->
+          <div class="field-block">
+            <label class="code-label">
+              <span class="keyword">const</span> <span class="var-name">guardiansCount</span>: <span class="type-name">number</span> =
+            </label>
+            <div class="selector-grid" id="adult-selector">
+              <button type="button" class="btn-select" data-count="0">0名</button>
+              <button type="button" class="btn-select active" data-count="1">1名</button>
+              <button type="button" class="btn-select" data-count="2">2名</button>
+              <button type="button" class="btn-select" data-count="3">3名〜</button>
             </div>
+          </div>
+
+          <!-- 4. 備考欄 -->
+          <div class="field-block">
+            <label class="code-label">
+              <span class="keyword">const</span> <span class="var-name">remarks</span>: <span class="type-name">string</span> =
+            </label>
+            <textarea
+              id="ticket-note"
+              class="code-textarea"
+              placeholder="// 学年やPC操作経験、ご質問等があれば入力してください（任意）"
+              maxlength="150"
+              rows="2"
+            ></textarea>
           </div>
 
           <!-- Cloudflare Turnstile コンテナ -->
-          <div
-            id="turnstile-container"
-            class="turnstile-container"
-            style="display: none;"
-          ></div>
+          <div id="turnstile-container" class="turnstile-container" style="display: none;"></div>
 
-          <button id="btn-issue" class="cyber-issue-btn" disabled>
-            <span class="btn-icon">🎟️</span>
-            <span id="btn-title-text" class="btn-title">整理券を取得する</span>
+          <!-- 実行ボタン -->
+          <button id="btn-issue" class="terminal-btn" disabled>
+            <span class="btn-arrow">&gt;&gt;</span>
+            <span id="btn-title-text" class="btn-title">EXECUTE_RESERVATION()</span>
           </button>
         </div>
 
-        <!-- ③ 発券完了状態（番号 ＆ 人数 ＆ 照合時計） -->
-        <div id="status-issued" class="panel-section" style="display: none;">
-          <div class="status-badge live-badge">
-            <span class="pulse-dot"></span> TICKET VERIFIED
+        <!-- ③ 発券完了状態 -->
+        <div id="status-issued" class="editor-body" style="display: none;">
+          <div class="terminal-success-badge">
+            <span class="pulse-dot"></span> STATUS: 200 OK (VERIFIED)
           </div>
 
-          <p class="ticket-sublabel">あなたの整理券番号</p>
-          <div class="number-wrapper">
-            <span class="num-prefix">No.</span>
-            <span id="ticket-number" class="ticket-num">--</span>
+          <p class="result-title">// RESERVATION GRANTED</p>
+          <div class="ticket-display">
+            <div class="num-wrapper">
+              <span id="ticket-number" class="ticket-num">--</span>
+            </div>
           </div>
 
-          <div class="issued-headcount-badge">
-            ご案内人数：<strong id="ticket-headcount">1</strong>名様
+          <div class="ticket-meta-box">
+            <div class="meta-row">
+              <span class="meta-key">children:</span>
+              <span id="res-child" class="meta-val">1名</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">guardians:</span>
+              <span id="res-adult" class="meta-val">1名</span>
+            </div>
+            <div class="meta-row" id="res-note-row" style="display: none;">
+              <span class="meta-key">note:</span>
+              <span id="res-note" class="meta-val">--</span>
+            </div>
           </div>
 
           <div class="live-clock-card">
-            <span class="clock-label">CURRENT TIME // 照合用</span>
+            <span class="clock-label">SYS_TIME // 照合確認用</span>
             <div id="live-clock" class="clock-display">--:--:--.--</div>
           </div>
 
-          <div class="flow-message">
-            <p>※順番になりましたら、入口受付にてこの画面をご提示ください。</p>
+          <div class="console-footer">
+            <p>※順番になりましたら、体験ブース受付にてこの画面をご提示ください。</p>
           </div>
         </div>
 
         <!-- ④ エラー表示 -->
-        <div id="status-error" class="panel-section" style="display: none;">
-          <div class="status-badge error-badge">ERROR</div>
-          <p id="error-message" class="error-text">通信エラーが発生しました。</p>
-          <button class="cyber-retry-btn" onclick="location.reload()">再読み込み</button>
+        <div id="status-error" class="editor-body" style="display: none;">
+          <div class="terminal-error-badge">EXCEPTION CAUGHT</div>
+          <p id="error-message" class="error-text">ERR: 通信に失敗しました。</p>
+          <button class="terminal-btn retry-btn" onclick="location.reload()">
+            &gt; SYSTEM.REBOOT()
+          </button>
         </div>
       </div>
     </main>
@@ -129,25 +170,52 @@ import Layout from '../layouts/Layout.astro';
   const issuedEl = document.getElementById("status-issued");
   const errorEl = document.getElementById("status-error");
   const errorMsgEl = document.getElementById("error-message");
+
   const numberEl = document.getElementById("ticket-number");
-  const headcountEl = document.getElementById("ticket-headcount");
+  const resChildEl = document.getElementById("res-child");
+  const resAdultEl = document.getElementById("res-adult");
+  const resNoteRow = document.getElementById("res-note-row");
+  const resNoteEl = document.getElementById("res-note");
+
   const issueBtn = document.getElementById("btn-issue");
   const btnTitleText = document.getElementById("btn-title-text");
   const clockEl = document.getElementById("live-clock");
   const modeBadgeEl = document.getElementById("mode-badge");
   const turnstileContainer = document.getElementById("turnstile-container");
+  const splitWrapper = document.getElementById("split-wrapper");
+  const splitCheckbox = document.getElementById("split-ticket-checkbox");
+  const noteInput = document.getElementById("ticket-note");
 
   let turnstileWidgetId = null;
   let turnstileToken = null;
   let lineReady = false;
-  let selectedHeadcount = 1;
 
-  // 人数選択ボタン制御
-  document.querySelectorAll(".btn-count").forEach((btn) => {
+  let selectedChildCount = 1;
+  let selectedAdultCount = 1;
+
+  // お子様 人数選択
+  document.querySelectorAll("#child-selector .btn-select").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".btn-count").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll("#child-selector .btn-select").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      selectedHeadcount = parseInt(btn.dataset.count, 10);
+      selectedChildCount = parseInt(btn.dataset.count, 10);
+
+      // お子様2人以上で兄弟分割オプションを表示
+      if (selectedChildCount >= 2) {
+        splitWrapper.style.display = "block";
+      } else {
+        splitWrapper.style.display = "none";
+        splitCheckbox.checked = false;
+      }
+    });
+  });
+
+  // 保護者 人数選択
+  document.querySelectorAll("#adult-selector .btn-select").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#adult-selector .btn-select").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedAdultCount = parseInt(btn.dataset.count, 10);
     });
   });
 
@@ -166,9 +234,16 @@ import Layout from '../layouts/Layout.astro';
     requestAnimationFrame(update);
   }
 
-  function displayTicket(ticketNo, headcount = 1) {
+  function displayTicket(ticketNo, child = 1, adult = 0, note = "") {
     if (numberEl) numberEl.innerText = ticketNo;
-    if (headcountEl) headcountEl.innerText = headcount;
+    if (resChildEl) resChildEl.innerText = `${child}名`;
+    if (resAdultEl) resAdultEl.innerText = `${adult}名`;
+
+    if (note && resNoteRow && resNoteEl) {
+      resNoteEl.innerText = note;
+      resNoteRow.style.display = "flex";
+    }
+
     if (loadingEl) loadingEl.style.display = "none";
     if (unissuedEl) unissuedEl.style.display = "none";
     if (errorEl) errorEl.style.display = "none";
@@ -189,28 +264,17 @@ import Layout from '../layouts/Layout.astro';
 
   function loadTurnstileSdk() {
     return new Promise((resolve, reject) => {
-      if (window.turnstile) {
-        resolve(window.turnstile);
-        return;
-      }
+      if (window.turnstile) return resolve(window.turnstile);
 
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-
       script.onload = () => {
-        if (window.turnstile) {
-          resolve(window.turnstile);
-        } else {
-          reject(new Error("Turnstile SDK unavailable"));
-        }
+        if (window.turnstile) resolve(window.turnstile);
+        else reject(new Error("Turnstile unavailable"));
       };
-
-      script.onerror = () => {
-        reject(new Error("Turnstile SDK Load Error"));
-      };
-
+      script.onerror = () => reject(new Error("Turnstile Error"));
       document.head.appendChild(script);
     });
   }
@@ -226,76 +290,50 @@ import Layout from '../layouts/Layout.astro';
 
     try {
       const turnstile = await loadTurnstileSdk();
-
       turnstileWidgetId = turnstile.render(turnstileContainer, {
         sitekey: TURNSTILE_SITE_KEY,
         action: "issue_ticket",
         appearance: "always",
-        theme: "light",
+        theme: "dark",
         callback: (token) => {
           turnstileToken = token;
-          if (issueBtn && lineReady) {
-            issueBtn.disabled = false;
-          }
+          if (issueBtn && lineReady) issueBtn.disabled = false;
         },
         "expired-callback": () => {
           turnstileToken = null;
           if (issueBtn) issueBtn.disabled = true;
         },
-        "error-callback": (code) => {
-          console.warn("Turnstile Verification Warning (Bypassing):", code);
-
-          try {
-            if (turnstileWidgetId !== null && window.turnstile) {
-              window.turnstile.remove(turnstileWidgetId);
-            }
-          } catch (e) {
-            console.warn("Turnstile remove failed:", e);
-          } finally {
-            turnstileWidgetId = null;
-          }
-
+        "error-callback": () => {
           turnstileToken = "BYPASS_UNAVAILABLE";
           if (turnstileContainer) {
             turnstileContainer.style.display = "none";
             turnstileContainer.innerHTML = "";
           }
-
-          if (issueBtn && lineReady) {
-            issueBtn.disabled = false;
-          }
+          if (issueBtn && lineReady) issueBtn.disabled = false;
         }
       });
     } catch (err) {
-      console.warn("Turnstile Mount Error (Bypassing):", err);
-      turnstileWidgetId = null;
       turnstileToken = "BYPASS_UNAVAILABLE";
-      if (turnstileContainer) {
-        turnstileContainer.style.display = "none";
-        turnstileContainer.innerHTML = "";
-      }
-      if (issueBtn && lineReady) {
-        issueBtn.disabled = false;
-      }
+      if (issueBtn && lineReady) issueBtn.disabled = false;
     }
   }
 
   async function init() {
     const cachedNo = localStorage.getItem("shokosai_ticket_no");
-    const cachedHeadcount = localStorage.getItem("shokosai_ticket_headcount") || 1;
+    const cachedChild = localStorage.getItem("shokosai_ticket_child") || 1;
+    const cachedAdult = localStorage.getItem("shokosai_ticket_adult") || 0;
+    const cachedNote = localStorage.getItem("shokosai_ticket_note") || "";
+
     if (cachedNo) {
-      displayTicket(cachedNo, cachedHeadcount);
+      displayTicket(cachedNo, cachedChild, cachedAdult, cachedNote);
       return;
     }
 
     if (isDevMode) {
-      console.warn("⚠️ [DEV MODE] ?dev=true 検知：LIFFをスキップしてWebモードで起動します。");
       if (modeBadgeEl) {
-        modeBadgeEl.textContent = "DIRECT WEB MODE";
-        modeBadgeEl.style.background = "#e0f2fe";
-        modeBadgeEl.style.color = "#0369a1";
+        modeBadgeEl.textContent = "DEV ENVIRONMENT";
+        modeBadgeEl.style.color = "#38bdf8";
       }
-      if (btnTitleText) btnTitleText.textContent = "整理券を発行する";
       if (loadingEl) loadingEl.style.display = "none";
       if (unissuedEl) unissuedEl.style.display = "block";
 
@@ -305,7 +343,7 @@ import Layout from '../layouts/Layout.astro';
     }
 
     try {
-      if (loadingTextEl) loadingTextEl.textContent = "LINE AUTHENTICATING...";
+      if (loadingTextEl) loadingTextEl.textContent = "ESTABLISHING LINE OAUTH...";
       const liffObj = await loadLiffSdk();
       await liffObj.init({ liffId: LIFF_ID });
 
@@ -315,32 +353,36 @@ import Layout from '../layouts/Layout.astro';
       }
 
       lineReady = true;
-
-      if (modeBadgeEl) modeBadgeEl.textContent = "LINE CONNECTED";
-      if (btnTitleText) btnTitleText.textContent = "LINEで整理券を取得";
+      if (modeBadgeEl) {
+        modeBadgeEl.textContent = "CONNECTED";
+        modeBadgeEl.style.color = "#4ade80";
+      }
       if (loadingEl) loadingEl.style.display = "none";
       if (unissuedEl) unissuedEl.style.display = "block";
 
       await initTurnstile();
-
-      if (turnstileToken && issueBtn) {
-        issueBtn.disabled = false;
-      }
+      if (turnstileToken && issueBtn) issueBtn.disabled = false;
     } catch (err) {
-      console.error("LIFF Init Error:", err);
       if (loadingEl) loadingEl.style.display = "none";
-      if (errorMsgEl) errorMsgEl.innerText = "LINE認証の初期化に失敗しました。";
+      if (errorMsgEl) errorMsgEl.innerText = "LINE_INIT_FAILED: 認証セッションを確立できませんでした。";
       if (errorEl) errorEl.style.display = "block";
     }
   }
 
   issueBtn?.addEventListener("click", async () => {
     issueBtn.disabled = true;
-    if (btnTitleText) btnTitleText.innerText = "発券処理中...";
+    if (btnTitleText) btnTitleText.innerText = "POSTING RESERVATION...";
+
+    const isSplit = splitCheckbox.checked;
+    const noteText = noteInput.value.trim();
 
     try {
       let payload = {
-        headcount: selectedHeadcount
+        childCount: selectedChildCount,
+        adultCount: selectedAdultCount,
+        splitTicket: isSplit,
+        note: noteText,
+        headcount: selectedChildCount + selectedAdultCount
       };
 
       if (isDevMode) {
@@ -352,15 +394,9 @@ import Layout from '../layouts/Layout.astro';
         payload.mockUserId = mockUid;
       } else {
         const idToken = window.liff?.getIDToken();
-
-        if (!idToken) {
-          throw new Error("LINE ID Token unavailable");
+        if (!idToken || !turnstileToken) {
+          throw new Error("AUTH_TOKEN_MISSING");
         }
-
-        if (!turnstileToken) {
-          throw new Error("Turnstile verification required");
-        }
-
         payload.idToken = idToken;
         payload.turnstileToken = turnstileToken;
       }
@@ -374,55 +410,34 @@ import Layout from '../layouts/Layout.astro';
       const data = await res.json();
 
       if (data.success) {
-        const ticketHeadcount = data.headcount || selectedHeadcount;
-        localStorage.setItem("shokosai_ticket_no", data.ticketNumber);
-        localStorage.setItem("shokosai_ticket_headcount", ticketHeadcount);
-        displayTicket(data.ticketNumber, ticketHeadcount);
+        let ticketLabel = `No.${data.ticketNumber}`;
+        if (data.ticketNumbers && data.ticketNumbers.length > 1) {
+          ticketLabel = data.ticketNumbers.map(n => `No.${n}`).join(", ");
+        }
+
+        const resChild = data.childCount || selectedChildCount;
+        const resAdult = data.adultCount !== undefined ? data.adultCount : selectedAdultCount;
+
+        localStorage.setItem("shokosai_ticket_no", ticketLabel);
+        localStorage.setItem("shokosai_ticket_child", resChild);
+        localStorage.setItem("shokosai_ticket_adult", resAdult);
+        localStorage.setItem("shokosai_ticket_note", noteText);
+
+        displayTicket(ticketLabel, resChild, resAdult, noteText);
         turnstileToken = null;
       } else {
         alert(data.message || "発券に失敗しました。");
-
-        if (
-          !isDevMode &&
-          window.turnstile &&
-          turnstileWidgetId !== null &&
-          turnstileToken !== "BYPASS_UNAVAILABLE"
-        ) {
-          try {
-            window.turnstile.reset(turnstileWidgetId);
-          } catch (e) {
-            console.warn("Turnstile reset skipped:", e);
-          }
+        if (!isDevMode && window.turnstile && turnstileWidgetId !== null && turnstileToken !== "BYPASS_UNAVAILABLE") {
+          window.turnstile.reset(turnstileWidgetId);
           turnstileToken = null;
         }
-
         issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
-        if (btnTitleText) {
-          btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
-        }
+        if (btnTitleText) btnTitleText.innerText = "EXECUTE_RESERVATION()";
       }
     } catch (err) {
-      console.error("Ticket issue error:", err);
       alert("通信エラーが発生しました。");
-
-      if (
-        !isDevMode &&
-        window.turnstile &&
-        turnstileWidgetId !== null &&
-        turnstileToken !== "BYPASS_UNAVAILABLE"
-      ) {
-        try {
-          window.turnstile.reset(turnstileWidgetId);
-        } catch (e) {
-          console.warn("Turnstile reset skipped:", e);
-        }
-        turnstileToken = null;
-      }
-
-      issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
-      if (btnTitleText) {
-        btnTitleText.innerText = isDevMode ? "整理券を発行する" : "LINEで整理券を取得";
-      }
+      issueBtn.disabled = false;
+      if (btnTitleText) btnTitleText.innerText = "EXECUTE_RESERVATION()";
     }
   });
 
@@ -438,499 +453,394 @@ import Layout from '../layouts/Layout.astro';
     margin: 0;
     padding: 0;
     width: 100%;
-    overflow-x: hidden;
+    background-color: #0b0f19;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, Monaco, monospace, system-ui;
     -webkit-text-size-adjust: 100%;
   }
 
-  .cyber-portal {
-    position: relative;
-    width: 100%;
+  .code-portal {
     min-height: 100vh;
     min-height: 100dvh;
-    padding: clamp(16px, 4vw, 32px) 16px clamp(40px, 8vh, 80px);
-    overflow-x: hidden;
+    padding: 24px 16px 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+    overflow-x: hidden;
   }
 
-  .digital-bg {
+  .matrix-bg {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image:
-      linear-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
-    background-size: 24px 24px;
-    z-index: -2;
+    inset: 0;
+    background-image: 
+      radial-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+      linear-gradient(rgba(15, 23, 42, 0.9), #0b0f19);
+    background-size: 20px 20px, 100% 100%;
     pointer-events: none;
-  }
-
-  .neon-glow {
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at center, rgba(6, 199, 85, 0.05) 0%, transparent 60%);
     z-index: -1;
-    pointer-events: none;
   }
 
-  .cyber-header {
+  .terminal-header {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     text-align: center;
-    margin-bottom: clamp(16px, 3vh, 24px);
-    padding-top: clamp(4px, 1.5vh, 12px);
+    margin-bottom: 20px;
   }
 
-  .header-line {
-    width: 36px;
-    height: 4px;
-    background: #06c755;
-    margin: 0 auto 10px;
-    box-shadow: 0 2px 8px rgba(6, 199, 85, 0.3);
-    border-radius: 2px;
+  .header-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
   }
 
-  .cyber-header h1 {
-    font-size: clamp(1.15rem, 5vw, 1.35rem);
-    font-weight: 900;
+  .terminal-header h1 {
+    font-size: 1.45rem;
     margin: 0;
-    letter-spacing: 0.03em;
-    color: #1e3a8a;
-    line-height: 1.3;
-    word-break: break-all;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
   }
 
-  .ver {
-    font-size: 0.72em;
-    vertical-align: top;
-    color: #06c755;
-    white-space: nowrap;
-  }
-
-  .cyber-subtitle {
-    font-size: clamp(0.65rem, 2.6vw, 0.72rem);
+  .terminal-subtitle {
+    font-size: 0.72rem;
     color: #64748b;
-    opacity: 0.85;
-    letter-spacing: 0.08em;
     margin-top: 4px;
-    font-weight: 600;
+    letter-spacing: 0.05em;
   }
 
   .portal-container {
-    position: relative;
     width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
+    max-width: 440px;
   }
 
-  .crystal {
-    position: absolute;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .c-1 {
-    top: -12px;
-    left: 2px;
-    width: 22px;
-    height: 38px;
-    animation: float1 4s infinite ease-in-out;
-  }
-  .c-2 {
-    top: 90px;
-    right: 2px;
-    width: 18px;
-    height: 32px;
-    opacity: 0.7;
-    animation: float2 5s infinite ease-in-out;
-  }
-  .c-3 {
-    bottom: 60px;
-    left: 2px;
-    width: 18px;
-    height: 32px;
-    opacity: 0.75;
-    animation: float3 4.5s infinite ease-in-out;
-  }
-  .c-4 {
-    bottom: -8px;
-    right: 2px;
-    width: 22px;
-    height: 38px;
-    animation: float4 4.2s infinite ease-in-out;
-  }
-
-  .crystal-core {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(6, 199, 85, 0.6) 0%, rgba(0, 180, 216, 0.5) 100%);
-    clip-path: polygon(50% 0%, 100% 35%, 100% 65%, 50% 100%, 0% 65%, 0% 35%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-  }
-
-  .shadow-core {
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.5) 0%, rgba(114, 9, 183, 0.45) 100%);
-  }
-
-  @keyframes float1 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  @keyframes float2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
-  @keyframes float3 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  @keyframes float4 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
-
-  .ticket-card {
-    position: relative;
-    width: 100%;
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 16px;
-    padding: clamp(20px, 5vw, 32px) clamp(14px, 4vw, 22px);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-    z-index: 2;
-    text-align: center;
-  }
-
-  .tile-edge {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 12px;
-    height: 12px;
-    border-top: 3px solid #06c755;
-    border-left: 3px solid #06c755;
-    border-top-left-radius: 4px;
-  }
-
-  .card-headline {
-    margin: 6px 0 12px;
-    font-size: clamp(1.1rem, 4.5vw, 1.25rem);
-    font-weight: 900;
-    color: #0f172a;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 3px 10px;
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    border-radius: 20px;
-    background: #f1f5f9;
-    color: #475569;
-    margin-bottom: 6px;
-  }
-
-  .live-badge {
-    background: rgba(6, 199, 85, 0.1);
-    color: #059669;
-  }
-
-  .error-badge {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-  }
-
-  .guide-box {
-    text-align: left;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: clamp(12px, 3.5vw, 16px) clamp(10px, 3vw, 14px);
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .guide-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: clamp(0.78rem, 3.2vw, 0.83rem);
-    line-height: 1.45;
-    color: #475569;
-  }
-
-  .guide-item p {
-    margin: 0;
-    flex: 1;
-  }
-
-  .guide-item strong {
-    color: #0f172a;
-  }
-
-  .guide-bullet {
-    font-size: 0.9rem;
-    line-height: 1.2;
-    flex-shrink: 0;
-  }
-
-  /* 👥 人数選択用スタイル */
-  .headcount-box {
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
+  .editor-window {
+    background: #111827;
+    border: 1px solid #1f2937;
     border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 16px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    overflow: hidden;
   }
 
-  .headcount-label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: #1e293b;
-    margin-bottom: 8px;
-    letter-spacing: 0.02em;
-  }
-
-  .headcount-selector {
+  .window-titlebar {
+    background: #1e293b;
+    padding: 10px 14px;
     display: flex;
-    justify-content: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    position: relative;
   }
 
-  .btn-count {
+  .traffic-lights {
+    display: flex;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-close { background: #ef4444; }
+  .dot-min { background: #f59e0b; }
+  .dot-max { background: #10b981; }
+
+  .tab-title {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-left: 12px;
+  }
+
+  .mode-tag {
+    margin-left: auto;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #eab308;
+    letter-spacing: 0.05em;
+  }
+
+  .editor-body {
+    padding: 20px 16px;
+  }
+
+  /* コメント風案内 */
+  .comment-box {
+    background: #0d131f;
+    border-left: 3px solid #38bdf8;
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .comment-line {
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  .field-block {
+    margin-bottom: 18px;
+  }
+
+  .code-label {
+    display: block;
+    font-size: 0.82rem;
+    margin-bottom: 8px;
+  }
+
+  .keyword { color: #f43f5e; font-weight: bold; }
+  .var-name { color: #38bdf8; }
+  .type-name { color: #a855f7; }
+
+  .selector-grid {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-select {
     flex: 1;
-    min-width: 50px;
-    padding: 8px 0;
-    background: #ffffff;
-    border: 2px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: #475569;
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #94a3b8;
+    padding: 9px 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
-    touch-action: manipulation;
     transition: all 0.15s ease;
   }
 
-  .btn-count:hover {
-    border-color: #06c755;
+  .btn-select.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #34d399;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
   }
 
-  .btn-count.active {
-    background: #06c755;
-    border-color: #06c755;
-    color: #ffffff;
-    box-shadow: 0 4px 10px rgba(6, 199, 85, 0.35);
+  /* チェックボックス */
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0d131f;
+    border: 1px dashed #334155;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: -6px;
   }
 
-  .issued-headcount-badge {
+  .checkbox-container input {
+    display: none;
+  }
+
+  .checkbox-custom {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #64748b;
+    border-radius: 4px;
     display: inline-block;
-    background: #e0f2fe;
-    color: #0369a1;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 14px;
+    position: relative;
+    flex-shrink: 0;
   }
 
-  .issued-headcount-badge strong {
-    font-size: 1.1rem;
-    margin: 0 2px;
+  .checkbox-container input:checked + .checkbox-custom {
+    background: #38bdf8;
+    border-color: #38bdf8;
+  }
+
+  .checkbox-container input:checked + .checkbox-custom::after {
+    content: "✓";
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    font-size: 12px;
+    color: #0b0f19;
+    font-weight: 900;
+  }
+
+  .checkbox-text {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+  }
+
+  /* 備考エリア */
+  .code-textarea {
+    width: 100%;
+    background: #0d131f;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    color: #e2e8f0;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    resize: none;
+    box-sizing: border-box;
+  }
+
+  .code-textarea:focus {
+    outline: none;
+    border-color: #38bdf8;
   }
 
   .turnstile-container {
-    margin: 0 auto 14px;
+    margin: 12px 0;
     min-height: 65px;
     display: flex;
     justify-content: center;
-    width: 100%;
-    overflow: hidden;
   }
 
-  .cyber-issue-btn {
+  /* ターミナル風ボタン */
+  .terminal-btn {
     width: 100%;
-    min-height: 48px;
-    padding: 14px 16px;
-    background: linear-gradient(135deg, #06c755 0%, #05a746 100%);
-    color: #ffffff;
+    background: #10b981;
     border: none;
-    border-radius: 12px;
-    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+    color: #0b0f19;
+    padding: 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(6, 199, 85, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
   }
 
-  .cyber-issue-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4);
+  .terminal-btn:hover:not(:disabled) {
+    background: #34d399;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
   }
 
-  .cyber-issue-btn:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  .cyber-issue-btn:disabled {
-    background: #94a3b8;
+  .terminal-btn:disabled {
+    background: #334155;
+    color: #64748b;
     cursor: not-allowed;
-    transform: none;
     box-shadow: none;
   }
 
-  .btn-title {
-    overflow-wrap: break-word;
-    line-height: 1.2;
-  }
-
-  .btn-icon {
-    flex-shrink: 0;
-  }
-
-  .ticket-sublabel {
-    font-size: clamp(0.75rem, 3vw, 0.85rem);
-    font-weight: 700;
-    color: #64748b;
-    margin: 8px 0 0;
-  }
-
-  .number-wrapper {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 4px;
-    margin: 4px 0 6px;
-  }
-
-  .num-prefix {
-    font-size: clamp(1.3rem, 5vw, 1.5rem);
-    font-weight: 800;
-    color: #64748b;
-  }
-
-  .ticket-num {
-    font-size: clamp(3.2rem, 15vw, 4.4rem);
-    font-weight: 900;
-    color: #06c755;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace, system-ui;
-  }
-
-  .live-clock-card {
-    background: #0a0e17;
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin-bottom: 14px;
-    width: 100%;
-  }
-
-  .clock-label {
-    font-size: 0.6rem;
-    color: #64748b;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    display: block;
-    margin-bottom: 2px;
-  }
-
-  .clock-display {
-    font-size: clamp(1.1rem, 4.8vw, 1.25rem);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-weight: 700;
-    color: #00f2ff;
-    letter-spacing: 0.05em;
-  }
-
-  .flow-message p {
-    font-size: clamp(0.72rem, 2.8vw, 0.78rem);
-    color: #64748b;
-    line-height: 1.45;
-    margin: 0;
-  }
-
-  .cyber-scanner {
-    width: 54px;
-    height: 54px;
-    margin: 16px auto 12px;
-    border: 2px solid rgba(6, 199, 85, 0.2);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .scan-beam {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: #06c755;
-    box-shadow: 0 0 8px #06c755;
-    animation: scanAnim 1.6s infinite ease-in-out;
-  }
-
-  @keyframes scanAnim {
-    0% { top: 0%; }
-    50% { top: 92%; }
-    100% { top: 0%; }
-  }
-
-  .scanning-text {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.75rem;
-    color: #64748b;
+  /* 発券完了画面 */
+  .terminal-success-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    margin-bottom: 12px;
   }
 
   .pulse-dot {
     width: 6px;
     height: 6px;
-    background: #059669;
     border-radius: 50%;
-    animation: pulse 1.4s infinite;
-    flex-shrink: 0;
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+  .result-title {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
   }
 
-  .cyber-retry-btn {
-    margin-top: 12px;
-    padding: 8px 16px;
-    background: #e2e8f0;
-    border: none;
+  .ticket-display {
+    padding: 12px 0 16px;
+    text-align: center;
+  }
+
+  .ticket-num {
+    font-size: clamp(2.4rem, 10vw, 3.4rem);
+    font-weight: 900;
+    color: #38bdf8;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  }
+
+  .ticket-meta-box {
+    background: #0d131f;
+    border: 1px solid #1f2937;
     border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  .meta-row:last-child { margin-bottom: 0; }
+
+  .meta-key { color: #64748b; }
+  .meta-val { color: #e2e8f0; font-weight: bold; }
+
+  .live-clock-card {
+    background: #050811;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .clock-label {
+    font-size: 0.6rem;
+    color: #64748b;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .clock-display {
+    font-size: 1.15rem;
     font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    touch-action: manipulation;
+    color: #f59e0b;
   }
 
-  .error-text {
-    color: #dc2626;
-    font-size: 0.82rem;
-    line-height: 1.45;
+  .console-footer p {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0;
+    text-align: center;
   }
 
-  @media (max-width: 360px) {
-    .crystal {
-      display: none;
-    }
-    .ticket-card {
-      padding: 18px 12px 16px;
-    }
-    .cyber-portal {
-      padding-left: 10px;
-      padding-right: 10px;
-    }
+  /* ローダー */
+  .loader-terminal {
+    padding: 40px 0;
+    text-align: center;
+  }
+
+  .cursor-line {
+    font-size: 0.95rem;
+    color: #38bdf8;
+  }
+
+  .blink {
+    animation: blinkAnim 1s infinite;
+  }
+
+  @keyframes blinkAnim {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .status-console {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 8px;
   }
 </style>
