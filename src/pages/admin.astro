@@ -3,31 +3,40 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="スタッフ管理画面 | 整理券システム">
-  <!-- 🔒 認証画面（ID・合言葉入力） -->
+  <!-- 🔒 認証画面（GASメール認証コード入力） -->
   <div id="auth-overlay" class="auth-box">
     <div class="auth-card">
-      <div class="lock-icon">🔒</div>
+      <div class="lock-icon">📧</div>
       <h2>スタッフ認証</h2>
-      <p class="auth-desc">関係者専用のIDと合言葉を入力してください</p>
+      <p class="auth-desc">登録されたメールアドレスに認証コードを送信します</p>
       
-      <!-- 👤 ログインID入力欄 -->
-      <input 
-        type="text" 
-        id="login-id-input" 
-        placeholder="ログインID" 
-        autocomplete="username" 
-      />
+      <!-- ステップ1: メールアドレス入力 -->
+      <div id="auth-step-email">
+        <input 
+          type="email" 
+          id="email-input" 
+          placeholder="登録済みメールアドレス" 
+          autocomplete="email" 
+        />
+        <button id="btn-send-code" class="btn-unlock">認証コードを送信</button>
+      </div>
 
-      <!-- 🔑 合言葉（パスワード）入力欄 -->
-      <input 
-        type="password" 
-        id="passcode-input" 
-        placeholder="合言葉（パスワード）" 
-        autocomplete="current-password" 
-      />
+      <!-- ステップ2: 認証コード入力（初期状態は非表示） -->
+      <div id="auth-step-code" style="display: none;">
+        <p class="code-sent-note">メールに送信された6桁の認証コードを入力してください</p>
+        <input 
+          type="text" 
+          id="code-input" 
+          placeholder="6桁の認証コード (例: 123456)" 
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="one-time-code" 
+        />
+        <button id="btn-verify-code" class="btn-unlock">ログイン</button>
+        <button id="btn-back-email" class="btn-text">← メールアドレスを再入力</button>
+      </div>
 
-      <button id="btn-unlock" class="btn-unlock">ログイン</button>
-      <p id="auth-error" class="auth-error" style="display: none;">IDまたは合言葉が正しくありません</p>
+      <p id="auth-error" class="auth-error" style="display: none;"></p>
     </div>
   </div>
 
@@ -38,7 +47,7 @@ import Layout from '../layouts/Layout.astro';
         <div class="tag">STAFF ONLY</div>
         <span id="current-user-badge" class="user-badge">--</span>
       </div>
-      <h1>整理券 運行・呼出ダッシュボード</h1>
+      <h1>プログラミング体験会 整理券運行パネル</h1>
       <div class="header-actions">
         <button id="btn-refresh" class="btn-refresh">🔄 データ更新</button>
         <button id="btn-lock" class="btn-lock">ログアウト</button>
@@ -84,14 +93,15 @@ import Layout from '../layouts/Layout.astro';
         <thead>
           <tr>
             <th>番号</th>
-            <th>人数</th>
+            <th>内訳 (子/親)</th>
+            <th>備考・要望</th>
             <th>発行時刻</th>
             <th>状態</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody id="ticket-list-body">
-          <tr><td colspan="5" style="text-align:center;">読み込み中...</td></tr>
+          <tr><td colspan="6" style="text-align:center;">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -103,9 +113,13 @@ import Layout from '../layouts/Layout.astro';
 
   const authOverlay = document.getElementById("auth-overlay");
   const adminMain = document.getElementById("admin-main");
-  const loginIdInput = document.getElementById("login-id-input");
-  const passInput = document.getElementById("passcode-input");
-  const unlockBtn = document.getElementById("btn-unlock");
+  const stepEmail = document.getElementById("auth-step-email");
+  const stepCode = document.getElementById("auth-step-code");
+  const emailInput = document.getElementById("email-input");
+  const codeInput = document.getElementById("code-input");
+  const sendCodeBtn = document.getElementById("btn-send-code");
+  const verifyCodeBtn = document.getElementById("btn-verify-code");
+  const backEmailBtn = document.getElementById("btn-back-email");
   const authError = document.getElementById("auth-error");
   const lockBtn = document.getElementById("btn-lock");
   const currentUserBadge = document.getElementById("current-user-badge");
@@ -121,6 +135,15 @@ import Layout from '../layouts/Layout.astro';
   const refreshBtn = document.getElementById("btn-refresh");
 
   let pollIntervalId = null;
+
+  function showAuthError(msg) {
+    authError.textContent = msg;
+    authError.style.display = "block";
+  }
+
+  function hideAuthError() {
+    authError.style.display = "none";
+  }
 
   function startPolling() {
     if (!pollIntervalId) {
@@ -141,13 +164,114 @@ import Layout from '../layouts/Layout.astro';
     return sessionStorage.getItem("staff_key") || "";
   }
 
-  function getStaffId() {
-    return sessionStorage.getItem("staff_id") || "";
+  function getStaffEmail() {
+    return sessionStorage.getItem("staff_email") || "";
   }
 
+  function getStaffName() {
+    return sessionStorage.getItem("staff_name") || "";
+  }
+
+  // --- Step 1: 認証コード送信 ---
+  sendCodeBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      showAuthError("有効なメールアドレスを入力してください");
+      return;
+    }
+
+    sendCodeBtn.disabled = true;
+    sendCodeBtn.textContent = "送信中...";
+    hideAuthError();
+
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/admin/send-auth-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        stepEmail.style.display = "none";
+        stepCode.style.display = "block";
+        codeInput.value = "";
+        codeInput.focus();
+      } else {
+        showAuthError(data.message || "認証メールの送信に失敗しました");
+      }
+    } catch (e) {
+      showAuthError("通信エラーが発生しました");
+    } finally {
+      sendCodeBtn.disabled = false;
+      sendCodeBtn.textContent = "認証コードを送信";
+    }
+  });
+
+  // --- Step 2: 認証コード検証 ---
+  verifyCodeBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim().toLowerCase();
+    const code = codeInput.value.trim();
+
+    if (!code || code.length !== 6) {
+      showAuthError("6桁の認証コードを入力してください");
+      return;
+    }
+
+    verifyCodeBtn.disabled = true;
+    verifyCodeBtn.textContent = "検証中...";
+    hideAuthError();
+
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/admin/verify-auth-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        sessionStorage.setItem("staff_email", data.email);
+        sessionStorage.setItem("staff_key", data.adminKey);
+        sessionStorage.setItem("staff_name", data.name);
+        loadData();
+      } else {
+        showAuthError(data.message || "認証コードが正しくありません");
+      }
+    } catch (e) {
+      showAuthError("認証サーバーへの接続に失敗しました");
+    } finally {
+      verifyCodeBtn.disabled = false;
+      verifyCodeBtn.textContent = "ログイン";
+    }
+  });
+
+  backEmailBtn.addEventListener("click", () => {
+    stepCode.style.display = "none";
+    stepEmail.style.display = "block";
+    hideAuthError();
+  });
+
+  emailInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendCodeBtn.click();
+  });
+
+  codeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") verifyCodeBtn.click();
+  });
+
+  lockBtn.addEventListener("click", () => {
+    stopPolling();
+    sessionStorage.clear();
+    location.reload();
+  });
+
+  // --- 一覧データ取得 ---
   async function loadData() {
     const staffKey = getStaffKey();
-    if (!staffKey) {
+    const staffEmail = getStaffEmail();
+
+    if (!staffKey || !staffEmail) {
       stopPolling();
       authOverlay.style.display = "flex";
       adminMain.style.display = "none";
@@ -158,33 +282,28 @@ import Layout from '../layouts/Layout.astro';
       const res = await fetch(`${BACKEND_ENDPOINT}/admin/list`, {
         headers: { 
           "X-Admin-Key": staffKey,
-          "X-Admin-User": getStaffId()
+          "X-Admin-User": staffEmail
         }
       });
 
-      // 401: 認証失敗（合言葉・ID不一致）
       if (res.status === 401) {
         stopPolling();
-        sessionStorage.removeItem("staff_key");
-        sessionStorage.removeItem("staff_id");
+        sessionStorage.clear();
         authOverlay.style.display = "flex";
         adminMain.style.display = "none";
-        authError.textContent = "IDまたは合言葉が正しくありません";
-        authError.style.display = "block";
+        showAuthError("認証セッションが切れました。再度ログインしてください。");
         return;
       }
 
-      // 403: システムOFF（GAS等で管理画面が停止中）
       if (res.status === 403) {
-        // 停止中は無駄な連続エラーを防ぐため自動更新を停止
         stopPolling();
-        const errorData = await res.json().catch(() => ({}));
+        const errData = await res.json().catch(() => ({}));
         authOverlay.style.display = "none";
         adminMain.style.display = "block";
         if (currentUserBadge) {
-          currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
+          currentUserBadge.textContent = `LOGIN: ${getStaffName() || staffEmail}`;
         }
-        listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errorData.message || "現在管理画面はメンテナンス停止中です"}<br><span style="font-size:0.8rem;color:#64748b;font-weight:normal;margin-top:6px;display:inline-block;">再開後は「🔄 データ更新」ボタンを押してください</span></td></tr>`;
+        listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errData.message || "現在管理画面はメンテナンス停止中です"}<br><span style="font-size:0.8rem;color:#64748b;font-weight:normal;margin-top:6px;display:inline-block;">再開後は「🔄 データ更新」ボタンを押してください</span></td></tr>`;
         nextInfoEl.textContent = "システム停止中";
         callNextBtn.disabled = true;
         return;
@@ -193,24 +312,21 @@ import Layout from '../layouts/Layout.astro';
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
 
-      // 正常レスポンスが取れたらポーリングを維持/開始
       startPolling();
 
       authOverlay.style.display = "none";
       adminMain.style.display = "block";
-      authError.style.display = "none";
+      hideAuthError();
 
       if (currentUserBadge) {
-        currentUserBadge.textContent = `LOGIN: ${getStaffId() || "ADMIN"}`;
+        currentUserBadge.textContent = `STAFF: ${getStaffName() || staffEmail}`;
       }
 
-      // 統計カード更新
       totalEl.textContent = data.stats.total;
       waitingEl.textContent = data.stats.waiting;
       calledEl.textContent = data.stats.called;
       admittedEl.textContent = data.stats.admitted;
 
-      // 待機中の合計人数を計算
       const waitingHeadcount = (data.tickets || [])
         .filter(t => t.status === "WAITING")
         .reduce((sum, t) => sum + (Number(t.headcount) || 1), 0);
@@ -222,46 +338,18 @@ import Layout from '../layouts/Layout.astro';
       updateQuickCall(data.tickets);
     } catch (e) {
       console.error(e);
-      listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
     }
   }
-
-  unlockBtn.addEventListener("click", () => {
-    const enteredId = loginIdInput.value.trim();
-    const enteredKey = passInput.value.trim();
-    if (!enteredId || !enteredKey) {
-      authError.textContent = "IDと合言葉を両方入力してください";
-      authError.style.display = "block";
-      return;
-    }
-
-    sessionStorage.setItem("staff_id", enteredId);
-    sessionStorage.setItem("staff_key", enteredKey);
-    passInput.value = "";
-    loadData();
-  });
-
-  loginIdInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") passInput.focus();
-  });
-
-  passInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") unlockBtn.click();
-  });
-
-  lockBtn.addEventListener("click", () => {
-    stopPolling();
-    sessionStorage.removeItem("staff_key");
-    sessionStorage.removeItem("staff_id");
-    location.reload();
-  });
 
   function updateQuickCall(tickets) {
     const nextWaiting = (tickets || []).slice().reverse().find(t => t.status === "WAITING") || tickets.find(t => t.status === "WAITING");
     
     if (nextWaiting) {
       const count = nextWaiting.headcount || 1;
-      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">${count}名様</span>）です`;
+      const child = nextWaiting.child_count ?? 1;
+      const adult = nextWaiting.adult_count ?? 0;
+      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">子ども${child}名 / 保護者${adult}名</span>）です`;
       callNextBtn.disabled = false;
       callNextBtn.onclick = () => updateStatus(nextWaiting.ticket_number, "CALLED", count);
     } else {
@@ -272,7 +360,7 @@ import Layout from '../layouts/Layout.astro';
 
   function renderTable(tickets) {
     if (!tickets || tickets.length === 0) {
-      listBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
       return;
     }
 
@@ -283,18 +371,20 @@ import Layout from '../layouts/Layout.astro';
         time = new Date(utcIsoString).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
       }
       
-      const count = t.headcount || 1;
-      const countBadge = `<span class="badge headcount-badge">${count}名</span>`;
+      const child = t.child_count ?? 1;
+      const adult = t.adult_count ?? 0;
+      const countBadge = `<span class="badge headcount-badge">子:${child} / 親:${adult}</span>`;
+      const noteText = t.note ? `<span class="ticket-note">${escapeHtml(t.note)}</span>` : `<span class="no-note">-</span>`;
 
       let badge = `<span class="badge waiting">待機中</span>`;
       let actionBtns = `
-        <button class="btn-sm btn-call" onclick="updateStatus(${t.ticket_number}, 'CALLED', ${count})">呼出</button>
+        <button class="btn-sm btn-call" onclick="updateStatus(${t.ticket_number}, 'CALLED', ${t.headcount || 1})">呼出</button>
       `;
 
       if (t.status === "CALLED") {
         badge = `<span class="badge called">呼出中</span>`;
         actionBtns = `
-          <button class="btn-sm btn-admit" onclick="updateStatus(${t.ticket_number}, 'ADMITTED', ${count})">入場完了</button>
+          <button class="btn-sm btn-admit" onclick="updateStatus(${t.ticket_number}, 'ADMITTED', ${t.headcount || 1})">入場完了</button>
         `;
       } else if (t.status === "ADMITTED") {
         badge = `<span class="badge admitted">入場済</span>`;
@@ -305,12 +395,19 @@ import Layout from '../layouts/Layout.astro';
         <tr>
           <td><strong>No.${t.ticket_number}</strong></td>
           <td>${countBadge}</td>
+          <td>${noteText}</td>
           <td>${time}</td>
           <td>${badge}</td>
           <td>${actionBtns}</td>
         </tr>
       `;
     }).join("");
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
   }
 
   window.updateStatus = async function(ticketNumber, status, count = 1) {
@@ -323,15 +420,14 @@ import Layout from '../layouts/Layout.astro';
         headers: { 
           "Content-Type": "application/json",
           "X-Admin-Key": getStaffKey(),
-          "X-Admin-User": getStaffId()
+          "X-Admin-User": getStaffEmail()
         },
         body: JSON.stringify({ ticketNumber, status })
       });
 
       if (res.status === 401) {
         alert("認証が無効です。再度ログインしてください。");
-        sessionStorage.removeItem("staff_key");
-        sessionStorage.removeItem("staff_id");
+        sessionStorage.clear();
         location.reload();
         return;
       }
@@ -352,7 +448,6 @@ import Layout from '../layouts/Layout.astro';
     }
   };
 
-  // 手動更新ボタンを押した際はポーリング再開も兼ねる
   refreshBtn.addEventListener("click", () => {
     loadData();
   });
@@ -363,18 +458,20 @@ import Layout from '../layouts/Layout.astro';
 <style>
   /* 認証オーバーレイ */
   .auth-box { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
-  .auth-card { background: white; border-radius: 16px; padding: 32px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+  .auth-card { background: white; border-radius: 16px; padding: 32px 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
   .lock-icon { font-size: 2.5rem; margin-bottom: 12px; }
   .auth-card h2 { margin: 0 0 8px; font-size: 1.25rem; color: #0f172a; }
-  .auth-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
+  .auth-desc { font-size: 0.8rem; color: #64748b; margin-bottom: 20px; line-height: 1.4; }
+  .code-sent-note { font-size: 0.8rem; color: #2563eb; margin-bottom: 14px; font-weight: bold; }
   .auth-card input { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px; }
   .auth-card input:focus { outline: none; border-color: #0284c7; }
   .btn-unlock { width: 100%; padding: 12px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 4px; }
   .btn-unlock:hover { background: #0369a1; }
-  .auth-error { color: #ef4444; font-size: 0.8rem; margin-top: 10px; font-weight: bold; }
+  .btn-text { background: none; border: none; color: #64748b; font-size: 0.8rem; margin-top: 12px; cursor: pointer; text-decoration: underline; }
+  .auth-error { color: #ef4444; font-size: 0.8rem; margin-top: 12px; font-weight: bold; }
 
   /* ダッシュボード本体 */
-  .admin-container { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
+  .admin-container { max-width: 900px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
   .admin-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
   .header-top { display: flex; align-items: center; justify-content: space-between; }
   .admin-header .tag { font-size: 0.7rem; font-weight: 900; background: #fee2e2; color: #dc2626; width: fit-content; padding: 2px 8px; border-radius: 4px; }
@@ -414,7 +511,9 @@ import Layout from '../layouts/Layout.astro';
   .badge.waiting { background: #e0f2fe; color: #0369a1; }
   .badge.called { background: #fef3c7; color: #b45309; }
   .badge.admitted { background: #f1f5f9; color: #64748b; }
-  .headcount-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .headcount-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-family: monospace; }
+  .ticket-note { font-size: 0.8rem; color: #334155; background: #f8fafc; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-block; max-width: 180px; word-break: break-all; }
+  .no-note { color: #cbd5e1; font-size: 0.8rem; }
 
   .btn-sm { border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
   .btn-call { background: #f59e0b; color: white; }
