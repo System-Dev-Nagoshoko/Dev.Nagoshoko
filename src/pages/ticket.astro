@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 
 <Layout title="プログラミング体験会 整理券発行 | 第7回商工祭">
   <div class="bright-code-portal">
-    <!-- 背景グラデーション & グリッド線 -->
+    <!-- 背景ホワイトグラデーション & グリッド線 -->
     <div class="white-gradient-bg"></div>
     <div class="code-grid-pattern"></div>
 
@@ -20,14 +20,14 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <header class="terminal-header">
-      <div class="header-badge">&lt;PROGRAMMING_BOOTH&gt;</div>
+      <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
       <h1>整理券受付システム</h1>
-      <p class="terminal-subtitle">CODE // EXPERIENCE // SMART QUEUE</p>
+      <p class="terminal-subtitle">SMART QUEUE // 個人情報は一切不要</p>
     </header>
 
     <main class="portal-container">
       <div class="editor-window">
-        <!-- エディタウィンドウのタイトルバー -->
+        <!-- エディタウィンドウ風タイトルバー -->
         <div class="window-titlebar">
           <div class="traffic-lights">
             <span class="dot dot-close"></span>
@@ -48,19 +48,29 @@ import Layout from '../layouts/Layout.astro';
 
         <!-- ② 未発券状態（入力フォーム） -->
         <div id="status-unissued" class="editor-body" style="display: none;">
-          <div class="comment-box">
-            <div class="comment-line"><span class="cmt-mark">/**</span></div>
-            <div class="comment-line">&nbsp;* 個人情報は一切取得しません</div>
-            <div class="comment-line">&nbsp;* 順番が近づきましたら公式LINEで通知します</div>
-            <div class="comment-line">&nbsp;* 呼出まで校内を自由にご見学いただけます</div>
-            <div class="comment-line"><span class="cmt-mark">&nbsp;*/</span></div>
+          <!-- 案内カード -->
+          <div class="notice-card">
+            <div class="notice-item">
+              <span class="icon">🛡️</span>
+              <p>氏名・電話番号等の<strong>個人情報は一切取得しません</strong>。</p>
+            </div>
+            <div class="notice-item">
+              <span class="icon">🔔</span>
+              <p>順番が近づきましたら<strong>公式LINE</strong>でお知らせします。</p>
+            </div>
+            <div class="notice-item">
+              <span class="icon">🚶</span>
+              <p>お呼び出しまで校内を自由にご見学いただけます。</p>
+            </div>
           </div>
 
           <!-- 1. お子様の人数 -->
           <div class="field-block">
-            <label class="code-label">
-              <span class="keyword">const</span> <span class="var-name">children</span>: <span class="type-name">number</span> =
-            </label>
+            <div class="field-header">
+              <span class="step-num">1</span>
+              <label class="field-label">体験するお子様の人数</label>
+              <span class="code-tag">&lt;children /&gt;</span>
+            </div>
             <div class="selector-grid" id="child-selector">
               <button type="button" class="btn-select active" data-count="1">1名</button>
               <button type="button" class="btn-select" data-count="2">2名</button>
@@ -69,22 +79,25 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
 
-          <!-- 2. 兄弟の別枠発券トグル（お子様2名以上で表示） -->
+          <!-- 2. 兄弟の別枠発券トグル（お子様2名以上で出現） -->
           <div id="split-wrapper" class="field-block split-option" style="display: none;">
             <label class="checkbox-container">
               <input type="checkbox" id="split-ticket-checkbox" />
               <span class="checkbox-custom"></span>
-              <span class="checkbox-text">
-                兄弟で個別に呼出枠を分ける（連続2番号を発行）
-              </span>
+              <div class="checkbox-text-group">
+                <span class="checkbox-title">兄弟で順番（番号）を個別に分ける</span>
+                <span class="checkbox-desc">※別々の席や時間帯で体験したい場合にチェックを入れてください</span>
+              </div>
             </label>
           </div>
 
           <!-- 3. 保護者の人数 -->
           <div class="field-block">
-            <label class="code-label">
-              <span class="keyword">const</span> <span class="var-name">guardians</span>: <span class="type-name">number</span> =
-            </label>
+            <div class="field-header">
+              <span class="step-num">2</span>
+              <label class="field-label">同伴する保護者の人数</label>
+              <span class="code-tag">&lt;guardians /&gt;</span>
+            </div>
             <div class="selector-grid" id="adult-selector">
               <button type="button" class="btn-select" data-count="0">0名</button>
               <button type="button" class="btn-select active" data-count="1">1名</button>
@@ -95,13 +108,15 @@ import Layout from '../layouts/Layout.astro';
 
           <!-- 4. 備考欄 -->
           <div class="field-block">
-            <label class="code-label">
-              <span class="keyword">const</span> <span class="var-name">remarks</span>: <span class="type-name">string</span> =
-            </label>
+            <div class="field-header">
+              <span class="step-num">3</span>
+              <label class="field-label">備考・ご要望 <span class="sub-label">（任意）</span></label>
+              <span class="code-tag">// optional</span>
+            </div>
             <textarea
               id="ticket-note"
               class="code-textarea"
-              placeholder="// 学年やPC操作経験、ご要望等があればご入力ください（任意）"
+              placeholder="お子様の学年やPC操作の経験有無、ご質問などがあればご自由に入力してください"
               maxlength="150"
               rows="2"
             ></textarea>
@@ -113,7 +128,7 @@ import Layout from '../layouts/Layout.astro';
           <!-- 実行ボタン -->
           <button id="btn-issue" class="terminal-btn" disabled>
             <span class="btn-arrow">&gt;&gt;</span>
-            <span id="btn-title-text" class="btn-title">EXECUTE_RESERVATION()</span>
+            <span id="btn-title-text" class="btn-title">LINEで整理券を取得する</span>
           </button>
         </div>
 
@@ -123,7 +138,7 @@ import Layout from '../layouts/Layout.astro';
             <span class="pulse-dot"></span> STATUS: 200 OK (VERIFIED)
           </div>
 
-          <p class="result-title">// RESERVATION COMPLETED</p>
+          <p class="result-title">// 発券が完了しました</p>
           <div class="ticket-display">
             <div class="num-wrapper">
               <span id="ticket-number" class="ticket-num">--</span>
@@ -132,15 +147,15 @@ import Layout from '../layouts/Layout.astro';
 
           <div class="ticket-meta-box">
             <div class="meta-row">
-              <span class="meta-key">children:</span>
+              <span class="meta-key">体験お子様:</span>
               <span id="res-child" class="meta-val">1名</span>
             </div>
             <div class="meta-row">
-              <span class="meta-key">guardians:</span>
+              <span class="meta-key">保護者同伴:</span>
               <span id="res-adult" class="meta-val">1名</span>
             </div>
             <div class="meta-row" id="res-note-row" style="display: none;">
-              <span class="meta-key">note:</span>
+              <span class="meta-key">備考:</span>
               <span id="res-note" class="meta-val">--</span>
             </div>
           </div>
@@ -158,7 +173,7 @@ import Layout from '../layouts/Layout.astro';
         <!-- ④ エラー表示 -->
         <div id="status-error" class="editor-body" style="display: none;">
           <div class="terminal-error-badge">EXCEPTION CAUGHT</div>
-          <p id="error-message" class="error-text">ERR: 通信に失敗しました。</p>
+          <p id="error-message" class="error-text">通信エラーが発生しました。</p>
           <button class="terminal-btn retry-btn" onclick="location.reload()">
             &gt; SYSTEM.RETRY()
           </button>
@@ -215,6 +230,7 @@ import Layout from '../layouts/Layout.astro';
       btn.classList.add("active");
       selectedChildCount = parseInt(btn.dataset.count, 10);
 
+      // お子様2人以上で兄弟分割オプションを表示
       if (selectedChildCount >= 2) {
         splitWrapper.style.display = "block";
       } else {
@@ -345,7 +361,7 @@ import Layout from '../layouts/Layout.astro';
 
     if (isDevMode) {
       if (modeBadgeEl) {
-        modeBadgeEl.textContent = "DEV MODE";
+        modeBadgeEl.textContent = "DIRECT WEB MODE";
         modeBadgeEl.style.color = "#0284c7";
       }
       if (loadingEl) loadingEl.style.display = "none";
@@ -385,7 +401,7 @@ import Layout from '../layouts/Layout.astro';
 
   issueBtn?.addEventListener("click", async () => {
     issueBtn.disabled = true;
-    if (btnTitleText) btnTitleText.innerText = "PROCESSING...";
+    if (btnTitleText) btnTitleText.innerText = "発券処理中...";
 
     const isSplit = splitCheckbox.checked;
     const noteText = noteInput.value.trim();
@@ -446,12 +462,12 @@ import Layout from '../layouts/Layout.astro';
           turnstileToken = null;
         }
         issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
-        if (btnTitleText) btnTitleText.innerText = "EXECUTE_RESERVATION()";
+        if (btnTitleText) btnTitleText.innerText = "LINEで整理券を取得する";
       }
     } catch (err) {
       alert("通信エラーが発生しました。");
       issueBtn.disabled = false;
-      if (btnTitleText) btnTitleText.innerText = "EXECUTE_RESERVATION()";
+      if (btnTitleText) btnTitleText.innerText = "LINEで整理券を取得する";
     }
   });
 
@@ -469,7 +485,7 @@ import Layout from '../layouts/Layout.astro';
     width: 100%;
     background-color: #f8fafc;
     color: #1e293b;
-    font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas, monospace, system-ui;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
 
@@ -493,7 +509,7 @@ import Layout from '../layouts/Layout.astro';
     z-index: -3;
   }
 
-  /* 📐 うっすらとした方眼グリッド線 */
+  /* 📐 方眼グリッド線 */
   .code-grid-pattern {
     position: fixed;
     inset: 0;
@@ -522,7 +538,7 @@ import Layout from '../layouts/Layout.astro';
     filter: drop-shadow(0 8px 16px rgba(14, 165, 233, 0.15));
   }
 
-  /* 💎 クリスタル（六角ひし形カット） */
+  /* 💎 クリスタル */
   .crystal {
     width: 24px;
     height: 42px;
@@ -561,7 +577,7 @@ import Layout from '../layouts/Layout.astro';
     animation: floatAnim3 6.5s infinite ease-in-out;
   }
 
-  /* 🔷 幾何学図形（キューブ、サークル、ひし形、リング） */
+  /* 🔷 幾何学図形 */
   .cube {
     width: 20px;
     height: 20px;
@@ -613,7 +629,6 @@ import Layout from '../layouts/Layout.astro';
     animation: spinReverse 12s infinite linear;
   }
 
-  /* 浮遊アニメーション */
   @keyframes floatAnim1 {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     50% { transform: translateY(-16px) rotate(8deg); }
@@ -739,41 +754,83 @@ import Layout from '../layouts/Layout.astro';
     padding: 22px 18px;
   }
 
-  /* コードコメント風案内枠 */
-  .comment-box {
+  /* 案内カード */
+  .notice-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-left: 3px solid #0284c7;
-    padding: 10px 14px;
-    margin-bottom: 18px;
-    border-radius: 4px;
+    border-left: 4px solid #0284c7;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .comment-line {
-    font-size: 0.75rem;
-    color: #475569;
-    line-height: 1.55;
-    font-weight: 600;
+  .notice-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #334155;
   }
 
-  .cmt-mark {
-    color: #94a3b8;
+  .notice-item p {
+    margin: 0;
+    line-height: 1.4;
   }
 
+  .notice-item .icon {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  /* フォーム要素 */
   .field-block {
     margin-bottom: 18px;
   }
 
-  .code-label {
-    display: block;
-    font-size: 0.84rem;
+  .field-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-bottom: 8px;
-    font-weight: 700;
   }
 
-  .keyword { color: #e11d48; }
-  .var-name { color: #0284c7; }
-  .type-name { color: #7c3aed; }
+  .step-num {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .field-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .sub-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: normal;
+  }
+
+  .code-tag {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
 
   .selector-grid {
     display: flex;
@@ -814,9 +871,9 @@ import Layout from '../layouts/Layout.astro';
     background: #f0fdf4;
     border: 1px dashed #86efac;
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    margin-top: -6px;
+    margin-top: -4px;
   }
 
   .checkbox-container input {
@@ -824,8 +881,8 @@ import Layout from '../layouts/Layout.astro';
   }
 
   .checkbox-custom {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #16a34a;
     border-radius: 4px;
     display: inline-block;
@@ -842,17 +899,28 @@ import Layout from '../layouts/Layout.astro';
     content: "✓";
     position: absolute;
     top: -3px;
-    left: 2px;
-    font-size: 12px;
+    left: 3px;
+    font-size: 13px;
     color: #ffffff;
     font-weight: 900;
   }
 
-  .checkbox-text {
-    font-size: 0.75rem;
+  .checkbox-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .checkbox-title {
+    font-size: 0.82rem;
+    font-weight: 800;
     color: #166534;
-    font-weight: 700;
-    line-height: 1.4;
+  }
+
+  .checkbox-desc {
+    font-size: 0.7rem;
+    color: #15803d;
+    font-weight: normal;
   }
 
   /* 備考欄 */
@@ -860,11 +928,12 @@ import Layout from '../layouts/Layout.astro';
     width: 100%;
     background: #f8fafc;
     border: 1.5px solid #cbd5e1;
-    border-radius: 6px;
+    border-radius: 8px;
     color: #1e293b;
     padding: 10px;
     font-family: inherit;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
     resize: none;
     box-sizing: border-box;
   }
@@ -873,6 +942,11 @@ import Layout from '../layouts/Layout.astro';
     outline: none;
     border-color: #0284c7;
     background: #ffffff;
+  }
+
+  .code-textarea::placeholder {
+    color: #94a3b8;
+    font-size: 0.78rem;
   }
 
   .turnstile-container {
