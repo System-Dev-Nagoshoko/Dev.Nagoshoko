@@ -105,7 +105,7 @@ const TIME_SLOTS = [
                     <span class="slot-time">{s.time}</span>
                   </div>
                   <div class="slot-status">
-                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>読み込み中...</span>
+                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中 (残10/10枠)</span>
                   </div>
                 </div>
               ))}
@@ -278,16 +278,16 @@ const TIME_SLOTS = [
   let selectedChildCount = 1;
   let selectedAdultCount = 1;
 
-  // 🔄 残枠数を取得して上限10枠ベースで判定・描画
+  // 🔄 残枠数を取得（デフォルト全枠booked:0 = 残10/10枠）
   async function fetchSlotAvailability(dateStr) {
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${dateStr}`);
       const data = await res.json();
       
       const slotData = data.slots || [
-        { slotId: "slot_1", booked: 2 },
-        { slotId: "slot_2", booked: 8 },
-        { slotId: "slot_3", booked: 10 }
+        { slotId: "slot_1", booked: 0 },
+        { slotId: "slot_2", booked: 0 },
+        { slotId: "slot_3", booked: 0 }
       ];
 
       let firstAvailableSelected = false;
@@ -323,7 +323,23 @@ const TIME_SLOTS = [
         }
       });
     } catch (err) {
-      console.warn("残枠情報の取得に失敗しました。デフォルト表示で続行します。");
+      // フォールバック: 通信エラー時も全枠残10枠表示で稼働
+      ["slot_1", "slot_2", "slot_3"].forEach((slotId, index) => {
+        const badgeEl = document.getElementById(`badge-${slotId}`);
+        const cardEl = document.querySelector(`[data-slot-id="${slotId}"]`);
+        if (badgeEl) {
+          badgeEl.className = "badge-status badge-ok";
+          badgeEl.textContent = "受付中 (残10/10枠)";
+        }
+        if (cardEl) {
+          cardEl.classList.remove("disabled");
+          if (index === 0) {
+            cardEl.classList.add("active");
+            selectedSlotId = slotId;
+            selectedSlotName = cardEl.dataset.slotName;
+          }
+        }
+      });
     }
   }
 
