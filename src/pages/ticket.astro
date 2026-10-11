@@ -1,44 +1,51 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+// イベント開催日（10/30, 10/31）
+const EVENT_DATES = [
+  { date: '2026-10-30', label: '10/30 (金)' },
+  { date: '2026-10-31', label: '10/31 (土)' },
+];
+
+// 1日3回の時間枠定義
+const TIME_SLOTS = [
+  { id: 'slot_1', name: '第一回', time: '10:00〜11:00' },
+  { id: 'slot_2', name: '第二回', time: '11:30〜12:30' },
+  { id: 'slot_3', name: '第三回', time: '13:00〜14:00' },
+];
 ---
 
-<Layout title="プログラミング体験会 整理券発行 | 第7回商工祭">
+<Layout title="プログラミング体験会 整理券予約 | 第7回商工祭">
   <div class="bright-code-portal">
-    <!-- 背景ホワイトグラデーション & グリッド線 -->
     <div class="white-gradient-bg"></div>
     <div class="code-grid-pattern"></div>
 
-    <!-- keyframeで浮遊するクリスタル＆幾何学図形群 -->
     <div class="floating-shapes">
       <div class="shape crystal c-1"><div class="crystal-facet"></div></div>
       <div class="shape crystal c-2"><div class="crystal-facet alt"></div></div>
-      <div class="shape crystal c-3"><div class="crystal-facet"></div></div>
       <div class="shape cube shape-1"></div>
       <div class="shape circle shape-2"></div>
-      <div class="shape rhombus shape-3"></div>
-      <div class="shape ring shape-4"></div>
     </div>
 
     <header class="terminal-header">
       <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
-      <h1>整理券受付システム</h1>
-      <p class="terminal-subtitle">SMART QUEUE // 個人情報は一切不要</p>
+      <h1>日時指定 整理券予約</h1>
+      <p class="terminal-subtitle">SMART SCHEDULE // 個人情報は一切不要</p>
     </header>
 
     <main class="portal-container">
       <div class="editor-window">
-        <!-- エディタウィンドウ風タイトルバー -->
         <div class="window-titlebar">
           <div class="traffic-lights">
             <span class="dot dot-close"></span>
             <span class="dot dot-min"></span>
             <span class="dot dot-max"></span>
           </div>
-          <span class="tab-title">ticket_reservation.ts</span>
+          <span class="tab-title">calendar_reservation.ts</span>
           <span class="mode-tag" id="mode-badge">CONNECTING...</span>
         </div>
 
-        <!-- ① 初期読み込み中表示 -->
+        <!-- ① 初期読み込み中 -->
         <div id="status-loading" class="editor-body">
           <div class="loader-terminal">
             <div class="cursor-line">&gt; system.connect()<span class="blink">_</span></div>
@@ -46,28 +53,69 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
 
-        <!-- ② 未発券状態（入力フォーム） -->
+        <!-- ② 予約入力フォーム -->
         <div id="status-unissued" class="editor-body" style="display: none;">
-          <!-- 案内カード -->
           <div class="notice-card">
             <div class="notice-item">
               <span class="icon">🛡️</span>
               <p>氏名・電話番号等の<strong>個人情報は一切取得しません</strong>。</p>
             </div>
             <div class="notice-item">
-              <span class="icon">🔔</span>
-              <p>順番が近づきましたら<strong>公式LINE</strong>でお知らせします。</p>
-            </div>
-            <div class="notice-item">
-              <span class="icon">🚶</span>
-              <p>お呼び出しまで校内を自由にご見学いただけます。</p>
+              <span class="icon">📅</span>
+              <p>ご希望の<strong>日付と時間帯（第一回〜第三回）</strong>を選択してください。</p>
             </div>
           </div>
 
-          <!-- 1. お子様の人数 -->
+          <!-- STEP 1: 日付選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">1</span>
+              <label class="field-label">体験希望日の選択</label>
+              <span class="code-tag">&lt;date /&gt;</span>
+            </div>
+            <div class="date-grid" id="date-selector">
+              {EVENT_DATES.map((d, index) => (
+                <button 
+                  type="button" 
+                  class={`btn-date ${index === 0 ? 'active' : ''}`} 
+                  data-date={d.date}
+                >
+                  <span class="date-label">{d.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- STEP 2: 時間枠選択（残枠リアルタイム連動） -->
+          <div class="field-block">
+            <div class="field-header">
+              <span class="step-num">2</span>
+              <label class="field-label">時間帯の選択 (1日3回)</label>
+              <span class="code-tag">&lt;timeslot /&gt;</span>
+            </div>
+            <div class="slot-list" id="slot-selector">
+              {TIME_SLOTS.map((s, index) => (
+                <div 
+                  class={`slot-card ${index === 0 ? 'active' : ''}`} 
+                  data-slot-id={s.id}
+                  data-slot-name={`${s.name} (${s.time})`}
+                >
+                  <div class="slot-info">
+                    <span class="slot-title">{s.name}</span>
+                    <span class="slot-time">{s.time}</span>
+                  </div>
+                  <div class="slot-status">
+                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>読み込み中...</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <!-- STEP 3: お子様の人数 -->
+          <div class="field-block">
+            <div class="field-header">
+              <span class="step-num">3</span>
               <label class="field-label">体験するお子様の人数</label>
               <span class="code-tag">&lt;children /&gt;</span>
             </div>
@@ -79,22 +127,22 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
 
-          <!-- 2. 兄弟の別枠発券トグル（お子様2名以上で出現） -->
+          <!-- 兄弟分割オプション -->
           <div id="split-wrapper" class="field-block split-option" style="display: none;">
             <label class="checkbox-container">
               <input type="checkbox" id="split-ticket-checkbox" />
               <span class="checkbox-custom"></span>
               <div class="checkbox-text-group">
-                <span class="checkbox-title">兄弟で順番（番号）を個別に分ける</span>
-                <span class="checkbox-desc">※別々の席や時間帯で体験したい場合にチェックを入れてください</span>
+                <span class="checkbox-title">兄弟で整理券番号を分ける</span>
+                <span class="checkbox-desc">※席や時間を個別に分けたい場合</span>
               </div>
             </label>
           </div>
 
-          <!-- 3. 保護者の人数 -->
+          <!-- STEP 4: 保護者の人数 -->
           <div class="field-block">
             <div class="field-header">
-              <span class="step-num">2</span>
+              <span class="step-num">4</span>
               <label class="field-label">同伴する保護者の人数</label>
               <span class="code-tag">&lt;guardians /&gt;</span>
             </div>
@@ -106,39 +154,37 @@ import Layout from '../layouts/Layout.astro';
             </div>
           </div>
 
-          <!-- 4. 備考欄 -->
+          <!-- STEP 5: 備考 -->
           <div class="field-block">
             <div class="field-header">
-              <span class="step-num">3</span>
+              <span class="step-num">5</span>
               <label class="field-label">備考・ご要望 <span class="sub-label">（任意）</span></label>
               <span class="code-tag">// optional</span>
             </div>
             <textarea
               id="ticket-note"
               class="code-textarea"
-              placeholder="お子様の学年やPC操作の経験有無、ご質問などがあればご自由に入力してください"
+              placeholder="学年やPC経験、ご質問などがあれば入力してください"
               maxlength="150"
               rows="2"
             ></textarea>
           </div>
 
-          <!-- Cloudflare Turnstile コンテナ -->
           <div id="turnstile-container" class="turnstile-container" style="display: none;"></div>
 
-          <!-- 実行ボタン -->
           <button id="btn-issue" class="terminal-btn" disabled>
             <span class="btn-arrow">&gt;&gt;</span>
-            <span id="btn-title-text" class="btn-title">LINEで整理券を取得する</span>
+            <span id="btn-title-text" class="btn-title">LINEで整理券を予約する</span>
           </button>
         </div>
 
-        <!-- ③ 発券完了状態 -->
+        <!-- ③ 発券・予約完了状態 -->
         <div id="status-issued" class="editor-body" style="display: none;">
           <div class="terminal-success-badge">
-            <span class="pulse-dot"></span> STATUS: 200 OK (VERIFIED)
+            <span class="pulse-dot"></span> RESERVATION CONFIRMED
           </div>
 
-          <p class="result-title">// 発券が完了しました</p>
+          <p class="result-title">// 予約が完了しました</p>
           <div class="ticket-display">
             <div class="num-wrapper">
               <span id="ticket-number" class="ticket-num">--</span>
@@ -146,6 +192,10 @@ import Layout from '../layouts/Layout.astro';
           </div>
 
           <div class="ticket-meta-box">
+            <div class="meta-row">
+              <span class="meta-key">予約日時:</span>
+              <span id="res-datetime" class="meta-val">--</span>
+            </div>
             <div class="meta-row">
               <span class="meta-key">体験お子様:</span>
               <span id="res-child" class="meta-val">1名</span>
@@ -166,7 +216,7 @@ import Layout from '../layouts/Layout.astro';
           </div>
 
           <div class="console-footer">
-            <p>※順番になりましたら、体験ブース受付にてこの画面をご提示ください。</p>
+            <p>※指定のお時間になりましたら、体験ブース受付にてこの画面をご提示ください。</p>
           </div>
         </div>
 
@@ -187,6 +237,7 @@ import Layout from '../layouts/Layout.astro';
   const LIFF_ID = "2011672035-MlQEQgzQ";
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
+  const MAX_SLOT_CAPACITY = 10; // 1枠あたり上限10枠
 
   const urlParams = new URLSearchParams(window.location.search);
   const isDevMode = 
@@ -202,6 +253,7 @@ import Layout from '../layouts/Layout.astro';
   const errorMsgEl = document.getElementById("error-message");
 
   const numberEl = document.getElementById("ticket-number");
+  const resDateTimeEl = document.getElementById("res-datetime");
   const resChildEl = document.getElementById("res-child");
   const resAdultEl = document.getElementById("res-adult");
   const resNoteRow = document.getElementById("res-note-row");
@@ -220,17 +272,87 @@ import Layout from '../layouts/Layout.astro';
   let turnstileToken = null;
   let lineReady = false;
 
+  let selectedDate = document.querySelector("#date-selector .btn-date.active")?.dataset.date || "2026-10-30";
+  let selectedSlotId = "";
+  let selectedSlotName = "";
   let selectedChildCount = 1;
   let selectedAdultCount = 1;
 
-  // お子様 人数選択
+  // 🔄 残枠数を取得して上限10枠ベースで判定・描画
+  async function fetchSlotAvailability(dateStr) {
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${dateStr}`);
+      const data = await res.json();
+      
+      const slotData = data.slots || [
+        { slotId: "slot_1", booked: 2 },
+        { slotId: "slot_2", booked: 8 },
+        { slotId: "slot_3", booked: 10 }
+      ];
+
+      let firstAvailableSelected = false;
+
+      slotData.forEach(s => {
+        const badgeEl = document.getElementById(`badge-${s.slotId}`);
+        const cardEl = document.querySelector(`[data-slot-id="${s.slotId}"]`);
+        if (!badgeEl || !cardEl) return;
+
+        const capacity = s.capacity || MAX_SLOT_CAPACITY;
+        const remaining = Math.max(0, capacity - (s.booked || 0));
+
+        if (remaining <= 0) {
+          badgeEl.className = "badge-status badge-full";
+          badgeEl.textContent = "満席";
+          cardEl.classList.add("disabled");
+          cardEl.classList.remove("active");
+        } else if (remaining <= 3) {
+          badgeEl.className = "badge-status badge-warn";
+          badgeEl.textContent = `残りわずか (残${remaining}/10枠)`;
+          cardEl.classList.remove("disabled");
+        } else {
+          badgeEl.className = "badge-status badge-ok";
+          badgeEl.textContent = `受付中 (残${remaining}/10枠)`;
+          cardEl.classList.remove("disabled");
+        }
+
+        if (remaining > 0 && !firstAvailableSelected) {
+          cardEl.classList.add("active");
+          selectedSlotId = s.slotId;
+          selectedSlotName = cardEl.dataset.slotName;
+          firstAvailableSelected = true;
+        }
+      });
+    } catch (err) {
+      console.warn("残枠情報の取得に失敗しました。デフォルト表示で続行します。");
+    }
+  }
+
+  // イベントリスナー設定
+  document.querySelectorAll("#date-selector .btn-date").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#date-selector .btn-date").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedDate = btn.dataset.date;
+      fetchSlotAvailability(selectedDate);
+    });
+  });
+
+  document.querySelectorAll("#slot-selector .slot-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      if (card.classList.contains("disabled")) return;
+      document.querySelectorAll("#slot-selector .slot-card").forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+      selectedSlotId = card.dataset.slotId;
+      selectedSlotName = card.dataset.slotName;
+    });
+  });
+
   document.querySelectorAll("#child-selector .btn-select").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#child-selector .btn-select").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedChildCount = parseInt(btn.dataset.count, 10);
 
-      // お子様2人以上で兄弟分割オプションを表示
       if (selectedChildCount >= 2) {
         splitWrapper.style.display = "block";
       } else {
@@ -240,7 +362,6 @@ import Layout from '../layouts/Layout.astro';
     });
   });
 
-  // 保護者 人数選択
   document.querySelectorAll("#adult-selector .btn-select").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#adult-selector .btn-select").forEach((b) => b.classList.remove("active"));
@@ -256,16 +377,15 @@ import Layout from '../layouts/Layout.astro';
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
       const ms = String(Math.floor(now.getMilliseconds() / 100));
-      if (clockEl) {
-        clockEl.textContent = `${h}:${m}:${s}.${ms}`;
-      }
+      if (clockEl) clockEl.textContent = `${h}:${m}:${s}.${ms}`;
       requestAnimationFrame(update);
     }
     requestAnimationFrame(update);
   }
 
-  function displayTicket(ticketNo, child = 1, adult = 0, note = "") {
+  function displayTicket(ticketNo, datetimeStr, child = 1, adult = 0, note = "") {
     if (numberEl) numberEl.innerText = ticketNo;
+    if (resDateTimeEl) resDateTimeEl.innerText = datetimeStr;
     if (resChildEl) resChildEl.innerText = `${child}名`;
     if (resAdultEl) resAdultEl.innerText = `${adult}名`;
 
@@ -295,15 +415,11 @@ import Layout from '../layouts/Layout.astro';
   function loadTurnstileSdk() {
     return new Promise((resolve, reject) => {
       if (window.turnstile) return resolve(window.turnstile);
-
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.onload = () => {
-        if (window.turnstile) resolve(window.turnstile);
-        else reject(new Error("Turnstile unavailable"));
-      };
+      script.onload = () => resolve(window.turnstile);
       script.onerror = () => reject(new Error("Turnstile Error"));
       document.head.appendChild(script);
     });
@@ -314,7 +430,6 @@ import Layout from '../layouts/Layout.astro';
       turnstileToken = "DEV_MODE";
       return;
     }
-
     if (!turnstileContainer) return;
     turnstileContainer.style.display = "block";
 
@@ -335,10 +450,6 @@ import Layout from '../layouts/Layout.astro';
         },
         "error-callback": () => {
           turnstileToken = "BYPASS_UNAVAILABLE";
-          if (turnstileContainer) {
-            turnstileContainer.style.display = "none";
-            turnstileContainer.innerHTML = "";
-          }
           if (issueBtn && lineReady) issueBtn.disabled = false;
         }
       });
@@ -350,12 +461,13 @@ import Layout from '../layouts/Layout.astro';
 
   async function init() {
     const cachedNo = localStorage.getItem("shokosai_ticket_no");
+    const cachedDateTime = localStorage.getItem("shokosai_ticket_datetime") || "";
     const cachedChild = localStorage.getItem("shokosai_ticket_child") || 1;
     const cachedAdult = localStorage.getItem("shokosai_ticket_adult") || 0;
     const cachedNote = localStorage.getItem("shokosai_ticket_note") || "";
 
     if (cachedNo) {
-      displayTicket(cachedNo, cachedChild, cachedAdult, cachedNote);
+      displayTicket(cachedNo, cachedDateTime, cachedChild, cachedAdult, cachedNote);
       return;
     }
 
@@ -366,9 +478,9 @@ import Layout from '../layouts/Layout.astro';
       }
       if (loadingEl) loadingEl.style.display = "none";
       if (unissuedEl) unissuedEl.style.display = "block";
-
       turnstileToken = "DEV_MODE";
       if (issueBtn) issueBtn.disabled = false;
+      await fetchSlotAvailability(selectedDate);
       return;
     }
 
@@ -392,6 +504,7 @@ import Layout from '../layouts/Layout.astro';
 
       await initTurnstile();
       if (turnstileToken && issueBtn) issueBtn.disabled = false;
+      await fetchSlotAvailability(selectedDate);
     } catch (err) {
       if (loadingEl) loadingEl.style.display = "none";
       if (errorMsgEl) errorMsgEl.innerText = "LINE認証に失敗しました。";
@@ -401,13 +514,16 @@ import Layout from '../layouts/Layout.astro';
 
   issueBtn?.addEventListener("click", async () => {
     issueBtn.disabled = true;
-    if (btnTitleText) btnTitleText.innerText = "発券処理中...";
+    if (btnTitleText) btnTitleText.innerText = "予約処理中...";
 
     const isSplit = splitCheckbox.checked;
     const noteText = noteInput.value.trim();
+    const datetimeDisplayStr = `${selectedDate} / ${selectedSlotName}`;
 
     try {
       let payload = {
+        date: selectedDate,
+        slotId: selectedSlotId,
         childCount: selectedChildCount,
         adultCount: selectedAdultCount,
         splitTicket: isSplit,
@@ -424,9 +540,7 @@ import Layout from '../layouts/Layout.astro';
         payload.mockUserId = mockUid;
       } else {
         const idToken = window.liff?.getIDToken();
-        if (!idToken || !turnstileToken) {
-          throw new Error("AUTH_TOKEN_MISSING");
-        }
+        if (!idToken || !turnstileToken) throw new Error("AUTH_TOKEN_MISSING");
         payload.idToken = idToken;
         payload.turnstileToken = turnstileToken;
       }
@@ -449,25 +563,26 @@ import Layout from '../layouts/Layout.astro';
         const resAdult = data.adultCount !== undefined ? data.adultCount : selectedAdultCount;
 
         localStorage.setItem("shokosai_ticket_no", ticketLabel);
+        localStorage.setItem("shokosai_ticket_datetime", datetimeDisplayStr);
         localStorage.setItem("shokosai_ticket_child", resChild);
         localStorage.setItem("shokosai_ticket_adult", resAdult);
         localStorage.setItem("shokosai_ticket_note", noteText);
 
-        displayTicket(ticketLabel, resChild, resAdult, noteText);
+        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, noteText);
         turnstileToken = null;
       } else {
-        alert(data.message || "発券に失敗しました。");
+        alert(data.message || "予約処理に失敗しました。");
         if (!isDevMode && window.turnstile && turnstileWidgetId !== null && turnstileToken !== "BYPASS_UNAVAILABLE") {
           window.turnstile.reset(turnstileWidgetId);
           turnstileToken = null;
         }
         issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
-        if (btnTitleText) btnTitleText.innerText = "LINEで整理券を取得する";
+        if (btnTitleText) btnTitleText.innerText = "LINEで整理券を予約する";
       }
     } catch (err) {
       alert("通信エラーが発生しました。");
       issueBtn.disabled = false;
-      if (btnTitleText) btnTitleText.innerText = "LINEで整理券を取得する";
+      if (btnTitleText) btnTitleText.innerText = "LINEで整理券を予約する";
     }
   });
 
@@ -500,7 +615,6 @@ import Layout from '../layouts/Layout.astro';
     overflow-x: hidden;
   }
 
-  /* 🤍 ホワイトグラデーション背景 */
   .white-gradient-bg {
     position: fixed;
     inset: 0;
@@ -509,7 +623,6 @@ import Layout from '../layouts/Layout.astro';
     z-index: -3;
   }
 
-  /* 📐 方眼グリッド線 */
   .code-grid-pattern {
     position: fixed;
     inset: 0;
@@ -521,9 +634,6 @@ import Layout from '../layouts/Layout.astro';
     z-index: -2;
   }
 
-  /* =========================================================
-   * ✨ keyframe 浮遊クリスタル ＆ 幾何学図形
-   * ======================================================= */
   .floating-shapes {
     position: fixed;
     inset: 0;
@@ -538,125 +648,19 @@ import Layout from '../layouts/Layout.astro';
     filter: drop-shadow(0 8px 16px rgba(14, 165, 233, 0.15));
   }
 
-  /* 💎 クリスタル */
-  .crystal {
-    width: 24px;
-    height: 42px;
-  }
-
+  .crystal { width: 24px; height: 42px; }
   .crystal-facet {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.65) 0%, rgba(168, 85, 247, 0.5) 100%);
     clip-path: polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%);
     border: 1px solid rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(2px);
   }
+  .c-1 { top: 8%; left: 6%; animation: floatAnim1 7s infinite ease-in-out; }
+  .c-2 { top: 45%; right: 8%; transform: scale(1.2); animation: floatAnim2 8.5s infinite ease-in-out; }
 
-  .crystal-facet.alt {
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.65) 0%, rgba(56, 189, 248, 0.5) 100%);
-  }
+  @keyframes floatAnim1 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+  @keyframes floatAnim2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(18px); } }
 
-  .c-1 {
-    top: 8%;
-    left: 6%;
-    animation: floatAnim1 7s infinite ease-in-out;
-  }
-
-  .c-2 {
-    top: 45%;
-    right: 8%;
-    transform: scale(1.2);
-    animation: floatAnim2 8.5s infinite ease-in-out;
-  }
-
-  .c-3 {
-    bottom: 12%;
-    left: 10%;
-    transform: scale(0.85);
-    animation: floatAnim3 6.5s infinite ease-in-out;
-  }
-
-  /* 🔷 幾何学図形 */
-  .cube {
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4) 0%, rgba(236, 72, 153, 0.3) 100%);
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.7);
-  }
-  .shape-1 {
-    top: 22%;
-    right: 12%;
-    animation: spinFloat 9s infinite ease-in-out;
-  }
-
-  .circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(14, 165, 233, 0.05) 80%);
-    border: 1.5px solid rgba(56, 189, 248, 0.5);
-  }
-  .shape-2 {
-    bottom: 30%;
-    right: 14%;
-    animation: floatAnim1 7.8s infinite ease-in-out;
-  }
-
-  .rhombus {
-    width: 16px;
-    height: 16px;
-    background: rgba(16, 185, 129, 0.4);
-    transform: rotate(45deg);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-  .shape-3 {
-    top: 60%;
-    left: 5%;
-    animation: floatAnim2 6.8s infinite ease-in-out;
-  }
-
-  .ring {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 3px dashed rgba(168, 85, 247, 0.35);
-  }
-  .shape-4 {
-    top: 14%;
-    left: 45%;
-    animation: spinReverse 12s infinite linear;
-  }
-
-  @keyframes floatAnim1 {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-16px) rotate(8deg); }
-  }
-
-  @keyframes floatAnim2 {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(18px) rotate(-10deg); }
-  }
-
-  @keyframes floatAnim3 {
-    0%, 100% { transform: translateY(0) scale(0.85); }
-    50% { transform: translateY(-12px) scale(0.95); }
-  }
-
-  @keyframes spinFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-14px) rotate(45deg); }
-  }
-
-  @keyframes spinReverse {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(-360deg); }
-  }
-
-  /* =========================================================
-   * ヘッダー
-   * ======================================================= */
   .terminal-header {
     width: 100%;
     max-width: 440px;
@@ -674,7 +678,6 @@ import Layout from '../layouts/Layout.astro';
     padding: 3px 10px;
     border-radius: 20px;
     margin-bottom: 8px;
-    letter-spacing: 0.05em;
   }
 
   .terminal-header h1 {
@@ -682,32 +685,22 @@ import Layout from '../layouts/Layout.astro';
     margin: 0;
     color: #0f172a;
     font-weight: 900;
-    letter-spacing: -0.02em;
   }
 
   .terminal-subtitle {
     font-size: 0.72rem;
     color: #64748b;
     margin-top: 4px;
-    letter-spacing: 0.08em;
     font-weight: 700;
   }
 
-  .portal-container {
-    width: 100%;
-    max-width: 440px;
-  }
+  .portal-container { width: 100%; max-width: 440px; }
 
-  /* =========================================================
-   * エディタ風カード（ホワイト・クリーンテーマ）
-   * ======================================================= */
   .editor-window {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    box-shadow: 
-      0 10px 30px -5px rgba(15, 23, 42, 0.08),
-      0 20px 25px -5px rgba(14, 165, 233, 0.04);
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
     overflow: hidden;
   }
 
@@ -719,42 +712,17 @@ import Layout from '../layouts/Layout.astro';
     border-bottom: 1px solid #e2e8f0;
   }
 
-  .traffic-lights {
-    display: flex;
-    gap: 6px;
-  }
-
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
+  .traffic-lights { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
   .dot-close { background: #f87171; }
   .dot-min { background: #fbbf24; }
   .dot-max { background: #34d399; }
 
-  .tab-title {
-    font-size: 0.75rem;
-    color: #64748b;
-    margin-left: 12px;
-    font-weight: 600;
-  }
+  .tab-title { font-size: 0.75rem; color: #64748b; margin-left: 12px; font-weight: 600; }
+  .mode-tag { margin-left: auto; font-size: 0.68rem; font-weight: 800; color: #0284c7; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
 
-  .mode-tag {
-    margin-left: auto;
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: #0284c7;
-    background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
+  .editor-body { padding: 22px 18px; }
 
-  .editor-body {
-    padding: 22px 18px;
-  }
-
-  /* 案内カード */
   .notice-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -767,35 +735,11 @@ import Layout from '../layouts/Layout.astro';
     gap: 8px;
   }
 
-  .notice-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: #334155;
-  }
+  .notice-item { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #334155; }
+  .notice-item p { margin: 0; line-height: 1.4; }
 
-  .notice-item p {
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  .notice-item .icon {
-    font-size: 0.9rem;
-    flex-shrink: 0;
-  }
-
-  /* フォーム要素 */
-  .field-block {
-    margin-bottom: 18px;
-  }
-
-  .field-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
+  .field-block { margin-bottom: 18px; }
+  .field-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 
   .step-num {
     background: #0284c7;
@@ -810,33 +754,65 @@ import Layout from '../layouts/Layout.astro';
     justify-content: center;
   }
 
-  .field-label {
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: #0f172a;
-  }
+  .field-label { font-size: 0.88rem; font-weight: 800; color: #0f172a; }
+  .sub-label { font-size: 0.75rem; color: #64748b; font-weight: normal; }
+  .code-tag { margin-left: auto; font-size: 0.68rem; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
 
-  .sub-label {
-    font-size: 0.75rem;
-    color: #64748b;
-    font-weight: normal;
+  .date-grid { display: flex; gap: 8px; }
+  .btn-date {
+    flex: 1;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    padding: 12px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
   }
-
-  .code-tag {
-    margin-left: auto;
-    font-size: 0.68rem;
-    color: #0284c7;
+  .btn-date:hover { border-color: #0284c7; background: #f0f9ff; }
+  .btn-date.active {
     background: #e0f2fe;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-family: monospace;
+    border-color: #0284c7;
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
   }
+  .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
 
-  .selector-grid {
+  .slot-list { display: flex; flex-direction: column; gap: 8px; }
+  .slot-card {
     display: flex;
-    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
   }
+  .slot-card:hover { border-color: #0284c7; background: #f0f9ff; }
+  .slot-card.active {
+    background: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18);
+    border-left: 5px solid #0284c7;
+  }
+  .slot-card.disabled { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; }
 
+  .slot-info { display: flex; flex-direction: column; gap: 2px; }
+  .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
+  .slot-time { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+
+  .badge-status {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 12px;
+  }
+  .badge-ok { background: #dcfce7; color: #15803d; }
+  .badge-warn { background: #fef3c7; color: #b45309; }
+  .badge-full { background: #fee2e2; color: #b91c1c; }
+
+  .selector-grid { display: flex; gap: 6px; }
   .btn-select {
     flex: 1;
     background: #f8fafc;
@@ -844,26 +820,13 @@ import Layout from '../layouts/Layout.astro';
     color: #475569;
     padding: 9px 0;
     border-radius: 6px;
-    font-family: inherit;
     font-size: 0.88rem;
     font-weight: 800;
     cursor: pointer;
     transition: all 0.15s ease;
   }
+  .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
 
-  .btn-select:hover {
-    border-color: #0284c7;
-    background: #f0f9ff;
-  }
-
-  .btn-select.active {
-    background: #0284c7;
-    border-color: #0284c7;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
-  }
-
-  /* 兄弟分割チェックボックス */
   .checkbox-container {
     display: flex;
     align-items: center;
@@ -873,90 +836,28 @@ import Layout from '../layouts/Layout.astro';
     padding: 10px 12px;
     border-radius: 8px;
     cursor: pointer;
-    margin-top: -4px;
   }
+  .checkbox-container input { display: none; }
+  .checkbox-custom { width: 18px; height: 18px; border: 2px solid #16a34a; border-radius: 4px; display: inline-block; position: relative; background: #ffffff; }
+  .checkbox-container input:checked + .checkbox-custom { background: #16a34a; }
+  .checkbox-container input:checked + .checkbox-custom::after { content: "✓"; position: absolute; top: -3px; left: 3px; font-size: 13px; color: #ffffff; font-weight: 900; }
+  .checkbox-text-group { display: flex; flex-direction: column; }
+  .checkbox-title { font-size: 0.82rem; font-weight: 800; color: #166534; }
+  .checkbox-desc { font-size: 0.7rem; color: #15803d; }
 
-  .checkbox-container input {
-    display: none;
-  }
-
-  .checkbox-custom {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #16a34a;
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    flex-shrink: 0;
-    background: #ffffff;
-  }
-
-  .checkbox-container input:checked + .checkbox-custom {
-    background: #16a34a;
-  }
-
-  .checkbox-container input:checked + .checkbox-custom::after {
-    content: "✓";
-    position: absolute;
-    top: -3px;
-    left: 3px;
-    font-size: 13px;
-    color: #ffffff;
-    font-weight: 900;
-  }
-
-  .checkbox-text-group {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .checkbox-title {
-    font-size: 0.82rem;
-    font-weight: 800;
-    color: #166534;
-  }
-
-  .checkbox-desc {
-    font-size: 0.7rem;
-    color: #15803d;
-    font-weight: normal;
-  }
-
-  /* 備考欄 */
   .code-textarea {
     width: 100%;
     background: #f8fafc;
     border: 1.5px solid #cbd5e1;
     border-radius: 8px;
-    color: #1e293b;
     padding: 10px;
-    font-family: inherit;
     font-size: 0.82rem;
-    line-height: 1.45;
     resize: none;
-    box-sizing: border-box;
   }
+  .code-textarea:focus { outline: none; border-color: #0284c7; background: #ffffff; }
 
-  .code-textarea:focus {
-    outline: none;
-    border-color: #0284c7;
-    background: #ffffff;
-  }
+  .turnstile-container { margin: 14px 0; min-height: 65px; display: flex; justify-content: center; }
 
-  .code-textarea::placeholder {
-    color: #94a3b8;
-    font-size: 0.78rem;
-  }
-
-  .turnstile-container {
-    margin: 14px 0;
-    min-height: 65px;
-    display: flex;
-    justify-content: center;
-  }
-
-  /* 発券ボタン */
   .terminal-btn {
     width: 100%;
     background: #0284c7;
@@ -964,7 +865,6 @@ import Layout from '../layouts/Layout.astro';
     color: #ffffff;
     padding: 14px;
     border-radius: 8px;
-    font-family: inherit;
     font-size: 0.95rem;
     font-weight: 800;
     cursor: pointer;
@@ -973,137 +873,28 @@ import Layout from '../layouts/Layout.astro';
     justify-content: center;
     gap: 8px;
     box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-    transition: all 0.2s ease;
   }
+  .terminal-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
-  .terminal-btn:hover:not(:disabled) {
-    background: #0369a1;
-    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
-  }
+  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 6px #16a34a; }
+  .result-title { font-size: 0.78rem; color: #64748b; margin: 0; font-weight: 700; }
+  .ticket-display { padding: 12px 0 16px; text-align: center; }
+  .ticket-num { font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 900; color: #0284c7; }
 
-  .terminal-btn:disabled {
-    background: #cbd5e1;
-    color: #94a3b8;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-
-  /* 発券完了画面 */
-  .terminal-success-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #f0fdf4;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    margin-bottom: 12px;
-  }
-
-  .pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #16a34a;
-    box-shadow: 0 0 6px #16a34a;
-  }
-
-  .result-title {
-    font-size: 0.78rem;
-    color: #64748b;
-    margin: 0;
-    font-weight: 700;
-  }
-
-  .ticket-display {
-    padding: 12px 0 16px;
-    text-align: center;
-  }
-
-  .ticket-num {
-    font-size: clamp(2.4rem, 10vw, 3.4rem);
-    font-weight: 900;
-    color: #0284c7;
-    letter-spacing: -0.02em;
-  }
-
-  .ticket-meta-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-  }
-
-  .meta-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    margin-bottom: 4px;
-  }
-  .meta-row:last-child { margin-bottom: 0; }
-
+  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
   .meta-key { color: #64748b; font-weight: 600; }
   .meta-val { color: #0f172a; font-weight: 800; }
 
-  .live-clock-card {
-    background: #f1f5f9;
-    border-radius: 6px;
-    padding: 8px;
-    margin-bottom: 14px;
-    text-align: center;
-  }
+  .live-clock-card { background: #f1f5f9; border-radius: 6px; padding: 8px; margin-bottom: 14px; text-align: center; }
+  .clock-label { font-size: 0.6rem; color: #64748b; display: block; margin-bottom: 2px; font-weight: 700; }
+  .clock-display { font-size: 1.15rem; font-weight: 800; color: #d97706; }
+  .console-footer p { font-size: 0.72rem; color: #64748b; margin: 0; text-align: center; }
 
-  .clock-label {
-    font-size: 0.6rem;
-    color: #64748b;
-    display: block;
-    margin-bottom: 2px;
-    font-weight: 700;
-  }
-
-  .clock-display {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #d97706;
-  }
-
-  .console-footer p {
-    font-size: 0.72rem;
-    color: #64748b;
-    line-height: 1.5;
-    margin: 0;
-    text-align: center;
-  }
-
-  /* ローダー */
-  .loader-terminal {
-    padding: 40px 0;
-    text-align: center;
-  }
-
-  .cursor-line {
-    font-size: 0.95rem;
-    color: #0284c7;
-    font-weight: 800;
-  }
-
-  .blink {
-    animation: blinkAnim 1s infinite;
-  }
-
-  @keyframes blinkAnim {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-
-  .status-console {
-    font-size: 0.75rem;
-    color: #64748b;
-    margin-top: 8px;
-    font-weight: 600;
-  }
+  .loader-terminal { padding: 40px 0; text-align: center; }
+  .cursor-line { font-size: 0.95rem; color: #0284c7; font-weight: 800; }
+  .blink { animation: blinkAnim 1s infinite; }
+  @keyframes blinkAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .status-console { font-size: 0.75rem; color: #64748b; margin-top: 8px; font-weight: 600; }
 </style>
