@@ -127,7 +127,7 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- ✨ お子様のお名前入力欄（人数に合わせて動的変更） -->
+          <!-- STEP 4: お子様のお名前入力欄（人数に合わせて動的変更） -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">4</span>
@@ -169,7 +169,7 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 6: 備考 -->
+          <!-- STEP 6: 備考・ご要望 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">6</span>
@@ -219,8 +219,12 @@ const TIME_SLOTS = [
               <span class="meta-key">保護者同伴:</span>
               <span id="res-adult" class="meta-val">1名</span>
             </div>
+            <div class="meta-row" id="res-names-row" style="display: none;">
+              <span class="meta-key">お子様お名前:</span>
+              <span id="res-child-names" class="meta-val">--</span>
+            </div>
             <div class="meta-row" id="res-note-row" style="display: none;">
-              <span class="meta-key">備考:</span>
+              <span class="meta-key">備考・ご要望:</span>
               <span id="res-note" class="meta-val">--</span>
             </div>
           </div>
@@ -271,6 +275,8 @@ const TIME_SLOTS = [
   const resDateTimeEl = document.getElementById("res-datetime");
   const resChildEl = document.getElementById("res-child");
   const resAdultEl = document.getElementById("res-adult");
+  const resNamesRow = document.getElementById("res-names-row");
+  const resNamesEl = document.getElementById("res-child-names");
   const resNoteRow = document.getElementById("res-note-row");
   const resNoteEl = document.getElementById("res-note");
 
@@ -293,7 +299,7 @@ const TIME_SLOTS = [
   let selectedChildCount = 1;
   let selectedAdultCount = 1;
 
-  // 🔄 お子様の人数に合わせて名前入力フォームを生成
+  // 🔄 人数に応じた名前入力欄の生成
   function updateChildNameInputs(count) {
     const container = document.getElementById("child-names-container");
     if (!container) return;
@@ -412,7 +418,6 @@ const TIME_SLOTS = [
       btn.classList.add("active");
       selectedChildCount = parseInt(btn.dataset.count, 10);
 
-      // 人数変更に合わせて名前の入力欄を動的更新
       updateChildNameInputs(selectedChildCount);
 
       if (selectedChildCount >= 2) {
@@ -445,15 +450,24 @@ const TIME_SLOTS = [
     requestAnimationFrame(update);
   }
 
-  function displayTicket(ticketNo, datetimeStr, child = 1, adult = 0, note = "") {
+  function displayTicket(ticketNo, datetimeStr, child = 1, adult = 0, childNames = "", note = "") {
     if (numberEl) numberEl.innerText = ticketNo;
     if (resDateTimeEl) resDateTimeEl.innerText = datetimeStr;
     if (resChildEl) resChildEl.innerText = `${child}名`;
     if (resAdultEl) resAdultEl.innerText = `${adult}名`;
 
+    if (childNames && resNamesRow && resNamesEl) {
+      resNamesEl.innerText = childNames;
+      resNamesRow.style.display = "flex";
+    } else if (resNamesRow) {
+      resNamesRow.style.display = "none";
+    }
+
     if (note && resNoteRow && resNoteEl) {
       resNoteEl.innerText = note;
       resNoteRow.style.display = "flex";
+    } else if (resNoteRow) {
+      resNoteRow.style.display = "none";
     }
 
     if (loadingEl) loadingEl.style.display = "none";
@@ -526,10 +540,11 @@ const TIME_SLOTS = [
     const cachedDateTime = localStorage.getItem("shokosai_ticket_datetime") || "";
     const cachedChild = localStorage.getItem("shokosai_ticket_child") || 1;
     const cachedAdult = localStorage.getItem("shokosai_ticket_adult") || 0;
+    const cachedNames = localStorage.getItem("shokosai_ticket_child_names") || "";
     const cachedNote = localStorage.getItem("shokosai_ticket_note") || "";
 
     if (cachedNo) {
-      displayTicket(cachedNo, cachedDateTime, cachedChild, cachedAdult, cachedNote);
+      displayTicket(cachedNo, cachedDateTime, cachedChild, cachedAdult, cachedNames, cachedNote);
       return;
     }
 
@@ -580,16 +595,15 @@ const TIME_SLOTS = [
 
     const isSplit = splitCheckbox.checked;
     
-    // 入力された名前の取得とフォーマット
+    // お子様のお名前（childNames）を取得
     const nameInputs = document.querySelectorAll(".child-name-input");
-    const childNames = Array.from(nameInputs)
+    const childNamesText = Array.from(nameInputs)
       .map(input => input.value.trim())
       .filter(val => val !== "")
       .join(", ");
 
+    // 備考・ご要望（note）を取得（混ぜずに完全独立）
     const noteText = noteInput.value.trim();
-    // 名前と備考欄を統合
-    const combinedNote = childNames ? `【名前】${childNames}${noteText ? " / " + noteText : ""}` : noteText;
     const datetimeDisplayStr = `${selectedDate} / ${selectedSlotName}`;
 
     try {
@@ -598,9 +612,9 @@ const TIME_SLOTS = [
         slotId: selectedSlotId,
         childCount: selectedChildCount,
         adultCount: selectedAdultCount,
-        childNames: childNames,
+        childNames: childNamesText, // 完全独立パラメータ
         splitTicket: isSplit,
-        note: combinedNote,
+        note: noteText,             // 完全独立パラメータ
         headcount: selectedChildCount + selectedAdultCount
       };
 
@@ -635,13 +649,15 @@ const TIME_SLOTS = [
         const resChild = data.childCount || selectedChildCount;
         const resAdult = data.adultCount !== undefined ? data.adultCount : selectedAdultCount;
 
+        // それぞれ別々に保存
         localStorage.setItem("shokosai_ticket_no", ticketLabel);
         localStorage.setItem("shokosai_ticket_datetime", datetimeDisplayStr);
         localStorage.setItem("shokosai_ticket_child", resChild);
         localStorage.setItem("shokosai_ticket_adult", resAdult);
-        localStorage.setItem("shokosai_ticket_note", combinedNote);
+        localStorage.setItem("shokosai_ticket_child_names", childNamesText);
+        localStorage.setItem("shokosai_ticket_note", noteText);
 
-        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, combinedNote);
+        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, childNamesText, noteText);
         turnstileToken = null;
       } else {
         alert(data.message || "予約処理に失敗しました。");
@@ -900,7 +916,7 @@ const TIME_SLOTS = [
   }
   .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
 
-  /* ✨ お子様お名前入力欄のスタイル */
+  /* お子様お名前入力欄のスタイル */
   .names-container {
     display: flex;
     flex-direction: column;
@@ -981,4 +997,29 @@ const TIME_SLOTS = [
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(2, 132,
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  }
+  .terminal-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 6px #16a34a; }
+  .result-title { font-size: 0.78rem; color: #64748b; margin: 0; font-weight: 700; }
+  .ticket-display { padding: 12px 0 16px; text-align: center; }
+  .ticket-num { font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 900; color: #0284c7; }
+
+  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+  .meta-key { color: #64748b; font-weight: 600; }
+  .meta-val { color: #0f172a; font-weight: 800; }
+
+  .live-clock-card { background: #f1f5f9; border-radius: 6px; padding: 8px; margin-bottom: 14px; text-align: center; }
+  .clock-label { font-size: 0.6rem; color: #64748b; display: block; margin-bottom: 2px; font-weight: 700; }
+  .clock-display { font-size: 1.15rem; font-weight: 800; color: #d97706; }
+  .console-footer p { font-size: 0.72rem; color: #64748b; margin: 0; text-align: center; }
+
+  .loader-terminal { padding: 40px 0; text-align: center; }
+  .cursor-line { font-size: 0.95rem; color: #0284c7; font-weight: 800; }
+  .blink { animation: blinkAnim 1s infinite; }
+  @keyframes blinkAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .status-console { font-size: 0.75rem; color: #64748b; margin-top: 8px; font-weight: 600; }
+</style>
