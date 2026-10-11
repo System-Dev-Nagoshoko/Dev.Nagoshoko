@@ -127,6 +127,21 @@ const TIME_SLOTS = [
             </div>
           </div>
 
+          <!-- ✨ お子様のお名前入力欄（人数に合わせて動的変更） -->
+          <div class="field-block">
+            <div class="field-header">
+              <span class="step-num">4</span>
+              <label class="field-label">体験するお子様のお名前 <span class="sub-label">（任意）</span></label>
+              <span class="code-tag">&lt;names /&gt;</span>
+            </div>
+            <div id="child-names-container" class="names-container">
+              <div class="name-input-wrapper">
+                <span class="name-index">1人目</span>
+                <input type="text" class="child-name-input code-input" placeholder="例: やまだ たろう" maxlength="30" />
+              </div>
+            </div>
+          </div>
+
           <!-- 兄弟分割オプション -->
           <div id="split-wrapper" class="field-block split-option" style="display: none;">
             <label class="checkbox-container">
@@ -139,10 +154,10 @@ const TIME_SLOTS = [
             </label>
           </div>
 
-          <!-- STEP 4: 保護者の人数 -->
+          <!-- STEP 5: 保護者の人数 -->
           <div class="field-block">
             <div class="field-header">
-              <span class="step-num">4</span>
+              <span class="step-num">5</span>
               <label class="field-label">同伴する保護者の人数</label>
               <span class="code-tag">&lt;guardians /&gt;</span>
             </div>
@@ -154,10 +169,10 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 5: 備考 -->
+          <!-- STEP 6: 備考 -->
           <div class="field-block">
             <div class="field-header">
-              <span class="step-num">5</span>
+              <span class="step-num">6</span>
               <label class="field-label">備考・ご要望 <span class="sub-label">（任意）</span></label>
               <span class="code-tag">// optional</span>
             </div>
@@ -237,7 +252,7 @@ const TIME_SLOTS = [
   const LIFF_ID = "2011672035-MlQEQgzQ";
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
-  const MAX_SLOT_CAPACITY = 10; // 1枠あたり上限10枠
+  const MAX_SLOT_CAPACITY = 10;
 
   const urlParams = new URLSearchParams(window.location.search);
   const isDevMode = 
@@ -278,7 +293,36 @@ const TIME_SLOTS = [
   let selectedChildCount = 1;
   let selectedAdultCount = 1;
 
-  // 🔄 残枠数を取得（デフォルト全枠booked:0 = 残10/10枠）
+  // 🔄 お子様の人数に合わせて名前入力フォームを生成
+  function updateChildNameInputs(count) {
+    const container = document.getElementById("child-names-container");
+    if (!container) return;
+
+    const currentValues = Array.from(container.querySelectorAll(".child-name-input")).map(input => input.value);
+    container.innerHTML = "";
+
+    for (let i = 0; i < count; i++) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "name-input-wrapper";
+
+      const label = document.createElement("span");
+      label.className = "name-index";
+      label.textContent = `${i + 1}人目`;
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "child-name-input code-input";
+      input.placeholder = count === 1 ? "例: やまだ たろう" : `例: お子様${i + 1}のお名前`;
+      input.maxLength = 30;
+      input.value = currentValues[i] || "";
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+      container.appendChild(wrapper);
+    }
+  }
+
+  // 残枠数を取得
   async function fetchSlotAvailability(dateStr) {
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${dateStr}`);
@@ -323,7 +367,6 @@ const TIME_SLOTS = [
         }
       });
     } catch (err) {
-      // フォールバック: 通信エラー時も全枠残10枠表示で稼働
       ["slot_1", "slot_2", "slot_3"].forEach((slotId, index) => {
         const badgeEl = document.getElementById(`badge-${slotId}`);
         const cardEl = document.querySelector(`[data-slot-id="${slotId}"]`);
@@ -368,6 +411,9 @@ const TIME_SLOTS = [
       document.querySelectorAll("#child-selector .btn-select").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selectedChildCount = parseInt(btn.dataset.count, 10);
+
+      // 人数変更に合わせて名前の入力欄を動的更新
+      updateChildNameInputs(selectedChildCount);
 
       if (selectedChildCount >= 2) {
         splitWrapper.style.display = "block";
@@ -533,7 +579,17 @@ const TIME_SLOTS = [
     if (btnTitleText) btnTitleText.innerText = "予約処理中...";
 
     const isSplit = splitCheckbox.checked;
+    
+    // 入力された名前の取得とフォーマット
+    const nameInputs = document.querySelectorAll(".child-name-input");
+    const childNames = Array.from(nameInputs)
+      .map(input => input.value.trim())
+      .filter(val => val !== "")
+      .join(", ");
+
     const noteText = noteInput.value.trim();
+    // 名前と備考欄を統合
+    const combinedNote = childNames ? `【名前】${childNames}${noteText ? " / " + noteText : ""}` : noteText;
     const datetimeDisplayStr = `${selectedDate} / ${selectedSlotName}`;
 
     try {
@@ -542,8 +598,9 @@ const TIME_SLOTS = [
         slotId: selectedSlotId,
         childCount: selectedChildCount,
         adultCount: selectedAdultCount,
+        childNames: childNames,
         splitTicket: isSplit,
-        note: noteText,
+        note: combinedNote,
         headcount: selectedChildCount + selectedAdultCount
       };
 
@@ -582,9 +639,9 @@ const TIME_SLOTS = [
         localStorage.setItem("shokosai_ticket_datetime", datetimeDisplayStr);
         localStorage.setItem("shokosai_ticket_child", resChild);
         localStorage.setItem("shokosai_ticket_adult", resAdult);
-        localStorage.setItem("shokosai_ticket_note", noteText);
+        localStorage.setItem("shokosai_ticket_note", combinedNote);
 
-        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, noteText);
+        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, combinedNote);
         turnstileToken = null;
       } else {
         alert(data.message || "予約処理に失敗しました。");
@@ -843,6 +900,42 @@ const TIME_SLOTS = [
   }
   .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
 
+  /* ✨ お子様お名前入力欄のスタイル */
+  .names-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .name-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .name-index {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #0284c7;
+    background: #e0f2fe;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .code-input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+  .code-input:focus {
+    outline: none;
+    border-color: #0284c7;
+    background: #ffffff;
+  }
+
   .checkbox-container {
     display: flex;
     align-items: center;
@@ -888,29 +981,4 @@ const TIME_SLOTS = [
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-  }
-  .terminal-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
-
-  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
-  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 6px #16a34a; }
-  .result-title { font-size: 0.78rem; color: #64748b; margin: 0; font-weight: 700; }
-  .ticket-display { padding: 12px 0 16px; text-align: center; }
-  .ticket-num { font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 900; color: #0284c7; }
-
-  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
-  .meta-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
-  .meta-key { color: #64748b; font-weight: 600; }
-  .meta-val { color: #0f172a; font-weight: 800; }
-
-  .live-clock-card { background: #f1f5f9; border-radius: 6px; padding: 8px; margin-bottom: 14px; text-align: center; }
-  .clock-label { font-size: 0.6rem; color: #64748b; display: block; margin-bottom: 2px; font-weight: 700; }
-  .clock-display { font-size: 1.15rem; font-weight: 800; color: #d97706; }
-  .console-footer p { font-size: 0.72rem; color: #64748b; margin: 0; text-align: center; }
-
-  .loader-terminal { padding: 40px 0; text-align: center; }
-  .cursor-line { font-size: 0.95rem; color: #0284c7; font-weight: 800; }
-  .blink { animation: blinkAnim 1s infinite; }
-  @keyframes blinkAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  .status-console { font-size: 0.75rem; color: #64748b; margin-top: 8px; font-weight: 600; }
-</style>
+    box-shadow: 0 4px 14px rgba(2, 132,
