@@ -1,9 +1,9 @@
 ---
-// フロントマター：サーバー側（ビルド時）に動くTypeScript
 import Layout from '../layouts/Layout.astro';
 
 // データ構造の定義
 interface ClassProject {
+  id: string;
   grade: number;
   dept: string;
   name: string;
@@ -15,30 +15,94 @@ interface ClassProject {
   color: string;
 }
 
-// 5学科×3学年 = 全15クラスのデータ自動生成
+// 学科基本カラー設定
 const DEPARTMENTS = [
+  { name: "総合情報科", color: "#59ce5d" },
   { name: "機械科", color: "#ff4d20" },
   { name: "電気科", color: "#ffd400" },
   { name: "建築科", color: "#ffaa1d" },
-  { name: "総合情報科", color: "#59ce5d" },
   { name: "商業科", color: "#32c5ff" },
   { name: "地域産業科", color: "#2582d1" }
 ];
 
-const projectData: ClassProject[] = [];
+const projectData: ClassProject[] = [
+  /* ---------------- 総合情報科 (画像データより完全反映) ---------------- */
+  {
+    id: "info-1",
+    grade: 1,
+    dept: "総合情報科",
+    name: "オリジナルデザイングッズ販売 & 会場装飾",
+    location: "情報棟2階 多目的教室",
+    time: "09:30 - 14:30",
+    description: "1年生が心を込めて制作補助・装飾を担当！キーホルダー、マグカップ、コースター、アクリルスタンド、アンブレラマーカー等を販売します。",
+    status: '空き',
+    target: "全年齢対象",
+    color: "#59ce5d"
+  },
+  {
+    id: "info-2-1",
+    grade: 2,
+    dept: "総合情報科",
+    name: "マグカップ作成体験会",
+    location: "情報棟3階 画像処理室",
+    time: "09:30 - 14:30",
+    description: "自分だけのオリジナルマグカップを作ろう！2年生が制作手順をサポートします。",
+    status: 'やや混雑',
+    target: "全年齢対象",
+    color: "#59ce5d"
+  },
+  {
+    id: "info-2-2",
+    grade: 2,
+    dept: "総合情報科",
+    name: "表現メディア作品展示（ポスター・かりゆしウェア等）",
+    location: "情報棟2階 言語実習室",
+    time: "09:30 - 14:30",
+    description: "2年生によるCG・デザイン技術を駆使したポスターやオリジナルのかりゆしウェアデザイン作品を展示しています。",
+    status: '空き',
+    target: "全年齢対象",
+    color: "#59ce5d"
+  },
+  {
+    id: "info-3-1",
+    grade: 3,
+    dept: "総合情報科",
+    name: "SPIKE ロボットプログラミング & ものづくり体験会",
+    location: "情報棟3階 NW教室",
+    time: "09:30 - 14:30",
+    description: "大人気のSPIKEロボットプログラミング体験！キーホルダーやアンブレラマーカーの作成体験も楽しめます。",
+    status: '混雑',
+    target: "全年齢対象",
+    color: "#59ce5d"
+  },
+  {
+    id: "info-3-2",
+    grade: 3,
+    dept: "総合情報科",
+    name: "課題研究 作品展示（Web・ゲーム・動画・ロボット）",
+    location: "情報棟2階 言語実習室",
+    time: "09:30 - 14:30",
+    description: "3年間の集大成！生徒が自らテーマを決めて開発したWebページ、ゲーム、動画、絵本、ロボット等のオリジナル作品を体験・閲覧できます。",
+    status: 'やや混雑',
+    target: "全年齢対象",
+    color: "#59ce5d"
+  }
+];
 
-DEPARTMENTS.forEach(d => {
+// 他学科のダミーデータ自動追加（総合情報科以外）
+DEPARTMENTS.filter(d => d.name !== "総合情報科").forEach(d => {
   [1, 2, 3].forEach(grade => {
     let displayName = `${d.name} ${grade}年 案内企画`;
     if (d.name === "機械科") displayName = `工業技術科 機械コース ${grade}年`;
     if (d.name === "電気科") displayName = `工業技術科 電気コース ${grade}年`;
 
     projectData.push({
+      id: `${d.name}-${grade}`,
       grade,
       dept: d.name,
       name: displayName,
       location: `${grade}F ${d.name.replace("科", "")}実習室`,
-      time: "09:30 - 15:30",
+      time: "09:30 - 14:30",
       description: `日頃の学習成果や専門技術を盛り込んだ、${d.name}${grade}年生による特別な展示・体験エリアです。`,
       status: grade === 3 ? 'やや混雑' : '空き',
       target: "全年齢対象",
@@ -53,7 +117,7 @@ DEPARTMENTS.forEach(d => {
     <input type="text" id="search-input" placeholder="企画名・学科・場所などで検索..." autocomplete="off" />
   </div>
 
-  <!-- 学年ナビゲーション（1年・2年・3年の順に変更） -->
+  <!-- 学年ナビゲーション -->
   <div class="grade-nav">
     <button class="grade-btn active" data-grade="1">1年生</button>
     <button class="grade-btn" data-grade="2">2年生</button>
@@ -64,7 +128,7 @@ DEPARTMENTS.forEach(d => {
 </Layout>
 
 <script define:vars={{ projectData }}>
-  let currentGrade = 1; // 初期表示を1年生に変更
+  let currentGrade = 1; // 初期表示は1年生
   let searchQuery = "";
 
   const container = document.getElementById('project-container');
@@ -91,7 +155,6 @@ DEPARTMENTS.forEach(d => {
       return matchesGrade && matchesQuery;
     });
 
-    // 動的にHTML（カード）を生成して挿入
     container.innerHTML = filtered.map(p => `
       <div class="card" style="--dept-color: ${p.color}">
         <div class="card-header">
@@ -108,7 +171,7 @@ DEPARTMENTS.forEach(d => {
         </div>
         <p class="info-text">${p.description}</p>
         <div class="card-footer">
-          <button class="detail-btn">Webで詳細確認</button>
+          <button class="detail-btn">詳細・関連情報</button>
         </div>
       </div>
     `).join('');
@@ -153,7 +216,7 @@ DEPARTMENTS.forEach(d => {
   .search-box input { width: 100%; padding: 14px; border: 1px solid #dcdcdc; border-radius: 12px; box-sizing: border-box; font-size: 1rem; background-color: #f8fafc; }
   
   .grade-nav { display: flex; gap: 8px; padding: 12px 16px; background: var(--white); border-bottom: 1px solid #eef2f5; }
-  .grade-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #dcdcdc; background: #f8fafc; color: var(--text-sub); font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+  .grade-btn { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #dcdcdc; background: #f8fafc; color: var(--text-sub); font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
   .grade-btn.active { background: var(--nago-blue); color: var(--white); border-color: var(--nago-blue); }
 
   .event-list { padding: 16px; max-width: 600px; margin: 0 auto; }
@@ -167,7 +230,7 @@ DEPARTMENTS.forEach(d => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
   }
   .card-header { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
-  .card h3 { margin: 4px 0 0 0; font-size: 1.15rem; color: var(--nago-navy); }
+  .card h3 { margin: 4px 0 0 0; font-size: 1.15rem; color: var(--nago-navy); line-height: 1.4; }
   
   .card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 0.8rem; }
   .badge { padding: 3px 8px; border-radius: 6px; font-weight: bold; }
@@ -181,9 +244,9 @@ DEPARTMENTS.forEach(d => {
   .badge.loc { background: #e3f2fd; color: #1976d2; }
   .badge.time { background: #fff3e0; color: #e65100; }
   .badge.target { background: #e8f5e9; color: #2e7d32; }
-  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: var(--white); }
+  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; color: var(--white); flex-shrink: 0; }
 
-  .info-text { font-size: 0.88rem; color: #4a5568; margin: 14px 0 0 0; padding-top: 10px; border-top: 1px dashed #edf2f7; }
+  .info-text { font-size: 0.88rem; color: #4a5568; margin: 14px 0 0 0; padding-top: 10px; border-top: 1px dashed #edf2f7; line-height: 1.5; }
   .card-footer { margin-top: 14px; }
   
   .detail-btn { 
