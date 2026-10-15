@@ -27,7 +27,7 @@ const scheduleData = [
 
 <Layout title="進行予定 - 第7回商工祭">
   <div class="page-wrapper">
-    <!-- 浮遊する装飾用図形 -->
+    <!-- 浮遊するホワイトベース装飾図形 -->
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
     <div class="bg-shape shape-3"></div>
@@ -72,13 +72,13 @@ const scheduleData = [
 </Layout>
 
 <style>
-  /* ページのベース設定と美しいグラデーション背景 */
+  /* ホワイトベースの背景 & 柔らかなグラデーション */
   .page-wrapper {
     position: relative;
     min-height: 100vh;
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
     overflow: hidden;
-    color: #f8fafc;
+    color: #1e293b;
   }
 
   /* Keyframes による図形の浮遊アニメーション */
@@ -97,8 +97,8 @@ const scheduleData = [
   .bg-shape {
     position: absolute;
     border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.45;
+    filter: blur(70px);
+    opacity: 0.5;
     pointer-events: none;
     animation: float 14s infinite ease-in-out;
   }
@@ -106,7 +106,7 @@ const scheduleData = [
   .shape-1 {
     width: 320px;
     height: 320px;
-    background: radial-gradient(circle, #6366f1, #a855f7);
+    background: radial-gradient(circle, #c084fc, #a855f7);
     top: -50px;
     left: -80px;
     animation-delay: 0s;
@@ -115,16 +115,16 @@ const scheduleData = [
   .shape-2 {
     width: 380px;
     height: 380px;
-    background: radial-gradient(circle, #3b82f6, #06b6d4);
+    background: radial-gradient(circle, #60a5fa, #38bdf8);
     bottom: -100px;
     right: -80px;
     animation-delay: -5s;
   }
 
   .shape-3 {
-    width: 250px;
-    height: 250px;
-    background: radial-gradient(circle, #ec4899, #8b5cf6);
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, #f472b6, #fb7185);
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -148,39 +148,43 @@ const scheduleData = [
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    color: #93c5fd;
+    color: #3b82f6;
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 600;
     margin-bottom: 1.25rem;
-    padding: 0.4rem 1rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.45rem 1.1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.9);
     border-radius: 9999px;
     backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     transition: all 0.25s ease;
   }
 
   .back-button:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background: #ffffff;
+    color: #1d4ed8;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.15);
     transform: translateX(-3px);
   }
 
+  /* 明るいグラデーションテキスト */
   .gradient-text {
     font-size: 2.25rem;
     font-weight: 800;
     margin: 0;
-    background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 50%, #c084fc 100%);
+    background: linear-gradient(135deg, #1e293b 0%, #2563eb 50%, #7c3aed 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
   }
 
   .subtitle {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 0.95rem;
     margin-top: 0.5rem;
+    font-weight: 500;
   }
 
   .schedule-list {
@@ -189,30 +193,30 @@ const scheduleData = [
     gap: 1.75rem;
   }
 
-  /* グラスモーフィズム調のカードデザイン */
+  /* 白ベースのガラスモーフィズムカード */
   .day-card {
     position: relative;
-    background: rgba(30, 41, 59, 0.65);
+    background: rgba(255, 255, 255, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: 20px;
     padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 10px 25px rgba(148, 163, 184, 0.12);
     overflow: hidden;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
   .day-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 15px 30px rgba(148, 163, 184, 0.2);
   }
 
-  /* 一般公開日（ハイライト）の豪華グラデーション枠 */
+  /* 一般公開日（ハイライト） */
   .day-card.highlight {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(49, 46, 129, 0.75) 100%);
-    border: 1px solid rgba(168, 85, 247, 0.4);
-    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.25);
+    background: rgba(255, 255, 255, 0.88);
+    border: 2px solid #818cf8;
+    box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
   }
 
   .day-card.highlight .card-glow {
@@ -221,7 +225,7 @@ const scheduleData = [
     right: 0;
     width: 150px;
     height: 150px;
-    background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -243,17 +247,17 @@ const scheduleData = [
   .day-date {
     font-size: 1.2rem;
     font-weight: 800;
-    color: #38bdf8;
+    color: #2563eb;
   }
 
   .day-card.highlight .day-date {
-    color: #c084fc;
+    color: #7c3aed;
   }
 
   .day-title {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a;
     margin: 0;
   }
 
@@ -262,21 +266,19 @@ const scheduleData = [
     font-weight: 700;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #cbd5e1;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #e2e8f0;
+    color: #475569;
   }
 
   .badge-primary {
-    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
     color: #ffffff;
-    border: none;
-    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.4);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
   }
 
   .day-note {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #64748b;
     margin-top: 0;
     margin-bottom: 1.25rem;
   }
@@ -293,27 +295,27 @@ const scheduleData = [
   .event-item {
     display: flex;
     align-items: center;
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(255, 255, 255, 0.65);
     padding: 0.85rem 1.1rem;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(226, 232, 240, 0.8);
     backdrop-filter: blur(4px);
   }
 
   .event-time {
     font-weight: 700;
-    color: #38bdf8;
+    color: #2563eb;
     width: 145px;
     font-size: 0.95rem;
   }
 
   .day-card.highlight .event-time {
-    color: #e879f9;
+    color: #7c3aed;
   }
 
   .event-title {
     font-size: 0.95rem;
-    color: #f1f5f9;
+    color: #1e293b;
     font-weight: 600;
   }
 
