@@ -14,7 +14,7 @@ import Layout from '../layouts/Layout.astro';
         <span class="version-tag">第7回商工祭</span>
       </div>
       <h2 class="hero-title">商工祭 <span>インフォメーション</span></h2>
-      <p class="hero-subtitle">ご来場にあたってのご案内・よくある質問</p>
+      <p class="hero-subtitle">ご来場にあたってのご案内・注意事項</p>
     </header>
 
     <section class="info-section">
@@ -49,29 +49,6 @@ import Layout from '../layouts/Layout.astro';
           <li><strong>ゴミの持ち帰り：</strong>模擬店等で購入された飲食のゴミは、各売店のゴミ箱に捨てるか、お持ち帰りにご協力ください。</li>
           <li><strong>撮影について：</strong>展示やステージの撮影は可能ですが、他の来場者のプライバシーにご配慮ください。</li>
         </ul>
-      </div>
-    </section>
-
-    <section class="info-section">
-      <div class="section-title">
-        <span class="section-icon">❓</span>
-        <h3>よくある質問 (FAQ)</h3>
-      </div>
-      <div class="faq-list">
-        <div class="faq-item">
-          <div class="faq-q"><span>Q.</span> 入場料はかかりますか？</div>
-          <div class="faq-a"><span>A.</span> どなたでも無料でご入場いただけます。事前のチケット予約なども必要ありません。</div>
-        </div>
-        
-        <div class="faq-item">
-          <div class="faq-q"><span>Q.</span> 金券の購入は必要ですか？</div>
-          <div class="faq-a"><span>A.</span> 各売店や企画での決済方法は現金のみになりますので現金のご用意をお願いいたします。</div>
-        </div>
-
-        <div class="faq-item">
-          <div class="faq-q"><span>Q.</span> 気分が悪くなった場合は？</div>
-          <div class="faq-a"><span>A.</span> 校内に<strong>救護室</strong>を設置しています。近くのスタッフにすぐにお声がけください。</div>
-        </div>
       </div>
     </section>
   </div>
@@ -206,37 +183,4 @@ import Layout from '../layouts/Layout.astro';
     left: 0;
     top: 2px;
   }
-
-  /* ❓ FAQリスト */
-  .faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .faq-item {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    border-radius: 14px;
-    padding: 16px;
-    border: 1px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
-  }
-  .faq-q {
-    font-weight: 800;
-    color: #0f172a;
-    font-size: 0.95rem;
-    margin-bottom: 6px;
-    display: flex;
-    gap: 6px;
-  }
-  .faq-q span { color: #ff9800; }
-  .faq-a {
-    font-size: 0.85rem;
-    color: #475569;
-    line-height: 1.5;
-    display: flex;
-    gap: 6px;
-    padding-left: 2px;
-  }
-  .faq-a span { color: #2582d1; font-weight: 800; }
 </style>
