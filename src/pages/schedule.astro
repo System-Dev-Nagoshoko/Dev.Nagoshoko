@@ -5,6 +5,7 @@ const scheduleData = [
   {
     day: "10月30日(金)",
     title: "1日目 (校内発表)",
+    badge: "校内限定",
     note: "※生徒対象の校内限定公開となります",
     events: [
       { time: "08:50 ~ 09:15", title: "開会式" },
@@ -15,6 +16,7 @@ const scheduleData = [
     day: "10月31日(土)",
     title: "2日目 (一般公開)",
     highlight: true,
+    badge: "一般公開日",
     note: "※どなたでもご自由にご入場いただけます",
     events: [
       { time: "09:30 ~ 14:30", title: "展示・体験 一般公開" }
@@ -24,113 +26,259 @@ const scheduleData = [
 ---
 
 <Layout title="進行予定 - 第7回商工祭">
-  <main class="schedule-container">
-    <div class="header">
-      <a href="/" class="back-button">← ホームへ戻る</a>
-      <h1>進行予定</h1>
-      <p class="subtitle">第7回 商工祭 開催スケジュール</p>
-    </div>
+  <div class="page-wrapper">
+    <!-- 浮遊する装飾用図形 -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
 
-    <div class="schedule-list">
-      {scheduleData.map((dayInfo) => (
-        <section class={`day-card ${dayInfo.highlight ? 'highlight' : ''}`}>
-          <div class="day-header">
-            <span class="day-date">{dayInfo.day}</span>
-            <h2 class="day-title">{dayInfo.title}</h2>
-          </div>
-          <p class="day-note">{dayInfo.note}</p>
+    <main class="schedule-container">
+      <div class="header">
+        <a href="/" class="back-button">
+          <span class="arrow">←</span> ホームへ戻る
+        </a>
+        <h1 class="gradient-text">進行予定</h1>
+        <p class="subtitle">第7回 商工祭 開催スケジュール</p>
+      </div>
 
-          <ul class="event-list">
-            {dayInfo.events.map((event) => (
-              <li class="event-item">
-                <span class="event-time">{event.time}</span>
-                <span class="event-title">{event.title}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  </main>
+      <div class="schedule-list">
+        {scheduleData.map((dayInfo) => (
+          <section class={`day-card ${dayInfo.highlight ? 'highlight' : ''}`}>
+            <div class="card-glow"></div>
+            <div class="day-header">
+              <div class="title-group">
+                <span class="day-date">{dayInfo.day}</span>
+                <h2 class="day-title">{dayInfo.title}</h2>
+              </div>
+              <span class={`status-badge ${dayInfo.highlight ? 'badge-primary' : ''}`}>
+                {dayInfo.badge}
+              </span>
+            </div>
+            <p class="day-note">{dayInfo.note}</p>
+
+            <ul class="event-list">
+              {dayInfo.events.map((event) => (
+                <li class="event-item">
+                  <span class="event-time">{event.time}</span>
+                  <span class="event-title">{event.title}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </main>
+  </div>
 </Layout>
 
 <style>
+  /* ページのベース設定と美しいグラデーション背景 */
+  .page-wrapper {
+    position: relative;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    overflow: hidden;
+    color: #f8fafc;
+  }
+
+  /* Keyframes による図形の浮遊アニメーション */
+  @keyframes float {
+    0% {
+      transform: translateY(0px) rotate(0deg) scale(1);
+    }
+    50% {
+      transform: translateY(-25px) rotate(180deg) scale(1.08);
+    }
+    100% {
+      transform: translateY(0px) rotate(360deg) scale(1);
+    }
+  }
+
+  .bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.45;
+    pointer-events: none;
+    animation: float 14s infinite ease-in-out;
+  }
+
+  .shape-1 {
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, #6366f1, #a855f7);
+    top: -50px;
+    left: -80px;
+    animation-delay: 0s;
+  }
+
+  .shape-2 {
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, #3b82f6, #06b6d4);
+    bottom: -100px;
+    right: -80px;
+    animation-delay: -5s;
+  }
+
+  .shape-3 {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, #ec4899, #8b5cf6);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation-delay: -9s;
+  }
+
   .schedule-container {
-    max-width: 600px;
+    position: relative;
+    z-index: 10;
+    max-width: 640px;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 2.5rem 1.25rem;
   }
 
   .header {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
   }
 
   .back-button {
-    display: inline-block;
-    color: #4b5563;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #93c5fd;
     text-decoration: none;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    padding: 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease;
   }
 
-  h1 {
-    font-size: 1.75rem;
-    font-weight: bold;
-    color: #111827;
+  .back-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    transform: translateX(-3px);
+  }
+
+  .gradient-text {
+    font-size: 2.25rem;
+    font-weight: 800;
     margin: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.05em;
   }
 
   .subtitle {
-    color: #6b7280;
-    font-size: 0.9rem;
-    margin-top: 0.25rem;
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
   }
 
   .schedule-list {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.75rem;
   }
 
+  /* グラスモーフィズム調のカードデザイン */
   .day-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1.25rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    background: rgba(30, 41, 59, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
   }
 
+  .day-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  /* 一般公開日（ハイライト）の豪華グラデーション枠 */
   .day-card.highlight {
-    border: 2px solid #2563eb;
-    background: #f8fafc;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(49, 46, 129, 0.75) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    box-shadow: 0 12px 35px rgba(99, 102, 241, 0.25);
+  }
+
+  .day-card.highlight .card-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   .day-header {
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .title-group {
+    display: flex;
     align-items: baseline;
     gap: 0.75rem;
-    margin-bottom: 0.25rem;
   }
 
   .day-date {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #2563eb;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #38bdf8;
+  }
+
+  .day-card.highlight .day-date {
+    color: #c084fc;
   }
 
   .day-title {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #1e293b;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
     margin: 0;
   }
 
+  .status-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .badge-primary {
+    background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.4);
+  }
+
   .day-note {
-    font-size: 0.8rem;
-    color: #64748b;
+    font-size: 0.85rem;
+    color: #94a3b8;
     margin-top: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
   }
 
   .event-list {
@@ -145,22 +293,38 @@ const scheduleData = [
   .event-item {
     display: flex;
     align-items: center;
-    background: #ffffff;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    border: 1px solid #f1f5f9;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 0.85rem 1.1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(4px);
   }
 
   .event-time {
-    font-weight: bold;
-    color: #0f172a;
-    width: 140px;
+    font-weight: 700;
+    color: #38bdf8;
+    width: 145px;
     font-size: 0.95rem;
+  }
+
+  .day-card.highlight .event-time {
+    color: #e879f9;
   }
 
   .event-title {
     font-size: 0.95rem;
-    color: #334155;
-    font-weight: 500;
+    color: #f1f5f9;
+    font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    .event-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+    .event-time {
+      width: auto;
+    }
   }
 </style>
