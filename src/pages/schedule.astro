@@ -1,0 +1,166 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const scheduleData = [
+  {
+    day: "10月30日(金)",
+    title: "1日目 (校内発表)",
+    note: "※保護者・生徒対象の校内限定公開となります",
+    events: [
+      { time: "08:50 ~ 09:15", title: "開会式" },
+      { time: "10:30 ~ 15:30", title: "校内 展示・体験" }
+    ]
+  },
+  {
+    day: "10月31日(土)",
+    title: "2日目 (一般公開)",
+    highlight: true,
+    note: "※どなたでもご自由にご入場いただけます",
+    events: [
+      { time: "09:30 ~ 14:30", title: "展示・体験 一般公開" }
+    ]
+  }
+];
+---
+
+<Layout title="進行予定 - 第7回商工祭">
+  <main class="schedule-container">
+    <div class="header">
+      <a href="/" class="back-button">← ホームへ戻る</a>
+      <h1>進行予定</h1>
+      <p class="subtitle">第7回 商工祭 開催スケジュール</p>
+    </div>
+
+    <div class="schedule-list">
+      {scheduleData.map((dayInfo) => (
+        <section class={`day-card ${dayInfo.highlight ? 'highlight' : ''}`}>
+          <div class="day-header">
+            <span class="day-date">{dayInfo.day}</span>
+            <h2 class="day-title">{dayInfo.title}</h2>
+          </div>
+          <p class="day-note">{dayInfo.note}</p>
+
+          <ul class="event-list">
+            {dayInfo.events.map((event) => (
+              <li class="event-item">
+                <span class="event-time">{event.time}</span>
+                <span class="event-title">{event.title}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .schedule-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+
+  .header {
+    margin-bottom: 2rem;
+  }
+
+  .back-button {
+    display: inline-block;
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #111827;
+    margin: 0;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+  }
+
+  .schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .day-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .day-card.highlight {
+    border: 2px solid #2563eb;
+    background: #f8fafc;
+  }
+
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .day-date {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2563eb;
+  }
+
+  .day-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .day-note {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .event-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .event-item {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+  }
+
+  .event-time {
+    font-weight: bold;
+    color: #0f172a;
+    width: 140px;
+    font-size: 0.95rem;
+  }
+
+  .event-title {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 500;
+  }
+</style>
