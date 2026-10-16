@@ -105,7 +105,7 @@ const TIME_SLOTS = [
                     <span class="slot-time">{s.time}</span>
                   </div>
                   <div class="slot-status">
-                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中 (残10/10枠)</span>
+                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中 (残15/15枠)</span>
                   </div>
                 </div>
               ))}
@@ -256,7 +256,7 @@ const TIME_SLOTS = [
   const LIFF_ID = "2011672035-MlQEQgzQ";
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
-  const MAX_SLOT_CAPACITY = 10;
+  const MAX_SLOT_CAPACITY = 15; // 15枠に変更
 
   const urlParams = new URLSearchParams(window.location.search);
   const isDevMode = 
@@ -335,9 +335,9 @@ const TIME_SLOTS = [
       const data = await res.json();
       
       const slotData = data.slots || [
-        { slotId: "slot_1", booked: 0 },
-        { slotId: "slot_2", booked: 0 },
-        { slotId: "slot_3", booked: 0 }
+        { slotId: "slot_1", booked: 0, capacity: MAX_SLOT_CAPACITY },
+        { slotId: "slot_2", booked: 0, capacity: MAX_SLOT_CAPACITY },
+        { slotId: "slot_3", booked: 0, capacity: MAX_SLOT_CAPACITY }
       ];
 
       let firstAvailableSelected = false;
@@ -357,11 +357,11 @@ const TIME_SLOTS = [
           cardEl.classList.remove("active");
         } else if (remaining <= 3) {
           badgeEl.className = "badge-status badge-warn";
-          badgeEl.textContent = `残りわずか (残${remaining}/15枠)`;
+          badgeEl.textContent = `残りわずか (残${remaining}/${capacity}枠)`;
           cardEl.classList.remove("disabled");
         } else {
           badgeEl.className = "badge-status badge-ok";
-          badgeEl.textContent = `受付中 (残${remaining}/10枠)`;
+          badgeEl.textContent = `受付中 (残${remaining}/${capacity}枠)`;
           cardEl.classList.remove("disabled");
         }
 
@@ -378,7 +378,7 @@ const TIME_SLOTS = [
         const cardEl = document.querySelector(`[data-slot-id="${slotId}"]`);
         if (badgeEl) {
           badgeEl.className = "badge-status badge-ok";
-          badgeEl.textContent = "受付中 (残10/10枠)";
+          badgeEl.textContent = `受付中 (残${MAX_SLOT_CAPACITY}/${MAX_SLOT_CAPACITY}枠)`;
         }
         if (cardEl) {
           cardEl.classList.remove("disabled");
@@ -602,7 +602,7 @@ const TIME_SLOTS = [
       .filter(val => val !== "")
       .join(", ");
 
-    // 備考・ご要望（note）を取得（混ぜずに完全独立）
+    // 備考・ご要望（note）を取得
     const noteText = noteInput.value.trim();
     const datetimeDisplayStr = `${selectedDate} / ${selectedSlotName}`;
 
@@ -612,9 +612,9 @@ const TIME_SLOTS = [
         slotId: selectedSlotId,
         childCount: selectedChildCount,
         adultCount: selectedAdultCount,
-        childNames: childNamesText, // 完全独立パラメータ
+        childNames: childNamesText,
         splitTicket: isSplit,
-        note: noteText,             // 完全独立パラメータ
+        note: noteText,
         headcount: selectedChildCount + selectedAdultCount
       };
 
@@ -649,7 +649,6 @@ const TIME_SLOTS = [
         const resChild = data.childCount || selectedChildCount;
         const resAdult = data.adultCount !== undefined ? data.adultCount : selectedAdultCount;
 
-        // それぞれ別々に保存
         localStorage.setItem("shokosai_ticket_no", ticketLabel);
         localStorage.setItem("shokosai_ticket_datetime", datetimeDisplayStr);
         localStorage.setItem("shokosai_ticket_child", resChild);
@@ -916,7 +915,6 @@ const TIME_SLOTS = [
   }
   .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
 
-  /* お子様お名前入力欄のスタイル */
   .names-container {
     display: flex;
     flex-direction: column;
