@@ -80,7 +80,7 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 4: 保護者様お名前入力欄（家族連れ時のみ） -->
+          <!-- STEP 4: 保護者様お名前入力欄 -->
           <div class="field-block" id="parent-name-block">
             <div class="field-header">
               <span class="step-num">4</span>
@@ -96,7 +96,7 @@ const TIME_SLOTS = [
             />
           </div>
 
-          <!-- STEP 5: 体験人数の選択 (1〜4人はボタン / 5人以上は入力) -->
+          <!-- STEP 5: 体験人数の選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">5</span>
@@ -110,7 +110,6 @@ const TIME_SLOTS = [
               <button type="button" class="btn-select" data-count="4">4名</button>
               <button type="button" class="btn-select" data-count="custom">5名〜</button>
             </div>
-            <!-- 5名以上選択時の数値入力欄 -->
             <div id="custom-count-wrapper" class="custom-input-box" style="display: none;">
               <label for="custom-count-input">体験人数を入力してください：</label>
               <div class="input-with-unit">
@@ -120,7 +119,7 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 6: 体験する方のお名前入力欄（人数に合わせて動的変化） -->
+          <!-- STEP 6: 体験する方のお名前入力欄 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">6</span>
@@ -140,7 +139,7 @@ const TIME_SLOTS = [
           </button>
         </div>
 
-        <!-- 完了画面（QRコード表示 & スクショ注意喚起） -->
+        <!-- 完了画面 -->
         <div id="status-issued" class="editor-body" style="display: none;">
           <div class="terminal-success-badge">
             <span class="pulse-dot"></span> RESERVATION CONFIRMED
@@ -206,7 +205,6 @@ const TIME_SLOTS = [
   const customCountWrapper = document.getElementById("custom-count-wrapper");
   const customCountInput = document.getElementById("custom-count-input");
 
-  // 1. 来場者タイプの切り替え（ご家族連れの場合のみ保護者名入力欄を表示）
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       visitorTypeBtns.forEach(b => b.classList.remove("active"));
@@ -222,7 +220,6 @@ const TIME_SLOTS = [
     });
   });
 
-  // 2. 体験人数に応じたお名前入力欄の生成関数
   function updateParticipantNameInputs(count) {
     const container = document.getElementById("participant-names-container");
     if (!container) return;
@@ -251,7 +248,6 @@ const TIME_SLOTS = [
     }
   }
 
-  // 3. 人数選択ボタン・手入力切替
   countBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       countBtns.forEach(b => b.classList.remove("active"));
@@ -270,20 +266,16 @@ const TIME_SLOTS = [
     });
   });
 
-  // 5名以上の手入力イベント
   customCountInput?.addEventListener("input", (e) => {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val) || val < 1) val = 1;
-    if (val > 15) val = 15; // Workerの上限15名に連動
+    if (val > 15) val = 15;
     currentParticipantCount = val;
     updateParticipantNameInputs(currentParticipantCount);
   });
 
-  // 4. 発券処理
   document.getElementById("btn-issue")?.addEventListener("click", async () => {
     const parentName = parentNameInput.value.trim();
-    
-    // 体験する全員のお名前を取得
     const nameInputs = document.querySelectorAll(".participant-name-input");
     const participantNamesText = Array.from(nameInputs)
       .map(input => input.value.trim())
@@ -322,96 +314,202 @@ const TIME_SLOTS = [
   });
 </script>
 
-<style>
-  .custom-input-box {
-    margin-top: 10px;
-    padding: 10px 12px;
-    background: #f8fafc;
-    border: 1px dashed #cbd5e1;
-    border-radius: 8px;
-  }
-  .custom-input-box label {
-    display: block;
-    font-size: 0.78rem;
-    color: #475569;
-    margin-bottom: 6px;
-    font-weight: bold;
-  }
-  .input-with-unit {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .input-with-unit input {
-    width: 100px;
-    text-align: center;
-  }
-  .unit {
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #334155;
+<style is:global>
+  *, *::before, *::after {
+    box-sizing: border-box;
   }
 
-  .names-container {
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background-color: #f8fafc;
+    color: #1e293b;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .bright-code-portal {
+    min-height: 100vh;
+    padding: 24px 16px 60px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-  }
-  .name-input-wrapper {
-    display: flex;
     align-items: center;
-    gap: 8px;
   }
-  .name-index {
-    font-size: 0.75rem;
+
+  .terminal-header {
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-size: 0.68rem;
     font-weight: 800;
     color: #0284c7;
     background: #e0f2fe;
-    padding: 6px 10px;
-    border-radius: 6px;
-    white-space: nowrap;
+    border: 1px solid #bae6fd;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
   }
 
-  .screenshot-alert {
-    background: #fef2f2;
-    border: 2px solid #fca5a5;
-    border-radius: 10px;
-    padding: 12px;
+  .terminal-header h1 {
+    font-size: 1.45rem;
+    margin: 0;
+    color: #0f172a;
+    font-weight: 900;
+  }
+
+  .terminal-subtitle {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  .portal-container { width: 100%; max-width: 440px; }
+
+  .editor-window {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+  }
+
+  .window-titlebar {
+    background: #f8fafc;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
   }
-  .screenshot-alert p {
-    margin: 0;
-    font-size: 0.82rem;
-    color: #991b1b;
-    line-height: 1.4;
+
+  .tab-title { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+  .mode-tag { margin-left: auto; font-size: 0.68rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 4px; }
+
+  .editor-body { padding: 22px 18px; }
+
+  .field-block { margin-bottom: 18px; }
+  .field-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+
+  .step-num {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
+
+  .field-label { font-size: 0.88rem; font-weight: 800; color: #0f172a; }
+  .sub-label { font-size: 0.75rem; color: #64748b; font-weight: normal; }
+  .code-tag { margin-left: auto; font-size: 0.68rem; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
+
+  .selector-grid { display: flex; gap: 6px; }
+  .btn-select {
+    flex: 1;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
+
+  .date-grid { display: flex; gap: 8px; }
+  .btn-date {
+    flex: 1;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    padding: 12px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .btn-date.active { background: #e0f2fe; border-color: #0284c7; }
+  .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
+
+  .slot-list { display: flex; flex-direction: column; gap: 8px; }
+  .slot-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  .slot-card.active { background: #ffffff; border-color: #0284c7; border-left: 5px solid #0284c7; }
+
+  .slot-info { display: flex; flex-direction: column; gap: 2px; }
+  .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
+  .slot-time { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+
+  .badge-status { font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
+  .badge-ok { background: #dcfce7; color: #15803d; }
+
+  .code-input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+  .code-input:focus { outline: none; border-color: #0284c7; background: #ffffff; }
+
+  .custom-input-box { margin-top: 10px; padding: 10px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; }
+  .custom-input-box label { display: block; font-size: 0.78rem; color: #475569; margin-bottom: 6px; font-weight: bold; }
+  .input-with-unit { display: flex; align-items: center; gap: 8px; }
+  .input-with-unit input { width: 100px; text-align: center; }
+  .unit { font-size: 0.9rem; font-weight: bold; color: #334155; }
+
+  .names-container { display: flex; flex-direction: column; gap: 8px; }
+  .name-input-wrapper { display: flex; align-items: center; gap: 8px; }
+  .name-index { font-size: 0.75rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+
+  .terminal-btn {
+    width: 100%;
+    background: #0284c7;
+    border: none;
+    color: #ffffff;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  }
+
+  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
+
+  .screenshot-alert { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .screenshot-alert p { margin: 0; font-size: 0.82rem; color: #991b1b; line-height: 1.4; }
   .alert-icon { font-size: 1.5rem; }
 
-  .qr-container {
-    display: flex;
-    justify-content: center;
-    margin: 14px 0;
-  }
-  .qr-container img {
-    width: 160px;
-    height: 160px;
-    border: 4px solid #ffffff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    border-radius: 8px;
-  }
+  .qr-container { display: flex; justify-content: center; margin: 14px 0; }
+  .qr-container img { width: 160px; height: 160px; border: 4px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; }
 
-  .remind-info-card {
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #166534;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.78rem;
-    text-align: center;
-    font-weight: bold;
-    margin-top: 12px;
-  }
+  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
+  .meta-key { color: #64748b; font-weight: 600; }
+  .meta-val { color: #0f172a; font-weight: 800; }
+
+  .remind-info-card { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 10px; border-radius: 8px; font-size: 0.78rem; text-align: center; font-weight: bold; }
 </style>
