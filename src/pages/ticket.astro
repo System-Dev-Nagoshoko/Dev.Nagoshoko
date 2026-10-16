@@ -155,7 +155,6 @@ const TIME_SLOTS = [
             </div>
 
             <div class="barcode-box">
-              <!-- JSでローカルSVG生成（外部通信なし・エラーゼロ） -->
               <svg id="barcode-svg"></svg>
               <span class="barcode-caption">※受付でこのバーコードを提示（またはスキャン）</span>
             </div>
@@ -214,12 +213,12 @@ const TIME_SLOTS = [
   let currentParticipantCount = 1;
 
   const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
-  const parentNameBlock = document.getElementById("parent-name-block") as HTMLElement;
-  const parentNameInput = document.getElementById("parent-name-input") as HTMLInputElement;
+  const parentNameBlock = document.getElementById("parent-name-block");
+  const parentNameInput = document.getElementById("parent-name-input") as HTMLInputElement | null;
   
   const countBtns = document.querySelectorAll("#participant-count-selector .btn-select");
-  const customCountWrapper = document.getElementById("custom-count-wrapper") as HTMLElement;
-  const customCountInput = document.getElementById("custom-count-input") as HTMLInputElement;
+  const customCountWrapper = document.getElementById("custom-count-wrapper");
+  const customCountInput = document.getElementById("custom-count-input") as HTMLInputElement | null;
 
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -227,11 +226,13 @@ const TIME_SLOTS = [
       btn.classList.add("active");
       selectedVisitorType = (btn as HTMLElement).dataset.type || "family";
 
-      if (selectedVisitorType === "family") {
-        parentNameBlock.style.display = "block";
-      } else {
-        parentNameBlock.style.display = "none";
-        parentNameInput.value = "";
+      if (parentNameBlock) {
+        if (selectedVisitorType === "family") {
+          parentNameBlock.style.display = "block";
+        } else {
+          parentNameBlock.style.display = "none";
+          if (parentNameInput) parentNameInput.value = "";
+        }
       }
     });
   });
@@ -272,10 +273,10 @@ const TIME_SLOTS = [
 
       const val = (btn as HTMLElement).dataset.count;
       if (val === "custom") {
-        customCountWrapper.style.display = "block";
-        currentParticipantCount = Math.max(5, parseInt(customCountInput.value, 10) || 5);
+        if (customCountWrapper) customCountWrapper.style.display = "block";
+        currentParticipantCount = Math.max(5, parseInt(customCountInput?.value || "5", 10) || 5);
       } else {
-        customCountWrapper.style.display = "none";
+        if (customCountWrapper) customCountWrapper.style.display = "none";
         currentParticipantCount = parseInt(val || "1", 10);
       }
 
@@ -292,7 +293,7 @@ const TIME_SLOTS = [
   });
 
   document.getElementById("btn-issue")?.addEventListener("click", async () => {
-    const parentName = parentNameInput.value.trim();
+    const parentName = parentNameInput?.value.trim() || "";
     const nameInputs = document.querySelectorAll(".participant-name-input") as NodeListOf<HTMLInputElement>;
     const participantNamesText = Array.from(nameInputs)
       .map(input => input.value.trim())
@@ -306,17 +307,21 @@ const TIME_SLOTS = [
     const numEl = document.getElementById("ticket-number");
     if (numEl) numEl.innerText = ticketNo;
 
-    // JsBarcode でSVG形式の CODE128 バーコードを即時レンダリング
-    JsBarcode("#barcode-svg", barcodeText, {
-      format: "CODE128",
-      lineColor: "#000000",
-      width: 2,
-      height: 60,
-      displayValue: true,
-      fontSize: 14,
-      fontOptions: "bold",
-      margin: 8
-    });
+    // SVGバーコード描画
+    try {
+      JsBarcode("#barcode-svg", barcodeText, {
+        format: "CODE128",
+        lineColor: "#000000",
+        width: 2,
+        height: 60,
+        displayValue: true,
+        fontSize: 14,
+        fontOptions: "bold",
+        margin: 8
+      });
+    } catch (e) {
+      console.error("Barcode render error:", e);
+    }
 
     const resTypeEl = document.getElementById("res-type");
     if (resTypeEl) resTypeEl.innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
