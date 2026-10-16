@@ -128,20 +128,19 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </Layout>
 
-<!-- HTML5-QRCode カメラライブラリ -->
-<script is:inline src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  import { Html5Qrcode } from 'html5-qrcode';
 
-<script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
 
   const authOverlay = document.getElementById("auth-overlay");
   const adminMain = document.getElementById("admin-main");
   const stepEmail = document.getElementById("auth-step-email");
   const stepCode = document.getElementById("auth-step-code");
-  const emailInput = document.getElementById("email-input");
-  const codeInput = document.getElementById("code-input");
-  const sendCodeBtn = document.getElementById("btn-send-code");
-  const verifyCodeBtn = document.getElementById("btn-verify-code");
+  const emailInput = document.getElementById("email-input") as HTMLInputElement | null;
+  const codeInput = document.getElementById("code-input") as HTMLInputElement | null;
+  const sendCodeBtn = document.getElementById("btn-send-code") as HTMLButtonElement | null;
+  const verifyCodeBtn = document.getElementById("btn-verify-code") as HTMLButtonElement | null;
   const backEmailBtn = document.getElementById("btn-back-email");
   const authError = document.getElementById("auth-error");
   const lockBtn = document.getElementById("btn-lock");
@@ -154,29 +153,33 @@ import Layout from '../layouts/Layout.astro';
   const admittedEl = document.getElementById("stat-admitted");
   const listBody = document.getElementById("ticket-list-body");
   const nextInfoEl = document.getElementById("next-calling-info");
-  const callNextBtn = document.getElementById("btn-call-next");
+  const callNextBtn = document.getElementById("btn-call-next") as HTMLButtonElement | null;
   const refreshBtn = document.getElementById("btn-refresh");
 
   const toggleScannerBtn = document.getElementById("btn-toggle-scanner");
   const scannerWrapper = document.getElementById("scanner-wrapper");
   const scanResultBox = document.getElementById("scan-result-box");
 
-  let html5QrCode = null;
+  let html5QrCode: Html5Qrcode | null = null;
   let isScanning = false;
-  let pollIntervalId = null;
+  let pollIntervalId: number | null = null;
 
-  function showAuthError(msg) {
-    authError.textContent = msg;
-    authError.style.display = "block";
+  function showAuthError(msg: string) {
+    if (authError) {
+      authError.textContent = msg;
+      authError.style.display = "block";
+    }
   }
 
   function hideAuthError() {
-    authError.style.display = "none";
+    if (authError) {
+      authError.style.display = "none";
+    }
   }
 
   function startPolling() {
     if (!pollIntervalId) {
-      pollIntervalId = setInterval(() => {
+      pollIntervalId = window.setInterval(() => {
         if (getStaffKey()) loadData();
       }, 10000);
     }
@@ -202,8 +205,8 @@ import Layout from '../layouts/Layout.astro';
   }
 
   // --- Step 1: 認証コード送信 ---
-  sendCodeBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim().toLowerCase();
+  sendCodeBtn?.addEventListener("click", async () => {
+    const email = emailInput?.value.trim().toLowerCase() || "";
     if (!email || !email.includes("@")) {
       showAuthError("有効なメールアドレスを入力してください");
       return;
@@ -222,10 +225,12 @@ import Layout from '../layouts/Layout.astro';
       const data = await res.json();
 
       if (res.ok && data.success) {
-        stepEmail.style.display = "none";
-        stepCode.style.display = "block";
-        codeInput.value = "";
-        codeInput.focus();
+        if (stepEmail) stepEmail.style.display = "none";
+        if (stepCode) stepCode.style.display = "block";
+        if (codeInput) {
+          codeInput.value = "";
+          codeInput.focus();
+        }
       } else {
         showAuthError(data.message || "認証メールの送信に失敗しました");
       }
@@ -238,9 +243,9 @@ import Layout from '../layouts/Layout.astro';
   });
 
   // --- Step 2: 認証コード検証 ---
-  verifyCodeBtn.addEventListener("click", async () => {
-    const email = emailInput.value.trim().toLowerCase();
-    const code = codeInput.value.trim();
+  verifyCodeBtn?.addEventListener("click", async () => {
+    const email = emailInput?.value.trim().toLowerCase() || "";
+    const code = codeInput?.value.trim() || "";
 
     if (!code || code.length !== 6) {
       showAuthError("6桁の認証コードを入力してください");
@@ -275,21 +280,21 @@ import Layout from '../layouts/Layout.astro';
     }
   });
 
-  backEmailBtn.addEventListener("click", () => {
-    stepCode.style.display = "none";
-    stepEmail.style.display = "block";
+  backEmailBtn?.addEventListener("click", () => {
+    if (stepCode) stepCode.style.display = "none";
+    if (stepEmail) stepEmail.style.display = "block";
     hideAuthError();
   });
 
-  emailInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendCodeBtn.click();
+  emailInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendCodeBtn?.click();
   });
 
-  codeInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") verifyCodeBtn.click();
+  codeInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") verifyCodeBtn?.click();
   });
 
-  lockBtn.addEventListener("click", () => {
+  lockBtn?.addEventListener("click", () => {
     stopPolling();
     stopScanner();
     sessionStorage.clear();
@@ -301,8 +306,9 @@ import Layout from '../layouts/Layout.astro';
   let lastKeyTime = 0;
 
   window.addEventListener("keydown", (e) => {
-    if (authOverlay.style.display !== "none") return;
-    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    const target = e.target as HTMLElement | null;
+    if (authOverlay && authOverlay.style.display !== "none") return;
+    if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
 
     const currentTime = Date.now();
     if (currentTime - lastKeyTime > 100) {
@@ -321,7 +327,7 @@ import Layout from '../layouts/Layout.astro';
   });
 
   // --- 📷 Webカメラ表示切り替え ---
-  toggleScannerBtn.addEventListener("click", () => {
+  toggleScannerBtn?.addEventListener("click", () => {
     if (isScanning) {
       stopScanner();
     } else {
@@ -330,15 +336,12 @@ import Layout from '../layouts/Layout.astro';
   });
 
   async function startScanner() {
-    if (!window.Html5Qrcode) {
-      alert("スキャンライブラリの読み込みに失敗しました。");
-      return;
+    if (scannerWrapper) scannerWrapper.style.display = "block";
+    if (toggleScannerBtn) {
+      toggleScannerBtn.textContent = "カメラを停止";
+      toggleScannerBtn.classList.add("btn-active");
     }
-
-    scannerWrapper.style.display = "block";
-    toggleScannerBtn.textContent = "カメラを停止";
-    toggleScannerBtn.classList.add("btn-active");
-    scanResultBox.style.display = "none";
+    if (scanResultBox) scanResultBox.style.display = "none";
 
     html5QrCode = new Html5Qrcode("qr-reader");
 
@@ -352,7 +355,7 @@ import Layout from '../layouts/Layout.astro';
       isScanning = true;
     } catch (err) {
       console.error("Camera access error:", err);
-      alert("カメラの起動に失敗しました。");
+      alert("カメラの起動に失敗しました。アクセス許可を確認してください。");
       stopScanner();
     }
   }
@@ -364,16 +367,18 @@ import Layout from '../layouts/Layout.astro';
       } catch (e) {}
     }
     isScanning = false;
-    scannerWrapper.style.display = "none";
-    toggleScannerBtn.textContent = "カメラを起動";
-    toggleScannerBtn.classList.remove("btn-active");
+    if (scannerWrapper) scannerWrapper.style.display = "none";
+    if (toggleScannerBtn) {
+      toggleScannerBtn.textContent = "カメラを起動";
+      toggleScannerBtn.classList.remove("btn-active");
+    }
   }
 
   let lastScannedText = "";
   let lastScanTime = 0;
 
   // 統合照合処理（カメラ / 外付けバーコードリーダー共通）
-  async function handleScannedCode(rawCode) {
+  async function handleScannedCode(rawCode: string) {
     const now = Date.now();
     if (rawCode === lastScannedText && now - lastScanTime < 3000) {
       return;
@@ -381,13 +386,13 @@ import Layout from '../layouts/Layout.astro';
     lastScannedText = rawCode;
     lastScanTime = now;
 
-    let ticketNumber = null;
+    let ticketNumber: string | null = null;
     const text = rawCode.trim();
 
     if (text.startsWith("SHOKO:") || text.startsWith("SHOKO-TICKET:")) {
       const parts = text.split(":");
-      ticketNumber = parts[1]?.replace("No.", "").trim();
-    } else if (!isNaN(text.replace("No.", ""))) {
+      ticketNumber = parts[1]?.replace("No.", "").trim() || null;
+    } else if (!isNaN(Number(text.replace("No.", "")))) {
       ticketNumber = text.replace("No.", "").trim();
     }
 
@@ -421,10 +426,12 @@ import Layout from '../layouts/Layout.astro';
     }
   }
 
-  function showScanResult(msg, type) {
-    scanResultBox.textContent = msg;
-    scanResultBox.className = `scan-result-box scan-${type}`;
-    scanResultBox.style.display = "block";
+  function showScanResult(msg: string, type: "info" | "success" | "error") {
+    if (scanResultBox) {
+      scanResultBox.textContent = msg;
+      scanResultBox.className = `scan-result-box scan-${type}`;
+      scanResultBox.style.display = "block";
+    }
   }
 
   // --- 一覧データ取得 ---
@@ -434,8 +441,8 @@ import Layout from '../layouts/Layout.astro';
 
     if (!staffKey || !staffEmail) {
       stopPolling();
-      authOverlay.style.display = "flex";
-      adminMain.style.display = "none";
+      if (authOverlay) authOverlay.style.display = "flex";
+      if (adminMain) adminMain.style.display = "none";
       return;
     }
 
@@ -450,8 +457,8 @@ import Layout from '../layouts/Layout.astro';
       if (res.status === 401) {
         stopPolling();
         sessionStorage.clear();
-        authOverlay.style.display = "flex";
-        adminMain.style.display = "none";
+        if (authOverlay) authOverlay.style.display = "flex";
+        if (adminMain) adminMain.style.display = "none";
         showAuthError("認証セッションが切れました。再度ログインしてください。");
         return;
       }
@@ -459,14 +466,16 @@ import Layout from '../layouts/Layout.astro';
       if (res.status === 403) {
         stopPolling();
         const errData = await res.json().catch(() => ({}));
-        authOverlay.style.display = "none";
-        adminMain.style.display = "block";
+        if (authOverlay) authOverlay.style.display = "none";
+        if (adminMain) adminMain.style.display = "block";
         if (currentUserBadge) {
           currentUserBadge.textContent = `LOGIN: ${getStaffName() || staffEmail}`;
         }
-        listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
-        nextInfoEl.textContent = "システム停止中";
-        callNextBtn.disabled = true;
+        if (listBody) {
+          listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
+        }
+        if (nextInfoEl) nextInfoEl.textContent = "システム停止中";
+        if (callNextBtn) callNextBtn.disabled = true;
         return;
       }
 
@@ -475,50 +484,53 @@ import Layout from '../layouts/Layout.astro';
 
       startPolling();
 
-      authOverlay.style.display = "none";
-      adminMain.style.display = "block";
+      if (authOverlay) authOverlay.style.display = "none";
+      if (adminMain) adminMain.style.display = "block";
       hideAuthError();
 
       if (currentUserBadge) {
         currentUserBadge.textContent = `STAFF: ${getStaffName() || staffEmail}`;
       }
 
-      totalEl.textContent = data.stats.total;
-      waitingEl.textContent = data.stats.waiting;
-      calledEl.textContent = data.stats.called;
-      admittedEl.textContent = data.stats.admitted;
+      if (totalEl) totalEl.textContent = data.stats.total;
+      if (waitingEl) waitingEl.textContent = data.stats.waiting;
+      if (calledEl) calledEl.textContent = data.stats.called;
+      if (admittedEl) admittedEl.textContent = data.stats.admitted;
 
       const waitingHeadcount = (data.tickets || [])
-        .filter(t => t.status === "WAITING")
-        .reduce((sum, t) => sum + (Number(t.headcount) || 1), 0);
+        .filter((t: any) => t.status === "WAITING")
+        .reduce((sum: number, t: any) => sum + (Number(t.headcount) || 1), 0);
       if (waitingPeopleEl) {
-        waitingPeopleEl.textContent = waitingHeadcount;
+        waitingPeopleEl.textContent = String(waitingHeadcount);
       }
 
       renderTable(data.tickets);
       updateQuickCall(data.tickets);
     } catch (e) {
       console.error(e);
-      listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+      if (listBody) {
+        listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+      }
     }
   }
 
-  function updateQuickCall(tickets) {
+  function updateQuickCall(tickets: any[]) {
     const nextWaiting = (tickets || []).slice().reverse().find(t => t.status === "WAITING") || tickets.find(t => t.status === "WAITING");
     
-    if (nextWaiting) {
+    if (nextWaiting && nextInfoEl && callNextBtn) {
       const count = nextWaiting.headcount || 1;
       const typeStr = nextWaiting.visitor_type === "family" ? "ご家族連れ" : "一般";
       nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">${typeStr} / ${count}名</span>）です`;
       callNextBtn.disabled = false;
-      callNextBtn.onclick = () => updateStatus(nextWaiting.ticket_number, "CALLED", count);
-    } else {
+      callNextBtn.onclick = () => (window as any).updateStatus(nextWaiting.ticket_number, "CALLED", count);
+    } else if (nextInfoEl && callNextBtn) {
       nextInfoEl.textContent = "待機中の来場者はいません";
       callNextBtn.disabled = true;
     }
   }
 
-  function renderTable(tickets) {
+  function renderTable(tickets: any[]) {
+    if (!listBody) return;
     if (!tickets || tickets.length === 0) {
       listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
       return;
@@ -563,13 +575,13 @@ import Layout from '../layouts/Layout.astro';
     }).join("");
   }
 
-  function escapeHtml(str) {
+  function escapeHtml(str: string) {
     return String(str).replace(/[&<>"']/g, (m) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
+    }[m] || m));
   }
 
-  window.updateStatus = async function(ticketNumber, status, count = 1) {
+  (window as any).updateStatus = async function(ticketNumber: number, status: string, count = 1) {
     const actionName = status === "CALLED" ? `お呼び出し（${count}名様）` : "入場完了";
     if (!confirm(`No.${ticketNumber} を「${actionName}」にしますか？`)) return;
 
@@ -607,7 +619,7 @@ import Layout from '../layouts/Layout.astro';
     }
   };
 
-  refreshBtn.addEventListener("click", () => {
+  refreshBtn?.addEventListener("click", () => {
     loadData();
   });
 
@@ -645,53 +657,4 @@ import Layout from '../layouts/Layout.astro';
   .scanner-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
   .scanner-title-group { display: flex; align-items: center; gap: 8px; }
   .scanner-header h3 { margin: 0; font-size: 1rem; color: #0f172a; }
-  .barcode-status-tag { font-size: 0.7rem; font-weight: 800; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 20px; }
-  
-  .btn-scanner-toggle { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-  .btn-scanner-toggle.btn-active { background: #dc2626; }
-  #qr-reader { width: 100%; max-width: 320px; margin: 14px auto 0; border-radius: 8px; overflow: hidden; }
-  .scanner-hint { font-size: 0.75rem; color: #64748b; text-align: center; margin-top: 8px; }
-
-  .scan-result-box { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; }
-  .scan-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-  .scan-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-  .scan-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-
-  /* 📊 統計カード */
-  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-  @media(min-width: 600px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
-  .stat-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
-  .stat-label { font-size: 0.75rem; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
-  .stat-val { font-size: 1.8rem; font-weight: 900; color: #0f172a; }
-  .stat-val-group { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
-  .stat-sub-val { font-size: 0.9rem; color: #0284c7; font-weight: 700; }
-  .highlight-waiting .stat-val { color: #0284c7; }
-  .highlight-called .stat-val { color: #d97706; }
-
-  /* ⚡ クイック呼出 */
-  .quick-call-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
-  .quick-call-box h3 { margin: 0 0 10px 0; font-size: 0.95rem; color: #1e3a8a; }
-  .quick-action { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .quick-headcount { background: #dbeafe; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
-  .btn-call-primary { background: #0284c7; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-  .btn-call-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-
-  /* 📋 テーブル */
-  .table-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow-x: auto; }
-  .table-container h2 { font-size: 1.05rem; margin: 0 0 14px 0; }
-  .ticket-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-  .ticket-table th { padding: 10px 8px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.8rem; }
-  .ticket-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; }
-
-  .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-  .badge.waiting { background: #e0f2fe; color: #0369a1; }
-  .badge.called { background: #fef3c7; color: #b45309; }
-  .badge.admitted { background: #f1f5f9; color: #64748b; }
-  .headcount-badge { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-family: monospace; }
-  .type-tag { font-size: 0.78rem; font-weight: 800; color: #334155; }
-  .name-sub { font-size: 0.72rem; color: #64748b; }
-
-  .btn-sm { border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
-  .btn-call { background: #f59e0b; color: white; }
-  .btn-admit { background: #10b981; color: white; }
-</style>
+  .barcode-status-tag { font-size: 0.7rem; font-weight: 800; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding:
