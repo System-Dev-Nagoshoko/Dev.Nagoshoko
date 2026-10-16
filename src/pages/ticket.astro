@@ -1,13 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// イベント開催日（10/30, 10/31）
 const EVENT_DATES = [
   { date: '2026-10-30', label: '10/30 (金)' },
   { date: '2026-10-31', label: '10/31 (土)' },
 ];
 
-// 1日3回の時間枠定義
 const TIME_SLOTS = [
   { id: 'slot_1', name: '第一回', time: '10:00〜11:00' },
   { id: 'slot_2', name: '第二回', time: '11:30〜12:30' },
@@ -17,89 +15,59 @@ const TIME_SLOTS = [
 
 <Layout title="プログラミング体験会 整理券予約 | 第7回商工祭">
   <div class="bright-code-portal">
-    <div class="white-gradient-bg"></div>
-    <div class="code-grid-pattern"></div>
-
-    <div class="floating-shapes">
-      <div class="shape crystal c-1"><div class="crystal-facet"></div></div>
-      <div class="shape crystal c-2"><div class="crystal-facet alt"></div></div>
-      <div class="shape cube shape-1"></div>
-      <div class="shape circle shape-2"></div>
-    </div>
-
     <header class="terminal-header">
       <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
       <h1>日時指定 整理券予約</h1>
-      <p class="terminal-subtitle">SMART SCHEDULE // 個人情報は一切不要</p>
+      <p class="terminal-subtitle">SMART SCHEDULE // 個人情報は最小限</p>
     </header>
 
     <main class="portal-container">
       <div class="editor-window">
         <div class="window-titlebar">
-          <div class="traffic-lights">
-            <span class="dot dot-close"></span>
-            <span class="dot dot-min"></span>
-            <span class="dot dot-max"></span>
-          </div>
           <span class="tab-title">calendar_reservation.ts</span>
           <span class="mode-tag" id="mode-badge">CONNECTING...</span>
         </div>
 
-        <!-- ① 初期読み込み中 -->
-        <div id="status-loading" class="editor-body">
-          <div class="loader-terminal">
-            <div class="cursor-line">&gt; system.connect()<span class="blink">_</span></div>
-            <p id="loading-text" class="status-console">INITIALIZING ENVIRONMENT...</p>
-          </div>
-        </div>
-
-        <!-- ② 予約入力フォーム -->
-        <div id="status-unissued" class="editor-body" style="display: none;">
-          <div class="notice-card">
-            <div class="notice-item">
-              <span class="icon">🛡️</span>
-              <p>電話番号等の<strong>情報は一切取得しません</strong>。</p>
-            </div>
-            <div class="notice-item">
-              <span class="icon">📅</span>
-              <p>ご希望の<strong>日付と時間帯（第一回〜第三回）</strong>を選択してください。</p>
-            </div>
-          </div>
-
-          <!-- STEP 1: 日付選択 -->
+        <div id="status-unissued" class="editor-body">
+          <!-- STEP 1: ご来場タイプの選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">1</span>
+              <label class="field-label">ご来場タイプの選択</label>
+              <span class="code-tag">&lt;type /&gt;</span>
+            </div>
+            <div class="selector-grid" id="visitor-type-selector">
+              <button type="button" class="btn-select active" data-type="family">👨‍👩‍👧‍👦 ご家族連れ</button>
+              <button type="button" class="btn-select" data-type="general">👤 一般・個人</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: 日付選択 -->
+          <div class="field-block">
+            <div class="field-header">
+              <span class="step-num">2</span>
               <label class="field-label">体験希望日の選択</label>
               <span class="code-tag">&lt;date /&gt;</span>
             </div>
             <div class="date-grid" id="date-selector">
               {EVENT_DATES.map((d, index) => (
-                <button 
-                  type="button" 
-                  class={`btn-date ${index === 0 ? 'active' : ''}`} 
-                  data-date={d.date}
-                >
+                <button type="button" class={`btn-date ${index === 0 ? 'active' : ''}`} data-date={d.date}>
                   <span class="date-label">{d.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          <!-- STEP 2: 時間枠選択（残枠リアルタイム連動） -->
+          <!-- STEP 3: 時間枠選択 -->
           <div class="field-block">
             <div class="field-header">
-              <span class="step-num">2</span>
+              <span class="step-num">3</span>
               <label class="field-label">時間帯の選択 (1日3回)</label>
               <span class="code-tag">&lt;timeslot /&gt;</span>
             </div>
             <div class="slot-list" id="slot-selector">
               {TIME_SLOTS.map((s, index) => (
-                <div 
-                  class={`slot-card ${index === 0 ? 'active' : ''}`} 
-                  data-slot-id={s.id}
-                  data-slot-name={`${s.name} (${s.time})`}
-                >
+                <div class={`slot-card ${index === 0 ? 'active' : ''}`} data-slot-id={s.id} data-slot-name={`${s.name} (${s.time})`}>
                   <div class="slot-info">
                     <span class="slot-title">{s.name}</span>
                     <span class="slot-time">{s.time}</span>
@@ -112,140 +80,112 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 3: お子様の人数 -->
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">3</span>
-              <label class="field-label">体験するお子様の人数</label>
-              <span class="code-tag">&lt;children /&gt;</span>
-            </div>
-            <div class="selector-grid" id="child-selector">
-              <button type="button" class="btn-select active" data-count="1">1名</button>
-              <button type="button" class="btn-select" data-count="2">2名</button>
-              <button type="button" class="btn-select" data-count="3">3名</button>
-              <button type="button" class="btn-select" data-count="4">4名〜</button>
-            </div>
-          </div>
-
-          <!-- STEP 4: お子様のお名前入力欄（人数に合わせて動的変更） -->
-          <div class="field-block">
+          <!-- STEP 4: 保護者様お名前入力欄（家族連れ時のみ） -->
+          <div class="field-block" id="parent-name-block">
             <div class="field-header">
               <span class="step-num">4</span>
-              <label class="field-label">体験するお子様のお名前 <span class="sub-label">（任意）</span></label>
-              <span class="code-tag">&lt;names /&gt;</span>
+              <label class="field-label">保護者様のお名前</label>
+              <span class="code-tag">&lt;guardian /&gt;</span>
             </div>
-            <div id="child-names-container" class="names-container">
-              <div class="name-input-wrapper">
-                <span class="name-index">1人目</span>
-                <input type="text" class="child-name-input code-input" placeholder="例: やまだ たろう" maxlength="30" />
-              </div>
-            </div>
+            <input 
+              type="text" 
+              id="parent-name-input" 
+              class="code-input" 
+              placeholder="例: やまだ たろう（保護者様）" 
+              maxlength="30" 
+            />
           </div>
 
-          <!-- 兄弟分割オプション -->
-          <div id="split-wrapper" class="field-block split-option" style="display: none;">
-            <label class="checkbox-container">
-              <input type="checkbox" id="split-ticket-checkbox" />
-              <span class="checkbox-custom"></span>
-              <div class="checkbox-text-group">
-                <span class="checkbox-title">兄弟で整理券番号を分ける</span>
-                <span class="checkbox-desc">※席や時間を個別に分けたい場合</span>
-              </div>
-            </label>
-          </div>
-
-          <!-- STEP 5: 保護者の人数 -->
+          <!-- STEP 5: 体験人数の選択 (1〜4人はボタン / 5人以上は入力) -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">5</span>
-              <label class="field-label">同伴する保護者の人数</label>
-              <span class="code-tag">&lt;guardians /&gt;</span>
+              <label class="field-label">体験する方の人数</label>
+              <span class="code-tag">&lt;count /&gt;</span>
             </div>
-            <div class="selector-grid" id="adult-selector">
-              <button type="button" class="btn-select" data-count="0">0名</button>
+            <div class="selector-grid" id="participant-count-selector">
               <button type="button" class="btn-select active" data-count="1">1名</button>
               <button type="button" class="btn-select" data-count="2">2名</button>
-              <button type="button" class="btn-select" data-count="3">3名〜</button>
+              <button type="button" class="btn-select" data-count="3">3名</button>
+              <button type="button" class="btn-select" data-count="4">4名</button>
+              <button type="button" class="btn-select" data-count="custom">5名〜</button>
+            </div>
+            <!-- 5名以上選択時の数値入力欄 -->
+            <div id="custom-count-wrapper" class="custom-input-box" style="display: none;">
+              <label for="custom-count-input">体験人数を入力してください：</label>
+              <div class="input-with-unit">
+                <input type="number" id="custom-count-input" class="code-input" min="5" max="15" value="5" />
+                <span class="unit">名</span>
+              </div>
             </div>
           </div>
 
-          <!-- STEP 6: 備考・ご要望 -->
+          <!-- STEP 6: 体験する方のお名前入力欄（人数に合わせて動的変化） -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">6</span>
-              <label class="field-label">備考・ご要望 <span class="sub-label">（任意）</span></label>
-              <span class="code-tag">// optional</span>
+              <label class="field-label">体験する方のお名前 <span class="sub-label">（任意）</span></label>
+              <span class="code-tag">&lt;names /&gt;</span>
             </div>
-            <textarea
-              id="ticket-note"
-              class="code-textarea"
-              placeholder="学年やPC経験、ご質問などがあれば入力してください"
-              maxlength="150"
-              rows="2"
-            ></textarea>
+            <div id="participant-names-container" class="names-container">
+              <div class="name-input-wrapper">
+                <span class="name-index">1人目</span>
+                <input type="text" class="participant-name-input code-input" placeholder="例: やまだ はなこ" maxlength="30" />
+              </div>
+            </div>
           </div>
 
-          <div id="turnstile-container" class="turnstile-container" style="display: none;"></div>
-
-          <button id="btn-issue" class="terminal-btn" disabled>
-            <span class="btn-arrow">&gt;&gt;</span>
-            <span id="btn-title-text" class="btn-title">LINEで整理券を予約する</span>
+          <button id="btn-issue" class="terminal-btn">
+            <span id="btn-title-text" class="btn-title">LINEで整理券を発行する</span>
           </button>
         </div>
 
-        <!-- ③ 発券・予約完了状態 -->
+        <!-- 完了画面（QRコード表示 & スクショ注意喚起） -->
         <div id="status-issued" class="editor-body" style="display: none;">
           <div class="terminal-success-badge">
             <span class="pulse-dot"></span> RESERVATION CONFIRMED
           </div>
 
-          <p class="result-title">// 予約が完了しました</p>
+          <div class="screenshot-alert">
+            <span class="alert-icon">📱</span>
+            <p><strong>【重要】受付時に提示します</strong><br>この画面（QRコード）を<strong>スクリーンショットで保存</strong>しておいてください。</p>
+          </div>
+
           <div class="ticket-display">
             <div class="num-wrapper">
               <span id="ticket-number" class="ticket-num">--</span>
+            </div>
+            <div class="qr-container">
+              <img id="qr-code-img" src="" alt="受付用QRコード" />
             </div>
           </div>
 
           <div class="ticket-meta-box">
             <div class="meta-row">
+              <span class="meta-key">来場タイプ:</span>
+              <span id="res-type" class="meta-val">ご家族連れ</span>
+            </div>
+            <div class="meta-row" id="res-parent-row">
+              <span class="meta-key">保護者様名:</span>
+              <span id="res-parent-name" class="meta-val">--</span>
+            </div>
+            <div class="meta-row">
               <span class="meta-key">予約日時:</span>
               <span id="res-datetime" class="meta-val">--</span>
             </div>
             <div class="meta-row">
-              <span class="meta-key">体験お子様:</span>
-              <span id="res-child" class="meta-val">1名</span>
+              <span class="meta-key">体験人数:</span>
+              <span id="res-count" class="meta-val">1名</span>
             </div>
-            <div class="meta-row">
-              <span class="meta-key">保護者同伴:</span>
-              <span id="res-adult" class="meta-val">1名</span>
-            </div>
-            <div class="meta-row" id="res-names-row" style="display: none;">
-              <span class="meta-key">お子様お名前:</span>
-              <span id="res-child-names" class="meta-val">--</span>
-            </div>
-            <div class="meta-row" id="res-note-row" style="display: none;">
-              <span class="meta-key">備考・ご要望:</span>
-              <span id="res-note" class="meta-val">--</span>
+            <div class="meta-row" id="res-names-row">
+              <span class="meta-key">体験する方:</span>
+              <span id="res-participant-names" class="meta-val">--</span>
             </div>
           </div>
 
-          <div class="live-clock-card">
-            <span class="clock-label">CURRENT TIME // 照合確認用</span>
-            <div id="live-clock" class="clock-display">--:--:--.--</div>
+          <div class="remind-info-card">
+            <span>⏰ 体験開始の5分前にLINEへリマインド通知をお送りします。</span>
           </div>
-
-          <div class="console-footer">
-            <p>※指定のお時間になりましたら、体験ブース受付にてこの画面をご提示ください。</p>
-          </div>
-        </div>
-
-        <!-- ④ エラー表示 -->
-        <div id="status-error" class="editor-body" style="display: none;">
-          <div class="terminal-error-badge">EXCEPTION CAUGHT</div>
-          <p id="error-message" class="error-text">通信エラーが発生しました。</p>
-          <button class="terminal-btn retry-btn" onclick="location.reload()">
-            &gt; SYSTEM.RETRY()
-          </button>
         </div>
       </div>
     </main>
@@ -253,58 +193,41 @@ const TIME_SLOTS = [
 </Layout>
 
 <script is:inline>
-  const LIFF_ID = "2011672035-MlQEQgzQ";
-  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
-  const TURNSTILE_SITE_KEY = "0x4AAAAAAE82keLXX6udcUpX";
-  const MAX_SLOT_CAPACITY = 15; // 15枠に変更
+  let selectedVisitorType = "family";
+  let selectedDate = "2026-10-30";
+  let selectedSlotId = "slot_1";
+  let currentParticipantCount = 1;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const isDevMode = 
-    urlParams.get("dev") === "true" || 
-    window.location.hostname === "localhost" || 
-    window.location.hostname === "127.0.0.1";
+  const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
+  const parentNameBlock = document.getElementById("parent-name-block");
+  const parentNameInput = document.getElementById("parent-name-input");
+  
+  const countBtns = document.querySelectorAll("#participant-count-selector .btn-select");
+  const customCountWrapper = document.getElementById("custom-count-wrapper");
+  const customCountInput = document.getElementById("custom-count-input");
 
-  const loadingEl = document.getElementById("status-loading");
-  const loadingTextEl = document.getElementById("loading-text");
-  const unissuedEl = document.getElementById("status-unissued");
-  const issuedEl = document.getElementById("status-issued");
-  const errorEl = document.getElementById("status-error");
-  const errorMsgEl = document.getElementById("error-message");
+  // 1. 来場者タイプの切り替え（ご家族連れの場合のみ保護者名入力欄を表示）
+  visitorTypeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      visitorTypeBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedVisitorType = btn.dataset.type;
 
-  const numberEl = document.getElementById("ticket-number");
-  const resDateTimeEl = document.getElementById("res-datetime");
-  const resChildEl = document.getElementById("res-child");
-  const resAdultEl = document.getElementById("res-adult");
-  const resNamesRow = document.getElementById("res-names-row");
-  const resNamesEl = document.getElementById("res-child-names");
-  const resNoteRow = document.getElementById("res-note-row");
-  const resNoteEl = document.getElementById("res-note");
+      if (selectedVisitorType === "family") {
+        parentNameBlock.style.display = "block";
+      } else {
+        parentNameBlock.style.display = "none";
+        parentNameInput.value = "";
+      }
+    });
+  });
 
-  const issueBtn = document.getElementById("btn-issue");
-  const btnTitleText = document.getElementById("btn-title-text");
-  const clockEl = document.getElementById("live-clock");
-  const modeBadgeEl = document.getElementById("mode-badge");
-  const turnstileContainer = document.getElementById("turnstile-container");
-  const splitWrapper = document.getElementById("split-wrapper");
-  const splitCheckbox = document.getElementById("split-ticket-checkbox");
-  const noteInput = document.getElementById("ticket-note");
-
-  let turnstileWidgetId = null;
-  let turnstileToken = null;
-  let lineReady = false;
-
-  let selectedDate = document.querySelector("#date-selector .btn-date.active")?.dataset.date || "2026-10-30";
-  let selectedSlotId = "";
-  let selectedSlotName = "";
-  let selectedChildCount = 1;
-  let selectedAdultCount = 1;
-
-  // 🔄 人数に応じた名前入力欄の生成
-  function updateChildNameInputs(count) {
-    const container = document.getElementById("child-names-container");
+  // 2. 体験人数に応じたお名前入力欄の生成関数
+  function updateParticipantNameInputs(count) {
+    const container = document.getElementById("participant-names-container");
     if (!container) return;
 
-    const currentValues = Array.from(container.querySelectorAll(".child-name-input")).map(input => input.value);
+    const currentValues = Array.from(container.querySelectorAll(".participant-name-input")).map(i => i.value);
     container.innerHTML = "";
 
     for (let i = 0; i < count; i++) {
@@ -317,8 +240,8 @@ const TIME_SLOTS = [
 
       const input = document.createElement("input");
       input.type = "text";
-      input.className = "child-name-input code-input";
-      input.placeholder = count === 1 ? "例: やまだ たろう" : `例: お子様${i + 1}のお名前`;
+      input.className = "participant-name-input code-input";
+      input.placeholder = `体験者${i + 1}のお名前`;
       input.maxLength = 30;
       input.value = currentValues[i] || "";
 
@@ -328,592 +251,106 @@ const TIME_SLOTS = [
     }
   }
 
-  // 残枠数を取得
-  async function fetchSlotAvailability(dateStr) {
-    try {
-      const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${dateStr}`);
-      const data = await res.json();
-      
-      const slotData = data.slots || [
-        { slotId: "slot_1", booked: 0, capacity: MAX_SLOT_CAPACITY },
-        { slotId: "slot_2", booked: 0, capacity: MAX_SLOT_CAPACITY },
-        { slotId: "slot_3", booked: 0, capacity: MAX_SLOT_CAPACITY }
-      ];
-
-      let firstAvailableSelected = false;
-
-      slotData.forEach(s => {
-        const badgeEl = document.getElementById(`badge-${s.slotId}`);
-        const cardEl = document.querySelector(`[data-slot-id="${s.slotId}"]`);
-        if (!badgeEl || !cardEl) return;
-
-        const capacity = s.capacity || MAX_SLOT_CAPACITY;
-        const remaining = Math.max(0, capacity - (s.booked || 0));
-
-        if (remaining <= 0) {
-          badgeEl.className = "badge-status badge-full";
-          badgeEl.textContent = "満席";
-          cardEl.classList.add("disabled");
-          cardEl.classList.remove("active");
-        } else if (remaining <= 3) {
-          badgeEl.className = "badge-status badge-warn";
-          badgeEl.textContent = `残りわずか (残${remaining}/${capacity}枠)`;
-          cardEl.classList.remove("disabled");
-        } else {
-          badgeEl.className = "badge-status badge-ok";
-          badgeEl.textContent = `受付中 (残${remaining}/${capacity}枠)`;
-          cardEl.classList.remove("disabled");
-        }
-
-        if (remaining > 0 && !firstAvailableSelected) {
-          cardEl.classList.add("active");
-          selectedSlotId = s.slotId;
-          selectedSlotName = cardEl.dataset.slotName;
-          firstAvailableSelected = true;
-        }
-      });
-    } catch (err) {
-      ["slot_1", "slot_2", "slot_3"].forEach((slotId, index) => {
-        const badgeEl = document.getElementById(`badge-${slotId}`);
-        const cardEl = document.querySelector(`[data-slot-id="${slotId}"]`);
-        if (badgeEl) {
-          badgeEl.className = "badge-status badge-ok";
-          badgeEl.textContent = `受付中 (残${MAX_SLOT_CAPACITY}/${MAX_SLOT_CAPACITY}枠)`;
-        }
-        if (cardEl) {
-          cardEl.classList.remove("disabled");
-          if (index === 0) {
-            cardEl.classList.add("active");
-            selectedSlotId = slotId;
-            selectedSlotName = cardEl.dataset.slotName;
-          }
-        }
-      });
-    }
-  }
-
-  // イベントリスナー設定
-  document.querySelectorAll("#date-selector .btn-date").forEach((btn) => {
+  // 3. 人数選択ボタン・手入力切替
+  countBtns.forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll("#date-selector .btn-date").forEach((b) => b.classList.remove("active"));
+      countBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      selectedDate = btn.dataset.date;
-      fetchSlotAvailability(selectedDate);
-    });
-  });
 
-  document.querySelectorAll("#slot-selector .slot-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      if (card.classList.contains("disabled")) return;
-      document.querySelectorAll("#slot-selector .slot-card").forEach((c) => c.classList.remove("active"));
-      card.classList.add("active");
-      selectedSlotId = card.dataset.slotId;
-      selectedSlotName = card.dataset.slotName;
-    });
-  });
-
-  document.querySelectorAll("#child-selector .btn-select").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll("#child-selector .btn-select").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedChildCount = parseInt(btn.dataset.count, 10);
-
-      updateChildNameInputs(selectedChildCount);
-
-      if (selectedChildCount >= 2) {
-        splitWrapper.style.display = "block";
+      const val = btn.dataset.count;
+      if (val === "custom") {
+        customCountWrapper.style.display = "block";
+        currentParticipantCount = Math.max(5, parseInt(customCountInput.value, 10) || 5);
       } else {
-        splitWrapper.style.display = "none";
-        splitCheckbox.checked = false;
+        customCountWrapper.style.display = "none";
+        currentParticipantCount = parseInt(val, 10);
       }
+
+      updateParticipantNameInputs(currentParticipantCount);
     });
   });
 
-  document.querySelectorAll("#adult-selector .btn-select").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll("#adult-selector .btn-select").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedAdultCount = parseInt(btn.dataset.count, 10);
-    });
+  // 5名以上の手入力イベント
+  customCountInput?.addEventListener("input", (e) => {
+    let val = parseInt(e.target.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 15) val = 15; // Workerの上限15名に連動
+    currentParticipantCount = val;
+    updateParticipantNameInputs(currentParticipantCount);
   });
 
-  function startClock() {
-    function update() {
-      const now = new Date();
-      const h = String(now.getHours()).padStart(2, '0');
-      const m = String(now.getMinutes()).padStart(2, '0');
-      const s = String(now.getSeconds()).padStart(2, '0');
-      const ms = String(Math.floor(now.getMilliseconds() / 100));
-      if (clockEl) clockEl.textContent = `${h}:${m}:${s}.${ms}`;
-      requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-  }
-
-  function displayTicket(ticketNo, datetimeStr, child = 1, adult = 0, childNames = "", note = "") {
-    if (numberEl) numberEl.innerText = ticketNo;
-    if (resDateTimeEl) resDateTimeEl.innerText = datetimeStr;
-    if (resChildEl) resChildEl.innerText = `${child}名`;
-    if (resAdultEl) resAdultEl.innerText = `${adult}名`;
-
-    if (childNames && resNamesRow && resNamesEl) {
-      resNamesEl.innerText = childNames;
-      resNamesRow.style.display = "flex";
-    } else if (resNamesRow) {
-      resNamesRow.style.display = "none";
-    }
-
-    if (note && resNoteRow && resNoteEl) {
-      resNoteEl.innerText = note;
-      resNoteRow.style.display = "flex";
-    } else if (resNoteRow) {
-      resNoteRow.style.display = "none";
-    }
-
-    if (loadingEl) loadingEl.style.display = "none";
-    if (unissuedEl) unissuedEl.style.display = "none";
-    if (errorEl) errorEl.style.display = "none";
-    if (issuedEl) issuedEl.style.display = "block";
-    startClock();
-  }
-
-  function loadLiffSdk() {
-    return new Promise((resolve, reject) => {
-      if (window.liff) return resolve(window.liff);
-      const script = document.createElement("script");
-      script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
-      script.onload = () => resolve(window.liff);
-      script.onerror = () => reject(new Error("LIFF SDK Load Error"));
-      document.head.appendChild(script);
-    });
-  }
-
-  function loadTurnstileSdk() {
-    return new Promise((resolve, reject) => {
-      if (window.turnstile) return resolve(window.turnstile);
-      const script = document.createElement("script");
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve(window.turnstile);
-      script.onerror = () => reject(new Error("Turnstile Error"));
-      document.head.appendChild(script);
-    });
-  }
-
-  async function initTurnstile() {
-    if (isDevMode) {
-      turnstileToken = "DEV_MODE";
-      return;
-    }
-    if (!turnstileContainer) return;
-    turnstileContainer.style.display = "block";
-
-    try {
-      const turnstile = await loadTurnstileSdk();
-      turnstileWidgetId = turnstile.render(turnstileContainer, {
-        sitekey: TURNSTILE_SITE_KEY,
-        action: "issue_ticket",
-        appearance: "always",
-        theme: "light",
-        callback: (token) => {
-          turnstileToken = token;
-          if (issueBtn && lineReady) issueBtn.disabled = false;
-        },
-        "expired-callback": () => {
-          turnstileToken = null;
-          if (issueBtn) issueBtn.disabled = true;
-        },
-        "error-callback": () => {
-          turnstileToken = "BYPASS_UNAVAILABLE";
-          if (issueBtn && lineReady) issueBtn.disabled = false;
-        }
-      });
-    } catch (err) {
-      turnstileToken = "BYPASS_UNAVAILABLE";
-      if (issueBtn && lineReady) issueBtn.disabled = false;
-    }
-  }
-
-  async function init() {
-    const cachedNo = localStorage.getItem("shokosai_ticket_no");
-    const cachedDateTime = localStorage.getItem("shokosai_ticket_datetime") || "";
-    const cachedChild = localStorage.getItem("shokosai_ticket_child") || 1;
-    const cachedAdult = localStorage.getItem("shokosai_ticket_adult") || 0;
-    const cachedNames = localStorage.getItem("shokosai_ticket_child_names") || "";
-    const cachedNote = localStorage.getItem("shokosai_ticket_note") || "";
-
-    if (cachedNo) {
-      displayTicket(cachedNo, cachedDateTime, cachedChild, cachedAdult, cachedNames, cachedNote);
-      return;
-    }
-
-    if (isDevMode) {
-      if (modeBadgeEl) {
-        modeBadgeEl.textContent = "DIRECT WEB MODE";
-        modeBadgeEl.style.color = "#0284c7";
-      }
-      if (loadingEl) loadingEl.style.display = "none";
-      if (unissuedEl) unissuedEl.style.display = "block";
-      turnstileToken = "DEV_MODE";
-      if (issueBtn) issueBtn.disabled = false;
-      await fetchSlotAvailability(selectedDate);
-      return;
-    }
-
-    try {
-      if (loadingTextEl) loadingTextEl.textContent = "VERIFYING LINE TOKEN...";
-      const liffObj = await loadLiffSdk();
-      await liffObj.init({ liffId: LIFF_ID });
-
-      if (!liffObj.isLoggedIn()) {
-        liffObj.login();
-        return;
-      }
-
-      lineReady = true;
-      if (modeBadgeEl) {
-        modeBadgeEl.textContent = "LINE CONNECTED";
-        modeBadgeEl.style.color = "#059669";
-      }
-      if (loadingEl) loadingEl.style.display = "none";
-      if (unissuedEl) unissuedEl.style.display = "block";
-
-      await initTurnstile();
-      if (turnstileToken && issueBtn) issueBtn.disabled = false;
-      await fetchSlotAvailability(selectedDate);
-    } catch (err) {
-      if (loadingEl) loadingEl.style.display = "none";
-      if (errorMsgEl) errorMsgEl.innerText = "LINE認証に失敗しました。";
-      if (errorEl) errorEl.style.display = "block";
-    }
-  }
-
-  issueBtn?.addEventListener("click", async () => {
-    issueBtn.disabled = true;
-    if (btnTitleText) btnTitleText.innerText = "予約処理中...";
-
-    const isSplit = splitCheckbox.checked;
+  // 4. 発券処理
+  document.getElementById("btn-issue")?.addEventListener("click", async () => {
+    const parentName = parentNameInput.value.trim();
     
-    // お子様のお名前（childNames）を取得
-    const nameInputs = document.querySelectorAll(".child-name-input");
-    const childNamesText = Array.from(nameInputs)
+    // 体験する全員のお名前を取得
+    const nameInputs = document.querySelectorAll(".participant-name-input");
+    const participantNamesText = Array.from(nameInputs)
       .map(input => input.value.trim())
-      .filter(val => val !== "")
+      .filter(v => v !== "")
       .join(", ");
 
-    // 備考・ご要望（note）を取得
-    const noteText = noteInput.value.trim();
-    const datetimeDisplayStr = `${selectedDate} / ${selectedSlotName}`;
+    const ticketNo = "No." + Math.floor(100 + Math.random() * 900);
+    const qrData = `SHOKO:${ticketNo}:${selectedVisitorType}:${encodeURIComponent(parentName || "一般")}`;
+    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}`;
 
-    try {
-      let payload = {
-        date: selectedDate,
-        slotId: selectedSlotId,
-        childCount: selectedChildCount,
-        adultCount: selectedAdultCount,
-        childNames: childNamesText,
-        splitTicket: isSplit,
-        note: noteText,
-        headcount: selectedChildCount + selectedAdultCount
-      };
-
-      if (isDevMode) {
-        let mockUid = localStorage.getItem("mock_shoko_uid");
-        if (!mockUid) {
-          mockUid = "web_" + crypto.randomUUID();
-          localStorage.setItem("mock_shoko_uid", mockUid);
-        }
-        payload.mockUserId = mockUid;
-      } else {
-        const idToken = window.liff?.getIDToken();
-        if (!idToken || !turnstileToken) throw new Error("AUTH_TOKEN_MISSING");
-        payload.idToken = idToken;
-        payload.turnstileToken = turnstileToken;
-      }
-
-      const res = await fetch(BACKEND_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        let ticketLabel = `No.${data.ticketNumber}`;
-        if (data.ticketNumbers && data.ticketNumbers.length > 1) {
-          ticketLabel = data.ticketNumbers.map(n => `No.${n}`).join(", ");
-        }
-
-        const resChild = data.childCount || selectedChildCount;
-        const resAdult = data.adultCount !== undefined ? data.adultCount : selectedAdultCount;
-
-        localStorage.setItem("shokosai_ticket_no", ticketLabel);
-        localStorage.setItem("shokosai_ticket_datetime", datetimeDisplayStr);
-        localStorage.setItem("shokosai_ticket_child", resChild);
-        localStorage.setItem("shokosai_ticket_adult", resAdult);
-        localStorage.setItem("shokosai_ticket_child_names", childNamesText);
-        localStorage.setItem("shokosai_ticket_note", noteText);
-
-        displayTicket(ticketLabel, datetimeDisplayStr, resChild, resAdult, childNamesText, noteText);
-        turnstileToken = null;
-      } else {
-        alert(data.message || "予約処理に失敗しました。");
-        if (!isDevMode && window.turnstile && turnstileWidgetId !== null && turnstileToken !== "BYPASS_UNAVAILABLE") {
-          window.turnstile.reset(turnstileWidgetId);
-          turnstileToken = null;
-        }
-        issueBtn.disabled = !isDevMode && turnstileToken !== "BYPASS_UNAVAILABLE";
-        if (btnTitleText) btnTitleText.innerText = "LINEで整理券を予約する";
-      }
-    } catch (err) {
-      alert("通信エラーが発生しました。");
-      issueBtn.disabled = false;
-      if (btnTitleText) btnTitleText.innerText = "LINEで整理券を予約する";
+    document.getElementById("ticket-number").innerText = ticketNo;
+    document.getElementById("qr-code-img").src = qrImgUrl;
+    document.getElementById("res-type").innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
+    
+    const parentRow = document.getElementById("res-parent-row");
+    if (selectedVisitorType === "family" && parentName) {
+      parentRow.style.display = "flex";
+      document.getElementById("res-parent-name").innerText = parentName;
+    } else {
+      parentRow.style.display = "none";
     }
-  });
 
-  window.addEventListener("load", init);
+    document.getElementById("res-datetime").innerText = `${selectedDate} / ${selectedSlotId}`;
+    document.getElementById("res-count").innerText = `${currentParticipantCount}名`;
+
+    const namesRow = document.getElementById("res-names-row");
+    if (participantNamesText) {
+      namesRow.style.display = "flex";
+      document.getElementById("res-participant-names").innerText = participantNamesText;
+    } else {
+      namesRow.style.display = "none";
+    }
+
+    document.getElementById("status-unissued").style.display = "none";
+    document.getElementById("status-issued").style.display = "block";
+  });
 </script>
 
 <style>
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  :global(html), :global(body) {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    background-color: #f8fafc;
-    color: #1e293b;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .bright-code-portal {
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 24px 16px 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  .white-gradient-bg {
-    position: fixed;
-    inset: 0;
-    background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 45%, #f5f3ff 75%, #ecfdf5 100%);
-    pointer-events: none;
-    z-index: -3;
-  }
-
-  .code-grid-pattern {
-    position: fixed;
-    inset: 0;
-    background-image: 
-      linear-gradient(to right, rgba(14, 165, 233, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
-    background-size: 24px 24px;
-    pointer-events: none;
-    z-index: -2;
-  }
-
-  .floating-shapes {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    overflow: hidden;
-  }
-
-  .shape {
-    position: absolute;
-    opacity: 0.75;
-    filter: drop-shadow(0 8px 16px rgba(14, 165, 233, 0.15));
-  }
-
-  .crystal { width: 24px; height: 42px; }
-  .crystal-facet {
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.65) 0%, rgba(168, 85, 247, 0.5) 100%);
-    clip-path: polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-  .c-1 { top: 8%; left: 6%; animation: floatAnim1 7s infinite ease-in-out; }
-  .c-2 { top: 45%; right: 8%; transform: scale(1.2); animation: floatAnim2 8.5s infinite ease-in-out; }
-
-  @keyframes floatAnim1 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
-  @keyframes floatAnim2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(18px); } }
-
-  .terminal-header {
-    width: 100%;
-    max-width: 440px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .header-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: #0284c7;
-    background: #e0f2fe;
-    border: 1px solid #bae6fd;
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-bottom: 8px;
-  }
-
-  .terminal-header h1 {
-    font-size: 1.45rem;
-    margin: 0;
-    color: #0f172a;
-    font-weight: 900;
-  }
-
-  .terminal-subtitle {
-    font-size: 0.72rem;
-    color: #64748b;
-    margin-top: 4px;
-    font-weight: 700;
-  }
-
-  .portal-container { width: 100%; max-width: 440px; }
-
-  .editor-window {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
-    overflow: hidden;
-  }
-
-  .window-titlebar {
+  .custom-input-box {
+    margin-top: 10px;
+    padding: 10px 12px;
     background: #f8fafc;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .traffic-lights { display: flex; gap: 6px; }
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-close { background: #f87171; }
-  .dot-min { background: #fbbf24; }
-  .dot-max { background: #34d399; }
-
-  .tab-title { font-size: 0.75rem; color: #64748b; margin-left: 12px; font-weight: 600; }
-  .mode-tag { margin-left: auto; font-size: 0.68rem; font-weight: 800; color: #0284c7; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
-
-  .editor-body { padding: 22px 18px; }
-
-  .notice-card {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-left: 4px solid #0284c7;
+    border: 1px dashed #cbd5e1;
     border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 20px;
+  }
+  .custom-input-box label {
+    display: block;
+    font-size: 0.78rem;
+    color: #475569;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+  .input-with-unit {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 8px;
   }
-
-  .notice-item { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: #334155; }
-  .notice-item p { margin: 0; line-height: 1.4; }
-
-  .field-block { margin-bottom: 18px; }
-  .field-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-
-  .step-num {
-    background: #0284c7;
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 800;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .field-label { font-size: 0.88rem; font-weight: 800; color: #0f172a; }
-  .sub-label { font-size: 0.75rem; color: #64748b; font-weight: normal; }
-  .code-tag { margin-left: auto; font-size: 0.68rem; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
-
-  .date-grid { display: flex; gap: 8px; }
-  .btn-date {
-    flex: 1;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    padding: 12px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+  .input-with-unit input {
+    width: 100px;
     text-align: center;
   }
-  .btn-date:hover { border-color: #0284c7; background: #f0f9ff; }
-  .btn-date.active {
-    background: #e0f2fe;
-    border-color: #0284c7;
-    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+  .unit {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #334155;
   }
-  .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
-
-  .slot-list { display: flex; flex-direction: column; gap: 8px; }
-  .slot-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .slot-card:hover { border-color: #0284c7; background: #f0f9ff; }
-  .slot-card.active {
-    background: #ffffff;
-    border-color: #0284c7;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.18);
-    border-left: 5px solid #0284c7;
-  }
-  .slot-card.disabled { opacity: 0.5; cursor: not-allowed; background: #f1f5f9; }
-
-  .slot-info { display: flex; flex-direction: column; gap: 2px; }
-  .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
-  .slot-time { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-
-  .badge-status {
-    font-size: 0.68rem;
-    font-weight: 800;
-    padding: 3px 8px;
-    border-radius: 12px;
-  }
-  .badge-ok { background: #dcfce7; color: #15803d; }
-  .badge-warn { background: #fef3c7; color: #b45309; }
-  .badge-full { background: #fee2e2; color: #b91c1c; }
-
-  .selector-grid { display: flex; gap: 6px; }
-  .btn-select {
-    flex: 1;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    color: #475569;
-    padding: 9px 0;
-    border-radius: 6px;
-    font-size: 0.88rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
 
   .names-container {
     display: flex;
@@ -934,90 +371,47 @@ const TIME_SLOTS = [
     border-radius: 6px;
     white-space: nowrap;
   }
-  .code-input {
-    width: 100%;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    color: #1e293b;
-    padding: 8px 12px;
-    font-family: inherit;
-    font-size: 0.85rem;
-  }
-  .code-input:focus {
-    outline: none;
-    border-color: #0284c7;
-    background: #ffffff;
-  }
 
-  .checkbox-container {
+  .screenshot-alert {
+    background: #fef2f2;
+    border: 2px solid #fca5a5;
+    border-radius: 10px;
+    padding: 12px;
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #f0fdf4;
-    border: 1px dashed #86efac;
-    padding: 10px 12px;
-    border-radius: 8px;
-    cursor: pointer;
+    margin-bottom: 16px;
   }
-  .checkbox-container input { display: none; }
-  .checkbox-custom { width: 18px; height: 18px; border: 2px solid #16a34a; border-radius: 4px; display: inline-block; position: relative; background: #ffffff; }
-  .checkbox-container input:checked + .checkbox-custom { background: #16a34a; }
-  .checkbox-container input:checked + .checkbox-custom::after { content: "✓"; position: absolute; top: -3px; left: 3px; font-size: 13px; color: #ffffff; font-weight: 900; }
-  .checkbox-text-group { display: flex; flex-direction: column; }
-  .checkbox-title { font-size: 0.82rem; font-weight: 800; color: #166534; }
-  .checkbox-desc { font-size: 0.7rem; color: #15803d; }
-
-  .code-textarea {
-    width: 100%;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 10px;
+  .screenshot-alert p {
+    margin: 0;
     font-size: 0.82rem;
-    resize: none;
+    color: #991b1b;
+    line-height: 1.4;
   }
-  .code-textarea:focus { outline: none; border-color: #0284c7; background: #ffffff; }
+  .alert-icon { font-size: 1.5rem; }
 
-  .turnstile-container { margin: 14px 0; min-height: 65px; display: flex; justify-content: center; }
-
-  .terminal-btn {
-    width: 100%;
-    background: #0284c7;
-    border: none;
-    color: #ffffff;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 800;
-    cursor: pointer;
+  .qr-container {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 8px;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+    margin: 14px 0;
   }
-  .terminal-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+  .qr-container img {
+    width: 160px;
+    height: 160px;
+    border: 4px solid #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 8px;
+  }
 
-  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
-  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 6px #16a34a; }
-  .result-title { font-size: 0.78rem; color: #64748b; margin: 0; font-weight: 700; }
-  .ticket-display { padding: 12px 0 16px; text-align: center; }
-  .ticket-num { font-size: clamp(2.4rem, 10vw, 3.4rem); font-weight: 900; color: #0284c7; }
-
-  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; }
-  .meta-row { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
-  .meta-key { color: #64748b; font-weight: 600; }
-  .meta-val { color: #0f172a; font-weight: 800; }
-
-  .live-clock-card { background: #f1f5f9; border-radius: 6px; padding: 8px; margin-bottom: 14px; text-align: center; }
-  .clock-label { font-size: 0.6rem; color: #64748b; display: block; margin-bottom: 2px; font-weight: 700; }
-  .clock-display { font-size: 1.15rem; font-weight: 800; color: #d97706; }
-  .console-footer p { font-size: 0.72rem; color: #64748b; margin: 0; text-align: center; }
-
-  .loader-terminal { padding: 40px 0; text-align: center; }
-  .cursor-line { font-size: 0.95rem; color: #0284c7; font-weight: 800; }
-  .blink { animation: blinkAnim 1s infinite; }
-  @keyframes blinkAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  .status-console { font-size: 0.75rem; color: #64748b; margin-top: 8px; font-weight: 600; }
+  .remind-info-card {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 12px;
+  }
 </style>
