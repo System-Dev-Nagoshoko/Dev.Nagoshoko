@@ -28,6 +28,7 @@ const TIME_SLOTS = [
           <span class="mode-tag" id="mode-badge">CONNECTING...</span>
         </div>
 
+        <!-- ① 入力フォーム -->
         <div id="status-unissued" class="editor-body">
           <!-- STEP 1: ご来場タイプの選択 -->
           <div class="field-block">
@@ -139,26 +140,33 @@ const TIME_SLOTS = [
           </button>
         </div>
 
-        <!-- 完了画面 -->
+        <!-- ② 完了画面（整理券番号 ＆ バーコード セット表示） -->
         <div id="status-issued" class="editor-body" style="display: none;">
           <div class="terminal-success-badge">
             <span class="pulse-dot"></span> RESERVATION CONFIRMED
           </div>
 
-          <div class="screenshot-alert">
-            <span class="alert-icon">📱</span>
-            <p><strong>【重要】受付時に提示します</strong><br>この画面（QRコード）を<strong>スクリーンショットで保存</strong>しておいてください。</p>
-          </div>
-
-          <div class="ticket-display">
-            <div class="num-wrapper">
+          <!-- 🎫 整理券 ＆ バーコード 表示カード -->
+          <div class="ticket-card-display">
+            <span class="ticket-card-label">受付提示用 整理券</span>
+            <div class="ticket-number-box">
+              <span class="num-prefix">No.</span>
               <span id="ticket-number" class="ticket-num">--</span>
             </div>
-            <div class="qr-container">
-              <img id="qr-code-img" src="" alt="受付用QRコード" />
+
+            <div class="barcode-box">
+              <img id="barcode-img" src="" alt="受付照合用バーコード" />
+              <span class="barcode-caption">※受付でこのバーコードを提示（またはスキャン）</span>
             </div>
           </div>
 
+          <!-- スクショ推奨アラート -->
+          <div class="screenshot-alert">
+            <span class="alert-icon">📱</span>
+            <p><strong>【スクリーンショット保存のお願い】</strong><br>会場での通信混雑に備え、この画面（整理券番号・バーコード）を<strong>写真保存（スクショ）</strong>してお越しください。</p>
+          </div>
+
+          <!-- 予約詳細メタ情報 -->
           <div class="ticket-meta-box">
             <div class="meta-row">
               <span class="meta-key">来場タイプ:</span>
@@ -182,8 +190,13 @@ const TIME_SLOTS = [
             </div>
           </div>
 
+          <!-- LINEリマインド案内 -->
           <div class="remind-info-card">
-            <span>⏰ 体験開始の5分前にLINEへリマインド通知をお送りします。</span>
+            <span class="remind-icon">💬</span>
+            <div class="remind-text">
+              <strong>LINE自動リマインド設定完了</strong>
+              <p>体験開始の<strong>5分前</strong>にLINEへ呼び出し通知が送信されます。</p>
+            </div>
           </div>
         </div>
       </div>
@@ -282,12 +295,15 @@ const TIME_SLOTS = [
       .filter(v => v !== "")
       .join(", ");
 
-    const ticketNo = "No." + Math.floor(100 + Math.random() * 900);
-    const qrData = `SHOKO:${ticketNo}:${selectedVisitorType}:${encodeURIComponent(parentName || "一般")}`;
-    const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}`;
+    const numVal = Math.floor(100 + Math.random() * 900);
+    const ticketNo = `${numVal}`;
+    
+    // CODE128 形式のバーコード画像を生成（bwip-js API経由）
+    const barcodeText = `SHOKO-${ticketNo}`;
+    const barcodeImgUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(barcodeText)}&scale=3&rotate=N&includetext=1&textsize=10`;
 
     document.getElementById("ticket-number").innerText = ticketNo;
-    document.getElementById("qr-code-img").src = qrImgUrl;
+    document.getElementById("barcode-img").src = barcodeImgUrl;
     document.getElementById("res-type").innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
     
     const parentRow = document.getElementById("res-parent-row");
@@ -499,17 +515,75 @@ const TIME_SLOTS = [
   .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
 
-  .screenshot-alert { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .screenshot-alert p { margin: 0; font-size: 0.82rem; color: #991b1b; line-height: 1.4; }
-  .alert-icon { font-size: 1.5rem; }
+  /* 🎫 整理券 ＆ バーコード カードデザイン */
+  .ticket-card-display {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-radius: 12px;
+    padding: 20px 14px;
+    color: #ffffff;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(2, 132, 199, 0.25);
+    margin-bottom: 16px;
+  }
+  .ticket-card-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    text-transform: uppercase;
+  }
+  .ticket-number-box {
+    margin: 6px 0 12px;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .num-prefix { font-size: 1.4rem; font-weight: 800; opacity: 0.9; }
+  .ticket-num { font-size: 3.2rem; font-weight: 900; line-height: 1; letter-spacing: 2px; }
 
-  .qr-container { display: flex; justify-content: center; margin: 14px 0; }
-  .qr-container img { width: 160px; height: 160px; border: 4px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; }
+  .barcode-box {
+    background: #ffffff;
+    padding: 14px 10px 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  .barcode-box img {
+    max-width: 100%;
+    height: 70px;
+    object-fit: contain;
+    display: block;
+  }
+  .barcode-caption {
+    font-size: 0.68rem;
+    color: #475569;
+    font-weight: 800;
+    margin-top: 6px;
+  }
+
+  .screenshot-alert { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .screenshot-alert p { margin: 0; font-size: 0.8rem; color: #991b1b; line-height: 1.4; }
+  .alert-icon { font-size: 1.4rem; }
 
   .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
   .meta-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
   .meta-key { color: #64748b; font-weight: 600; }
   .meta-val { color: #0f172a; font-weight: 800; }
 
-  .remind-info-card { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 10px; border-radius: 8px; font-size: 0.78rem; text-align: center; font-weight: bold; }
+  .remind-info-card {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .remind-icon { font-size: 1.4rem; }
+  .remind-text strong { display: block; font-size: 0.82rem; color: #14532d; }
+  .remind-text p { margin: 2px 0 0; font-size: 0.75rem; color: #166534; }
 </style>
