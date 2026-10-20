@@ -30,7 +30,7 @@
 
 ## 🛠 技術構成
 
-- HTML / CSS / TypeScript
+- Astro
 
 - GitHub Pages （予定）
 
