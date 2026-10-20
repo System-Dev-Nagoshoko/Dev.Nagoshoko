@@ -14,6 +14,9 @@ const TIME_SLOTS = [
 ---
 
 <Layout title="プログラミング体験会 整理券予約 | 第7回商工祭">
+  <!-- LINE LIFF SDK の読み込み -->
+  <script is:inline src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
   <div class="bright-code-portal">
     <header class="terminal-header">
       <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
@@ -203,6 +206,7 @@ const TIME_SLOTS = [
   let selectedDate = "2026-10-30";
   let selectedSlotId = "slot_1";
   let currentParticipantCount = 1;
+  let lineIdToken = null;
 
   const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
   const dateBtns = document.querySelectorAll("#date-selector .btn-date");
@@ -219,12 +223,31 @@ const TIME_SLOTS = [
   const modeBadge = document.getElementById("mode-badge");
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
+
+  // モードバッジ設定 ＆ LIFF 初期化
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
     modeBadge.style.color = "#b45309";
-  } else if (modeBadge) {
-    modeBadge.textContent = "ONLINE";
+  } else {
+    if (modeBadge) modeBadge.textContent = "ONLINE";
+    
+    // LIFF SDK 初期化 (本番環境時)
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (window.liff) {
+        try {
+          // ※ LINE Developers で発行された LIFF ID を環境に合わせてセットしてください
+          await liff.init({ liffId: "YOUR_LIFF_ID" });
+          if (liff.isLoggedIn()) {
+            lineIdToken = liff.getIDToken();
+          } else {
+            liff.login();
+          }
+        } catch (err) {
+          console.error("LIFF Init Error:", err);
+        }
+      }
+    });
   }
 
   visitorTypeBtns.forEach(btn => {
@@ -400,6 +423,7 @@ const TIME_SLOTS = [
     issueBtn.disabled = true;
     if (btnTitleText) btnTitleText.textContent = "整理券を発行中...";
 
+    // ★ モックモード(isDevMode)の場合は mockUserId、それ以外は idToken を設定[cite: 6]
     const payload = {
       date: selectedDate,
       slotId: selectedSlotId,
@@ -407,7 +431,7 @@ const TIME_SLOTS = [
       headcount: currentParticipantCount,
       parentName: parentName,
       participantNames: participantNamesText,
-      ...(isDevMode ? { mockUserId: "web_dev_user_001" } : {})
+      ...(isDevMode ? { mockUserId: "web_dev_user_001" } : { idToken: lineIdToken })
     };
 
     try {
@@ -420,7 +444,6 @@ const TIME_SLOTS = [
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // ★ APIから返ってきた正確なチケット番号を直接使用
         const ticketNo = String(data.ticketNumber);
         const barcodeText = `SHOKO-${ticketNo}`;
 
