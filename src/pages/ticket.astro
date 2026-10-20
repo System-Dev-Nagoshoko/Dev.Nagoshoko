@@ -14,9 +14,6 @@ const TIME_SLOTS = [
 ---
 
 <Layout title="プログラミング体験会 整理券予約 | 第7回商工祭">
-  <!-- LINE LIFF SDK の読み込み -->
-  <script is:inline src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
   <div class="bright-code-portal">
     <header class="terminal-header">
       <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
@@ -224,7 +221,7 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // モードバッジ設定 ＆ LIFF 初期化
+  // モードバッジ設定 ＆ 動的 LIFF 初期化
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
@@ -232,21 +229,25 @@ const TIME_SLOTS = [
   } else {
     if (modeBadge) modeBadge.textContent = "ONLINE";
     
-    // LIFF SDK 初期化 (本番環境時)
-    window.addEventListener("DOMContentLoaded", async () => {
-      if (window.liff) {
-        try {
-          // ※ LINE Developers で発行された LIFF ID を環境に合わせてセットしてください
-          await liff.init({ liffId: "YOUR_LIFF_ID" });
-          if (liff.isLoggedIn()) {
-            lineIdToken = liff.getIDToken();
-          } else {
-            liff.login();
+    // 本番（LINE内アクセス）の場合のみ動的にスクリプトタグを注入しSSLエラーを防止
+    window.addEventListener("DOMContentLoaded", () => {
+      const script = document.createElement("script");
+      script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      script.onload = async () => {
+        if (window.liff) {
+          try {
+            await liff.init({ liffId: "YOUR_LIFF_ID" });
+            if (liff.isLoggedIn()) {
+              lineIdToken = liff.getIDToken();
+            } else {
+              liff.login();
+            }
+          } catch (err) {
+            console.error("LIFF Init Error:", err);
           }
-        } catch (err) {
-          console.error("LIFF Init Error:", err);
         }
-      }
+      };
+      document.head.appendChild(script);
     });
   }
 
@@ -338,6 +339,7 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
+  // SVGエラーを修正した Code128-B レンダラー
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -387,8 +389,7 @@ const TIME_SLOTS = [
     const totalHeight = height + 35;
 
     svgEl.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
-    svgEl.setAttribute("width", "100%");
-    svgEl.setAttribute("height", "auto");
+    svgEl.removeAttribute("height");
     svgEl.innerHTML = `${rects}<text x="${totalWidth / 2}" y="${height + 25}" font-size="14" font-weight="bold" font-family="monospace" text-anchor="middle" fill="#000">${text}</text>`;
   }
 
@@ -423,7 +424,6 @@ const TIME_SLOTS = [
     issueBtn.disabled = true;
     if (btnTitleText) btnTitleText.textContent = "整理券を発行中...";
 
-    // ★ モックモード(isDevMode)の場合は mockUserId、それ以外は idToken を設定[cite: 6]
     const payload = {
       date: selectedDate,
       slotId: selectedSlotId,
@@ -621,7 +621,7 @@ const TIME_SLOTS = [
     transition: all 0.15s ease;
     text-align: center;
   }
-  .btn-date.active { background: #e0f2fe; border-color: #0284c7; }
+  .btn-date.active { background: #e0f2fe; border-color: #0369a1; }
   .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
 
   .slot-list { display: flex; flex-direction: column; gap: 8px; }
