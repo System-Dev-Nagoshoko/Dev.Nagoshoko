@@ -71,7 +71,7 @@ const TIME_SLOTS = [
                     <span class="slot-time">{s.time}</span>
                   </div>
                   <div class="slot-status">
-                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中</span>
+                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>確認中...</span>
                   </div>
                 </div>
               ))}
@@ -221,7 +221,7 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // モードバッジ設定 ＆ 動的 LIFF 初期化
+  // モード設定 ＆ 初期データ取得
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
@@ -229,7 +229,6 @@ const TIME_SLOTS = [
   } else {
     if (modeBadge) modeBadge.textContent = "ONLINE";
     
-    // 本番（LINE内アクセス）の場合のみ動的にスクリプトタグを注入しSSLエラーを防止
     window.addEventListener("DOMContentLoaded", () => {
       const script = document.createElement("script");
       script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
@@ -250,6 +249,38 @@ const TIME_SLOTS = [
       document.head.appendChild(script);
     });
   }
+
+  // 残り枠数を API から取得して画面に反映
+  async function fetchSlotAvailability(date) {
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${date}`);
+      const data = await res.json();
+
+      if (res.ok && data.success && data.slots) {
+        data.slots.forEach(s => {
+          const badgeEl = document.getElementById(`badge-${s.slotId}`);
+          const cardEl = document.querySelector(`.slot-card[data-slot-id="${s.slotId}"]`);
+
+          if (badgeEl) {
+            if (s.isFull) {
+              badgeEl.textContent = "満席";
+              badgeEl.className = "badge-status badge-full";
+              if (cardEl) cardEl.classList.add("disabled");
+            } else {
+              badgeEl.textContent = `受付中 (残${s.remaining}/${s.capacity}枠)`;
+              badgeEl.className = "badge-status badge-ok";
+              if (cardEl) cardEl.classList.remove("disabled");
+            }
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch slots:", e);
+    }
+  }
+
+  // 初期読み込み
+  fetchSlotAvailability(selectedDate);
 
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -273,11 +304,13 @@ const TIME_SLOTS = [
       dateBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       selectedDate = btn.dataset.date || "2026-10-30";
+      fetchSlotAvailability(selectedDate);
     });
   });
 
   slotCards.forEach(card => {
     card.addEventListener("click", () => {
+      if (card.classList.contains("disabled")) return;
       slotCards.forEach(c => c.classList.remove("active"));
       card.classList.add("active");
       selectedSlotId = card.dataset.slotId || "slot_1";
@@ -339,7 +372,6 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
-  // SVGエラーを修正した Code128-B レンダラー
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -636,6 +668,7 @@ const TIME_SLOTS = [
     cursor: pointer;
   }
   .slot-card.active { background: #ffffff; border-color: #0284c7; border-left: 5px solid #0284c7; }
+  .slot-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
   .slot-info { display: flex; flex-direction: column; gap: 2px; }
   .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
@@ -643,6 +676,7 @@ const TIME_SLOTS = [
 
   .badge-status { font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
   .badge-ok { background: #dcfce7; color: #15803d; }
+  .badge-full { background: #fee2e2; color: #b91c1c; }
 
   .code-input {
     width: 100%;
