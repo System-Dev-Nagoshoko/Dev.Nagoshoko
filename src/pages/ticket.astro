@@ -30,7 +30,6 @@ const TIME_SLOTS = [
 
         <!-- ① 入力フォーム -->
         <div id="status-unissued" class="editor-body">
-          <!-- STEP 1: ご来場タイプの選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">1</span>
@@ -43,7 +42,6 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 2: 日付選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">2</span>
@@ -59,7 +57,6 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 3: 時間枠選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">3</span>
@@ -74,14 +71,13 @@ const TIME_SLOTS = [
                     <span class="slot-time">{s.time}</span>
                   </div>
                   <div class="slot-status">
-                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中 (残15/15枠)</span>
+                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>受付中</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <!-- STEP 4: 保護者様お名前入力欄 -->
           <div class="field-block" id="parent-name-block">
             <div class="field-header">
               <span class="step-num">4</span>
@@ -97,7 +93,6 @@ const TIME_SLOTS = [
             />
           </div>
 
-          <!-- STEP 5: 体験人数の選択 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">5</span>
@@ -120,7 +115,6 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- STEP 6: 体験する方のお名前入力欄 -->
           <div class="field-block">
             <div class="field-header">
               <span class="step-num">6</span>
@@ -135,18 +129,19 @@ const TIME_SLOTS = [
             </div>
           </div>
 
+          <p id="issue-error-msg" class="error-message" style="display: none;"></p>
+
           <button id="btn-issue" class="terminal-btn">
             <span id="btn-title-text" class="btn-title">LINEで整理券を発行する</span>
           </button>
         </div>
 
-        <!-- ② 完了画面（整理券番号 ＆ バーコード セット表示） -->
+        <!-- ② 完了画面 -->
         <div id="status-issued" class="editor-body" style="display: none;">
           <div class="terminal-success-badge">
             <span class="pulse-dot"></span> RESERVATION CONFIRMED
           </div>
 
-          <!-- 🎫 整理券 ＆ バーコード 表示カード -->
           <div class="ticket-card-display">
             <span class="ticket-card-label">受付提示用 整理券</span>
             <div class="ticket-number-box">
@@ -160,13 +155,11 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- スクショ推奨アラート -->
           <div class="screenshot-alert">
             <span class="alert-icon">📱</span>
             <p><strong>【スクリーンショット保存のお願い】</strong><br>会場での通信混雑に備え、この画面（整理券番号・バーコード）を<strong>写真保存（スクショ）</strong>してお越しください。</p>
           </div>
 
-          <!-- 予約詳細メタ情報 -->
           <div class="ticket-meta-box">
             <div class="meta-row">
               <span class="meta-key">来場タイプ:</span>
@@ -190,7 +183,6 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- LINEリマインド案内 -->
           <div class="remind-info-card">
             <span class="remind-icon">💬</span>
             <div class="remind-text">
@@ -205,18 +197,35 @@ const TIME_SLOTS = [
 </Layout>
 
 <script is:inline>
+  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
+
   let selectedVisitorType = "family";
   let selectedDate = "2026-10-30";
   let selectedSlotId = "slot_1";
   let currentParticipantCount = 1;
 
   const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
+  const dateBtns = document.querySelectorAll("#date-selector .btn-date");
+  const slotCards = document.querySelectorAll("#slot-selector .slot-card");
   const parentNameBlock = document.getElementById("parent-name-block");
   const parentNameInput = document.getElementById("parent-name-input");
   
   const countBtns = document.querySelectorAll("#participant-count-selector .btn-select");
   const customCountWrapper = document.getElementById("custom-count-wrapper");
   const customCountInput = document.getElementById("custom-count-input");
+  const issueBtn = document.getElementById("btn-issue");
+  const btnTitleText = document.getElementById("btn-title-text");
+  const errorMsgEl = document.getElementById("issue-error-msg");
+  const modeBadge = document.getElementById("mode-badge");
+
+  const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
+  if (isDevMode && modeBadge) {
+    modeBadge.textContent = "DEV MOCK MODE";
+    modeBadge.style.background = "#fef3c7";
+    modeBadge.style.color = "#b45309";
+  } else if (modeBadge) {
+    modeBadge.textContent = "ONLINE";
+  }
 
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -232,6 +241,22 @@ const TIME_SLOTS = [
           if (parentNameInput) parentNameInput.value = "";
         }
       }
+    });
+  });
+
+  dateBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      dateBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedDate = btn.dataset.date || "2026-10-30";
+    });
+  });
+
+  slotCards.forEach(card => {
+    card.addEventListener("click", () => {
+      slotCards.forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      selectedSlotId = card.dataset.slotId || "slot_1";
     });
   });
 
@@ -290,7 +315,6 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
-  // 外部パッケージ非依存の Pure JS Code128-B SVG生成エンジン
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -345,55 +369,108 @@ const TIME_SLOTS = [
     svgEl.innerHTML = `${rects}<text x="${totalWidth / 2}" y="${height + 25}" font-size="14" font-weight="bold" font-family="monospace" text-anchor="middle" fill="#000">${text}</text>`;
   }
 
-  document.getElementById("btn-issue")?.addEventListener("click", async () => {
+  function showError(msg) {
+    if (errorMsgEl) {
+      errorMsgEl.textContent = msg;
+      errorMsgEl.style.display = "block";
+    }
+  }
+
+  function hideError() {
+    if (errorMsgEl) {
+      errorMsgEl.style.display = "none";
+    }
+  }
+
+  issueBtn?.addEventListener("click", async () => {
+    hideError();
+
     const parentName = parentNameInput?.value.trim() || "";
+    if (selectedVisitorType === "family" && !parentName) {
+      showError("保護者様のお名前を入力してください");
+      return;
+    }
+
     const nameInputs = document.querySelectorAll(".participant-name-input");
     const participantNamesText = Array.from(nameInputs)
       .map(input => input.value.trim())
       .filter(v => v !== "")
       .join(", ");
 
-    const numVal = Math.floor(100 + Math.random() * 900);
-    const ticketNo = `${numVal}`;
-    const barcodeText = `SHOKO-${ticketNo}`;
+    issueBtn.disabled = true;
+    if (btnTitleText) btnTitleText.textContent = "整理券を発行中...";
 
-    const numEl = document.getElementById("ticket-number");
-    if (numEl) numEl.innerText = ticketNo;
+    const payload = {
+      date: selectedDate,
+      slotId: selectedSlotId,
+      visitorType: selectedVisitorType,
+      headcount: currentParticipantCount,
+      parentName: parentName,
+      participantNames: participantNamesText,
+      ...(isDevMode ? { mockUserId: "web_dev_user_001" } : {})
+    };
 
-    const svgEl = document.getElementById("barcode-svg");
-    if (svgEl) renderCode128SVG(svgEl, barcodeText);
+    try {
+      const res = await fetch(`${BACKEND_ENDPOINT}/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-    const resTypeEl = document.getElementById("res-type");
-    if (resTypeEl) resTypeEl.innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
-    
-    const parentRow = document.getElementById("res-parent-row");
-    const parentNameValEl = document.getElementById("res-parent-name");
-    if (selectedVisitorType === "family" && parentName) {
-      if (parentRow) parentRow.style.display = "flex";
-      if (parentNameValEl) parentNameValEl.innerText = parentName;
-    } else {
-      if (parentRow) parentRow.style.display = "none";
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // ★ APIから返ってきた正確なチケット番号を直接使用
+        const ticketNo = String(data.ticketNumber);
+        const barcodeText = `SHOKO-${ticketNo}`;
+
+        const numEl = document.getElementById("ticket-number");
+        if (numEl) numEl.innerText = ticketNo;
+
+        const svgEl = document.getElementById("barcode-svg");
+        if (svgEl) renderCode128SVG(svgEl, barcodeText);
+
+        const resTypeEl = document.getElementById("res-type");
+        if (resTypeEl) resTypeEl.innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
+        
+        const parentRow = document.getElementById("res-parent-row");
+        const parentNameValEl = document.getElementById("res-parent-name");
+        if (selectedVisitorType === "family" && parentName) {
+          if (parentRow) parentRow.style.display = "flex";
+          if (parentNameValEl) parentNameValEl.innerText = parentName;
+        } else {
+          if (parentRow) parentRow.style.display = "none";
+        }
+
+        const dtEl = document.getElementById("res-datetime");
+        if (dtEl) dtEl.innerText = `${selectedDate} / ${selectedSlotId}`;
+
+        const countEl = document.getElementById("res-count");
+        if (countEl) countEl.innerText = `${currentParticipantCount}名`;
+
+        const namesRow = document.getElementById("res-names-row");
+        const namesValEl = document.getElementById("res-participant-names");
+        if (participantNamesText) {
+          if (namesRow) namesRow.style.display = "flex";
+          if (namesValEl) namesValEl.innerText = participantNamesText;
+        } else {
+          if (namesRow) namesRow.style.display = "none";
+        }
+
+        const unissuedEl = document.getElementById("status-unissued");
+        const issuedEl = document.getElementById("status-issued");
+        if (unissuedEl) unissuedEl.style.display = "none";
+        if (issuedEl) issuedEl.style.display = "block";
+      } else {
+        showError(data.message || "整理券の発行に失敗しました");
+      }
+    } catch (e) {
+      console.error(e);
+      showError("通信エラーが発生しました。インターネット接続を確認してください。");
+    } finally {
+      issueBtn.disabled = false;
+      if (btnTitleText) btnTitleText.textContent = "LINEで整理券を発行する";
     }
-
-    const dtEl = document.getElementById("res-datetime");
-    if (dtEl) dtEl.innerText = `${selectedDate} / ${selectedSlotId}`;
-
-    const countEl = document.getElementById("res-count");
-    if (countEl) countEl.innerText = `${currentParticipantCount}名`;
-
-    const namesRow = document.getElementById("res-names-row");
-    const namesValEl = document.getElementById("res-participant-names");
-    if (participantNamesText) {
-      if (namesRow) namesRow.style.display = "flex";
-      if (namesValEl) namesValEl.innerText = participantNamesText;
-    } else {
-      if (namesRow) namesRow.style.display = "none";
-    }
-
-    const unissuedEl = document.getElementById("status-unissued");
-    const issuedEl = document.getElementById("status-issued");
-    if (unissuedEl) unissuedEl.style.display = "none";
-    if (issuedEl) issuedEl.style.display = "block";
   });
 </script>
 
@@ -565,6 +642,18 @@ const TIME_SLOTS = [
   .name-input-wrapper { display: flex; align-items: center; gap: 8px; }
   .name-index { font-size: 0.75rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
 
+  .error-message {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    text-align: center;
+  }
+
   .terminal-btn {
     width: 100%;
     background: #0284c7;
@@ -578,11 +667,15 @@ const TIME_SLOTS = [
     margin-top: 10px;
     box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
   }
+  .terminal-btn:disabled {
+    background: #94a3b8;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
 
   .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
 
-  /* 🎫 整理券 ＆ バーコード カードデザイン */
   .ticket-card-display {
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     border-radius: 12px;
