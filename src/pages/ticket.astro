@@ -198,7 +198,7 @@ const TIME_SLOTS = [
 
 <script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
-  // ★ LINE Developers の LIFF アプリから発行された LIFF ID を設定してください
+  // ★ LINE Developers で取得した LIFF ID を設定してください
   const MY_LIFF_ID = "YOUR_LIFF_ID";
 
   let selectedVisitorType = "family";
@@ -206,6 +206,7 @@ const TIME_SLOTS = [
   let selectedSlotId = "slot_1";
   let currentParticipantCount = 1;
   let lineIdToken = null;
+  let isLiffReady = false;
 
   const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
   const dateBtns = document.querySelectorAll("#date-selector .btn-date");
@@ -223,34 +224,46 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
+  // モード判定 & LIFF SDK の動的・安全読み込み
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
     modeBadge.style.color = "#b45309";
+    isLiffReady = true;
   } else {
     if (modeBadge) modeBadge.textContent = "ONLINE";
     
     window.addEventListener("DOMContentLoaded", () => {
       const script = document.createElement("script");
       script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      
       script.onload = async () => {
         if (window.liff) {
           try {
             await liff.init({ liffId: MY_LIFF_ID });
             if (liff.isLoggedIn()) {
               lineIdToken = liff.getIDToken();
+              isLiffReady = true;
             } else {
               liff.login();
             }
           } catch (err) {
             console.error("LIFF Init Error:", err);
+            showError("LINEログインの初期化に失敗しました。LINEアプリ内から開き直してください。");
           }
         }
       };
+
+      script.onerror = () => {
+        console.error("LIFF SDK Load Error (ERR_CERT_AUTHORITY_INVALID)");
+        showError("LINE通信ライブラリの読み込みに失敗しました。URL末尾に ?dev=true を付けてお試しください。");
+      };
+
       document.head.appendChild(script);
     });
   }
 
+  // 枠情報の取得
   async function fetchSlotAvailability(date) {
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${date}`);
@@ -281,6 +294,7 @@ const TIME_SLOTS = [
 
   fetchSlotAvailability(selectedDate);
 
+  // イベントハンドラ等
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       visitorTypeBtns.forEach(b => b.classList.remove("active"));
@@ -371,7 +385,7 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
-  // 元のサイズ規格（height=50, x=10）に戻した Code128-B SVG描画関数
+  // Code128-B SVG生成関数（元のサイズ指定）
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -438,8 +452,18 @@ const TIME_SLOTS = [
     }
   }
 
+  // 発行処理
   issueBtn?.addEventListener("click", async () => {
     hideError();
+
+    if (!isDevMode && (!isLiffReady || !lineIdToken)) {
+      if (window.liff && !liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      showError("LINEログイン情報の取得中です。数秒待ってから再試行するか、LINEアプリ内で開いてください。");
+      return;
+    }
 
     const parentName = parentNameInput?.value.trim() || "";
     if (selectedVisitorType === "family" && !parentName) {
