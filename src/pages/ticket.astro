@@ -198,6 +198,8 @@ const TIME_SLOTS = [
 
 <script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
+  // ★ LINE Developers の LIFF アプリから発行された LIFF ID を設定してください
+  const MY_LIFF_ID = "YOUR_LIFF_ID";
 
   let selectedVisitorType = "family";
   let selectedDate = "2026-10-30";
@@ -221,7 +223,6 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // モード設定 ＆ 初期データ取得
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
@@ -235,7 +236,7 @@ const TIME_SLOTS = [
       script.onload = async () => {
         if (window.liff) {
           try {
-            await liff.init({ liffId: "YOUR_LIFF_ID" });
+            await liff.init({ liffId: MY_LIFF_ID });
             if (liff.isLoggedIn()) {
               lineIdToken = liff.getIDToken();
             } else {
@@ -250,7 +251,6 @@ const TIME_SLOTS = [
     });
   }
 
-  // 残り枠数を API から取得して画面に反映
   async function fetchSlotAvailability(date) {
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${date}`);
@@ -279,7 +279,6 @@ const TIME_SLOTS = [
     }
   }
 
-  // 初期読み込み
   fetchSlotAvailability(selectedDate);
 
   visitorTypeBtns.forEach(btn => {
@@ -372,6 +371,7 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
+  // 元のサイズ規格（height=50, x=10）に戻した Code128-B SVG描画関数
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
