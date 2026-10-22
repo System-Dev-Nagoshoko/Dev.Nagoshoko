@@ -224,7 +224,8 @@ import Layout from '../../layouts/wbgt1/layouts/Layout.astro';
     const item = table[code] || ["曇り", "kumori"];
     const emojiEl = document.getElementById("emoji");
     if (emojiEl) {
-      emojiEl.innerHTML = "<img src='/wbgt/images/" + item[1] + ".png' alt='天気アイコン'>";
+      // 画像パスを「/images/」に完全統一
+      emojiEl.innerHTML = "<img src='/images/" + item[1] + ".png' alt='天気アイコン'>";
     }
     return item[0];
   }
