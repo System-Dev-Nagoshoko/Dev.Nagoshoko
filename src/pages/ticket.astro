@@ -198,8 +198,8 @@ const TIME_SLOTS = [
 
 <script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
-  // ★ LIFF ID を本番環境用に設定（環境変数の代用設定）
-  const MY_LIFF_ID = "2000000000-XXXXXXXX"; 
+  // ★ LINE Developers で取得した LIFF ID を設定してください
+  const MY_LIFF_ID = "YOUR_LIFF_ID";
 
   let selectedVisitorType = "family";
   let selectedDate = "2026-10-30";
@@ -224,6 +224,7 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
+  // モード判定 & LIFF SDK の動的・安全読み込み
   if (isDevMode && modeBadge) {
     modeBadge.textContent = "DEV MOCK MODE";
     modeBadge.style.background = "#fef3c7";
@@ -248,19 +249,21 @@ const TIME_SLOTS = [
             }
           } catch (err) {
             console.error("LIFF Init Error:", err);
-            showError("LINE認証の初期化に失敗しました。LINEアプリ内から開き直してください。");
+            showError("LINEログインの初期化に失敗しました。LINEアプリ内から開き直してください。");
           }
         }
       };
 
       script.onerror = () => {
-        showError("通信ライブラリの読み込みに失敗しました。?dev=true を付けて開発モードでお試しください。");
+        console.error("LIFF SDK Load Error (ERR_CERT_AUTHORITY_INVALID)");
+        showError("LINE通信ライブラリの読み込みに失敗しました。URL末尾に ?dev=true を付けてお試しください。");
       };
 
       document.head.appendChild(script);
     });
   }
 
+  // 枠情報の取得
   async function fetchSlotAvailability(date) {
     try {
       const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${date}`);
@@ -291,6 +294,7 @@ const TIME_SLOTS = [
 
   fetchSlotAvailability(selectedDate);
 
+  // イベントハンドラ等
   visitorTypeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       visitorTypeBtns.forEach(b => b.classList.remove("active"));
@@ -381,6 +385,7 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
+  // Code128-B SVG生成関数（元のサイズ指定）
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -447,6 +452,7 @@ const TIME_SLOTS = [
     }
   }
 
+  // 発行処理
   issueBtn?.addEventListener("click", async () => {
     hideError();
 
@@ -455,7 +461,7 @@ const TIME_SLOTS = [
         liff.login();
         return;
       }
-      showError("LINEログイン処理中です。数秒後に再試行してください。");
+      showError("LINEログイン情報の取得中です。数秒待ってから再試行するか、LINEアプリ内で開いてください。");
       return;
     }
 
@@ -539,7 +545,7 @@ const TIME_SLOTS = [
       }
     } catch (e) {
       console.error(e);
-      showError("通信エラーが発生しました。接続状況を確認してください。");
+      showError("通信エラーが発生しました。インターネット接続を確認してください。");
     } finally {
       issueBtn.disabled = false;
       if (btnTitleText) btnTitleText.textContent = "LINEで整理券を発行する";
