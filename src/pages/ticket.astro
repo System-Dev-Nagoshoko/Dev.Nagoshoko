@@ -132,9 +132,9 @@ const TIME_SLOTS = [
             </div>
           </div>
 
-          <!-- Turnstile ウィジェット（Cloudflare Turnstile サイトキーを設定） -->
+          <!-- Turnstile ウィジェット (正しいサイトキーを設定済み) -->
           <div id="turnstile-block" class="turnstile-wrapper">
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAAAxxxxxxxxxxxxxx"></div>
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAAE82keLXX6udcUpX"></div>
           </div>
 
           <p id="issue-error-msg" class="error-message" style="display: none;"></p>
@@ -253,7 +253,6 @@ const TIME_SLOTS = [
       modeBadge.style.color = "#b45309";
       isLiffReady = true;
 
-      // 开发モード時は Turnstile 非表示
       const turnstileBlock = document.getElementById("turnstile-block");
       if (turnstileBlock) turnstileBlock.style.display = "none";
     } else {
@@ -471,7 +470,6 @@ const TIME_SLOTS = [
       .filter(v => v !== "")
       .join(", ");
 
-    // Turnstile トークンの取得（本番用）
     const turnstileInput = document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement;
     const turnstileToken = turnstileInput ? turnstileInput.value : "";
 
@@ -485,7 +483,7 @@ const TIME_SLOTS = [
       headcount: currentParticipantCount,
       parentName: parentName,
       participantNames: participantNamesText,
-      turnstileToken: turnstileToken, // ★ 追加
+      turnstileToken: turnstileToken,
       ...(isDevMode ? { mockUserId: "web_dev_user_001" } : { idToken: lineIdToken })
     };
 
