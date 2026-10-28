@@ -1,828 +1,721 @@
----
-import Layout from '../layouts/Layout.astro';
+const ALLOWED_ORIGINS = new Set([
+  "https://shoko-guide.stki.org",
+  "http://localhost:4321",
+  "http://127.0.0.1:4321",
+]);
 
-const EVENT_DATES = [
-  { date: '2026-10-30', label: '10/30 (金)' },
-  { date: '2026-10-31', label: '10/31 (土)' },
-];
+// 枠あたりの定員数（15名）
+const MAX_SLOT_CAPACITY = 15;
 
-const TIME_SLOTS = [
-  { id: 'slot_1', name: '第一回', time: '10:00〜11:00' },
-  { id: 'slot_2', name: '第二回', time: '11:30〜12:30' },
-  { id: 'slot_3', name: '第三回', time: '13:00〜14:00' },
-];
----
+/* =========================================================
+ * ユーティリティ & セキュリティ
+ * ======================================================= */
 
-<Layout title="プログラミング体験会 整理券予約 | 第7回商工祭">
-  <!-- Turnstile SDK 読み込み -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+function timingSafeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 
-  <div class="bright-code-portal">
-    <header class="terminal-header">
-      <div class="header-badge">&lt;PROGRAMMING_BOOTH /&gt;</div>
-      <h1>日時指定 整理券予約</h1>
-      <p class="terminal-subtitle">SMART SCHEDULE // 個人情報は最小限</p>
-    </header>
+function normalizeOrigin(origin) {
+  if (!origin || typeof origin !== "string") return null;
+  return origin.trim().replace(/\/$/, "");
+}
 
-    <main class="portal-container">
-      <div class="editor-window">
-        <div class="window-titlebar">
-          <span class="tab-title">calendar_reservation.ts</span>
-          <span class="mode-tag" id="mode-badge">CONNECTING...</span>
-        </div>
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  const norm = normalizeOrigin(origin);
+  if (!norm) return false;
 
-        <!-- ① 入力フォーム -->
-        <div id="status-unissued" class="editor-body">
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">1</span>
-              <label class="field-label">ご来場タイプの選択</label>
-              <span class="code-tag">&lt;type /&gt;</span>
-            </div>
-            <div class="selector-grid" id="visitor-type-selector">
-              <button type="button" class="btn-select active" data-type="family">👨‍👩‍👧‍👦 ご家族連れ</button>
-              <button type="button" class="btn-select" data-type="general">👤 一般・個人</button>
-            </div>
-          </div>
+  // 1. 本番・ローカル固定ドメイン
+  if (ALLOWED_ORIGINS.has(norm)) return true;
 
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">2</span>
-              <label class="field-label">体験希望日の選択</label>
-              <span class="code-tag">&lt;date /&gt;</span>
-            </div>
-            <div class="date-grid" id="date-selector">
-              {EVENT_DATES.map((d, index) => (
-                <button type="button" class={`btn-date ${index === 0 ? 'active' : ''}`} data-date={d.date}>
-                  <span class="date-label">{d.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">3</span>
-              <label class="field-label">時間帯の選択 (1日3回)</label>
-              <span class="code-tag">&lt;timeslot /&gt;</span>
-            </div>
-            <div class="slot-list" id="slot-selector">
-              {TIME_SLOTS.map((s, index) => (
-                <div class={`slot-card ${index === 0 ? 'active' : ''}`} data-slot-id={s.id} data-slot-name={`${s.name} (${s.time})`}>
-                  <div class="slot-info">
-                    <span class="slot-title">{s.name}</span>
-                    <span class="slot-time">{s.time}</span>
-                  </div>
-                  <div class="slot-status">
-                    <span class="badge-status badge-ok" id={`badge-${s.id}`}>確認中...</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div class="field-block" id="parent-name-block">
-            <div class="field-header">
-              <span class="step-num">4</span>
-              <label class="field-label">保護者様のお名前</label>
-              <span class="code-tag">&lt;guardian /&gt;</span>
-            </div>
-            <input 
-              type="text" 
-              id="parent-name-input" 
-              class="code-input" 
-              placeholder="例: やまだ たろう（保護者様）" 
-              maxlength="30" 
-            />
-          </div>
-
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">5</span>
-              <label class="field-label">体験する方の人数</label>
-              <span class="code-tag">&lt;count /&gt;</span>
-            </div>
-            <div class="selector-grid" id="participant-count-selector">
-              <button type="button" class="btn-select active" data-count="1">1名</button>
-              <button type="button" class="btn-select" data-count="2">2名</button>
-              <button type="button" class="btn-select" data-count="3">3名</button>
-              <button type="button" class="btn-select" data-count="4">4名</button>
-              <button type="button" class="btn-select" data-count="custom">5名〜</button>
-            </div>
-            <div id="custom-count-wrapper" class="custom-input-box" style="display: none;">
-              <label for="custom-count-input">体験人数を入力してください：</label>
-              <div class="input-with-unit">
-                <input type="number" id="custom-count-input" class="code-input" min="5" max="15" value="5" />
-                <span class="unit">名</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="field-block">
-            <div class="field-header">
-              <span class="step-num">6</span>
-              <label class="field-label">体験する方のお名前 <span class="sub-label">（任意）</span></label>
-              <span class="code-tag">&lt;names /&gt;</span>
-            </div>
-            <div id="participant-names-container" class="names-container">
-              <div class="name-input-wrapper">
-                <span class="name-index">1人目</span>
-                <input type="text" class="participant-name-input code-input" placeholder="例: やまだ はなこ" maxlength="30" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Turnstile ウィジェット (正しいサイトキーを設定済み) -->
-          <div id="turnstile-block" class="turnstile-wrapper">
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAAAE82keLXX6udcUpX"></div>
-          </div>
-
-          <p id="issue-error-msg" class="error-message" style="display: none;"></p>
-
-          <button id="btn-issue" class="terminal-btn">
-            <span id="btn-title-text" class="btn-title">LINEで整理券を発行する</span>
-          </button>
-        </div>
-
-        <!-- ② 完了画面 -->
-        <div id="status-issued" class="editor-body" style="display: none;">
-          <div class="terminal-success-badge">
-            <span class="pulse-dot"></span> RESERVATION CONFIRMED
-          </div>
-
-          <div class="ticket-card-display">
-            <span class="ticket-card-label">受付提示用 整理券</span>
-            <div class="ticket-number-box">
-              <span class="num-prefix">No.</span>
-              <span id="ticket-number" class="ticket-num">--</span>
-            </div>
-
-            <div class="barcode-box">
-              <svg id="barcode-svg"></svg>
-              <span class="barcode-caption">※受付でこのバーコードを提示（またはスキャン）</span>
-            </div>
-          </div>
-
-          <div class="screenshot-alert">
-            <span class="alert-icon">📱</span>
-            <p><strong>【スクリーンショット保存のお願い】</strong><br>会場での通信混雑に備え、この画面（整理券番号・バーコード）を<strong>写真保存（スクショ）</strong>してお越しください。</p>
-          </div>
-
-          <div class="ticket-meta-box">
-            <div class="meta-row">
-              <span class="meta-key">来場タイプ:</span>
-              <span id="res-type" class="meta-val">ご家族連れ</span>
-            </div>
-            <div class="meta-row" id="res-parent-row">
-              <span class="meta-key">保護者様名:</span>
-              <span id="res-parent-name" class="meta-val">--</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-key">予約日時:</span>
-              <span id="res-datetime" class="meta-val">--</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-key">体験人数:</span>
-              <span id="res-count" class="meta-val">1名</span>
-            </div>
-            <div class="meta-row" id="res-names-row">
-              <span class="meta-key">体験する方:</span>
-              <span id="res-participant-names" class="meta-val">--</span>
-            </div>
-          </div>
-
-          <div class="remind-info-card">
-            <span class="remind-icon">💬</span>
-            <div class="remind-text">
-              <strong>LINE自動リマインド設定完了</strong>
-              <p>体験開始の<strong>5分前</strong>にLINEへ呼び出し通知が送信されます。</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</Layout>
-
-<script>
-  import liff from '@line/liff';
-
-  const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
-  const MY_LIFF_ID = "2011672035-MlQEQgzQ";
-
-  let selectedVisitorType = "family";
-  let selectedDate = "2026-10-30";
-  let selectedSlotId = "slot_1";
-  let currentParticipantCount = 1;
-  let lineIdToken = null;
-  let isLiffReady = false;
-
-  const visitorTypeBtns = document.querySelectorAll("#visitor-type-selector .btn-select");
-  const dateBtns = document.querySelectorAll("#date-selector .btn-date");
-  const slotCards = document.querySelectorAll("#slot-selector .slot-card");
-  const parentNameBlock = document.getElementById("parent-name-block");
-  const parentNameInput = document.getElementById("parent-name-input");
-  
-  const countBtns = document.querySelectorAll("#participant-count-selector .btn-select");
-  const customCountWrapper = document.getElementById("custom-count-wrapper");
-  const customCountInput = document.getElementById("custom-count-input");
-  const issueBtn = document.getElementById("btn-issue");
-  const btnTitleText = document.getElementById("btn-title-text");
-  const errorMsgEl = document.getElementById("issue-error-msg");
-  const modeBadge = document.getElementById("mode-badge");
-
-  const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
-
-  function showError(msg) {
-    if (errorMsgEl) {
-      errorMsgEl.textContent = msg;
-      errorMsgEl.style.display = "block";
-    }
+  // 2. StackBlitz / WebContainer / Localhost 開発ドメインを柔軟に許可
+  if (
+    norm.endsWith(".stackblitz.io") ||
+    norm.endsWith(".webcontainer-api.io") ||
+    norm.endsWith(".webcontainer.io") ||
+    norm.includes("localhost") ||
+    norm.includes("127.0.0.1")
+  ) {
+    return true;
   }
 
-  function hideError() {
-    if (errorMsgEl) {
-      errorMsgEl.style.display = "none";
-    }
+  return false;
+}
+
+function getCorsHeaders(origin) {
+  const norm = normalizeOrigin(origin);
+  const headers = {
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Key, X-Admin-User, X-POS-User, X-POS-Key",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+
+  if (norm && isAllowedOrigin(norm)) {
+    headers["Access-Control-Allow-Origin"] = norm;
+  } else {
+    headers["Access-Control-Allow-Origin"] = "*";
   }
 
-  async function initLiffApp() {
-    if (isDevMode && modeBadge) {
-      modeBadge.textContent = "DEV MOCK MODE";
-      modeBadge.style.background = "#fef3c7";
-      modeBadge.style.color = "#b45309";
-      isLiffReady = true;
+  return headers;
+}
 
-      const turnstileBlock = document.getElementById("turnstile-block");
-      if (turnstileBlock) turnstileBlock.style.display = "none";
-    } else {
-      if (modeBadge) modeBadge.textContent = "ONLINE";
-      try {
-        await liff.init({ liffId: MY_LIFF_ID });
-        if (liff.isLoggedIn()) {
-          lineIdToken = liff.getIDToken();
-          isLiffReady = true;
-        } else {
-          liff.login();
-        }
-      } catch (err) {
-        console.error("LIFF Init Error:", err);
-        showError("LINE連携の初期化に失敗しました。?dev=true でお試しください。");
-      }
-    }
-    fetchSlotAvailability(selectedDate);
-  }
-
-  async function fetchSlotAvailability(date) {
-    try {
-      const res = await fetch(`${BACKEND_ENDPOINT}/api/slots?date=${date}`);
-      const data = await res.json();
-
-      if (res.ok && data.success && data.slots) {
-        data.slots.forEach(s => {
-          const badgeEl = document.getElementById(`badge-${s.slotId}`);
-          const cardEl = document.querySelector(`.slot-card[data-slot-id="${s.slotId}"]`);
-
-          if (badgeEl) {
-            if (s.isFull) {
-              badgeEl.textContent = "満席";
-              badgeEl.className = "badge-status badge-full";
-              if (cardEl) cardEl.classList.add("disabled");
-            } else {
-              badgeEl.textContent = `受付中 (残${s.remaining}/${s.capacity}枠)`;
-              badgeEl.className = "badge-status badge-ok";
-              if (cardEl) cardEl.classList.remove("disabled");
-            }
-          }
-        });
-      }
-    } catch (e) {
-      console.error("Failed to fetch slots:", e);
-    }
-  }
-
-  initLiffApp();
-
-  visitorTypeBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      visitorTypeBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedVisitorType = btn.dataset.type || "family";
-
-      if (parentNameBlock) {
-        if (selectedVisitorType === "family") {
-          parentNameBlock.style.display = "block";
-        } else {
-          parentNameBlock.style.display = "none";
-          if (parentNameInput) parentNameInput.value = "";
-        }
-      }
-    });
+function jsonResponse(data, status = 200, origin = null, extraHeaders = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=UTF-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      ...getCorsHeaders(origin),
+      ...extraHeaders,
+    },
   });
+}
 
-  dateBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      dateBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedDate = btn.dataset.date || "2026-10-30";
-      fetchSlotAvailability(selectedDate);
-    });
+function errorResponse(message, status = 400, origin = null) {
+  return jsonResponse({ success: false, message, error: message }, status, origin);
+}
+
+function handleOptions(request, origin) {
+  const norm = normalizeOrigin(origin);
+  const requestedHeaders =
+    request.headers.get("Access-Control-Request-Headers") ||
+    "Content-Type, X-Admin-Key, X-Admin-User, X-POS-User, X-POS-Key";
+
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": norm && isAllowedOrigin(norm) ? norm : "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": requestedHeaders,
+      "Access-Control-Max-Age": "86400",
+      "Vary": "Origin",
+    },
   });
+}
 
-  slotCards.forEach(card => {
-    card.addEventListener("click", () => {
-      if (card.classList.contains("disabled")) return;
-      slotCards.forEach(c => c.classList.remove("active"));
-      card.classList.add("active");
-      selectedSlotId = card.dataset.slotId || "slot_1";
-    });
-  });
+function isNonEmptyString(value, maxLength = 2048) {
+  return typeof value === "string" && value.length > 0 && value.length <= maxLength;
+}
 
-  function updateParticipantNameInputs(count) {
-    const container = document.getElementById("participant-names-container");
-    if (!container) return;
+function isValidUserId(value) {
+  return typeof value === "string" && value.length >= 1 && value.length <= 128 && !/[\u0000-\u001F\u007F]/.test(value);
+}
 
-    const currentInputs = container.querySelectorAll(".participant-name-input");
-    const currentValues = Array.from(currentInputs).map(i => i.value);
-    container.innerHTML = "";
-
-    for (let i = 0; i < count; i++) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "name-input-wrapper";
-
-      const label = document.createElement("span");
-      label.className = "name-index";
-      label.textContent = `${i + 1}人目`;
-
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "participant-name-input code-input";
-      input.placeholder = `体験者${i + 1}のお名前`;
-      input.maxLength = 30;
-      input.value = currentValues[i] || "";
-
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
-      container.appendChild(wrapper);
-    }
+async function readJson(request) {
+  const contentType = request.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    throw new Error("INVALID_CONTENT_TYPE");
   }
 
-  countBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-      countBtns.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      const val = btn.dataset.count;
-      if (val === "custom") {
-        if (customCountWrapper) customCountWrapper.style.display = "block";
-        currentParticipantCount = Math.max(5, parseInt(customCountInput?.value || "5", 10) || 5);
-      } else {
-        if (customCountWrapper) customCountWrapper.style.display = "none";
-        currentParticipantCount = parseInt(val || "1", 10);
-      }
-
-      updateParticipantNameInputs(currentParticipantCount);
-    });
-  });
-
-  customCountInput?.addEventListener("input", (e) => {
-    let val = parseInt(e.target.value, 10);
-    if (isNaN(val) || val < 1) val = 1;
-    if (val > 15) val = 15;
-    currentParticipantCount = val;
-    updateParticipantNameInputs(currentParticipantCount);
-  });
-
-  function renderCode128SVG(svgEl, text) {
-    const patterns = [
-      "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
-      "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
-      "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
-      "212123","212321","232121","111323","131123","131321","112313","132113","132311","211313",
-      "231113","231311","112133","112331","132131","113123","113321","133121","313121","211331",
-      "231131","213113","213311","213131","311123","311321","331121","312113","312311","332111",
-      "314111","221411","431111","111224","111422","121124","121421","141122","141221","112214",
-      "112412","122114","122411","142112","142211","241211","221114","413111","241112","134111",
-      "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
-      "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
-      "114131","311141","411111","211412","211214","211232","2331112"
-    ];
-
-    const codes = [104];
-    let checksum = 104;
-
-    for (let i = 0; i < text.length; i++) {
-      const code = text.charCodeAt(i) - 32;
-      if (code >= 0 && code <= 95) {
-        codes.push(code);
-        checksum += code * (i + 1);
-      }
-    }
-
-    codes.push(checksum % 103);
-    codes.push(106);
-
-    let bars = "";
-    for (let c of codes) bars += patterns[c];
-
-    const moduleWidth = 2;
-    const height = 50;
-    let x = 10;
-    let rects = "";
-    let isBar = true;
-
-    for (let i = 0; i < bars.length; i++) {
-      const w = parseInt(bars[i], 10) * moduleWidth;
-      if (isBar) rects += `<rect x="${x}" y="10" width="${w}" height="${height}" fill="#000" />`;
-      x += w;
-      isBar = !isBar;
-    }
-
-    const totalWidth = x + 10;
-    const totalHeight = height + 35;
-
-    svgEl.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
-    svgEl.removeAttribute("height");
-    svgEl.innerHTML = `${rects}<text x="${totalWidth / 2}" y="${height + 25}" font-size="14" font-weight="bold" font-family="monospace" text-anchor="middle" fill="#000">${text}</text>`;
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (Number.isFinite(contentLength) && contentLength > 32768) {
+    throw new Error("BODY_TOO_LARGE");
   }
 
-  issueBtn?.addEventListener("click", async () => {
-    hideError();
+  return request.json();
+}
 
-    if (!isDevMode && (!isLiffReady || !lineIdToken)) {
-      if (window.liff && !liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
-      showError("LINEログイン情報の取得中です。数秒待ってから再試行するか、LINEアプリ内で開いてください。");
-      return;
-    }
+/* =========================================================
+ * システム稼働制御 (モジュール別 ON/OFF 判定)
+ * ======================================================= */
 
-    const parentName = parentNameInput?.value.trim() || "";
-    if (selectedVisitorType === "family" && !parentName) {
-      showError("保護者様のお名前を入力してください");
-      return;
-    }
+async function getModuleStatus(env, key) {
+  try {
+    const res = await env.DB.prepare("SELECT value FROM system_settings WHERE key = ? LIMIT 1").bind(key).first();
+    return !res || res.value === "1";
+  } catch (e) {
+    console.error(`Status check failed for ${key}:`, e);
+    return true;
+  }
+}
 
-    const nameInputs = document.querySelectorAll(".participant-name-input");
-    const participantNamesText = Array.from(nameInputs)
-      .map(input => input.value.trim())
-      .filter(v => v !== "")
-      .join(", ");
-
-    const turnstileInput = document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement;
-    const turnstileToken = turnstileInput ? turnstileInput.value : "";
-
-    issueBtn.disabled = true;
-    if (btnTitleText) btnTitleText.textContent = "整理券を発行中...";
-
-    const payload = {
-      date: selectedDate,
-      slotId: selectedSlotId,
-      visitorType: selectedVisitorType,
-      headcount: currentParticipantCount,
-      parentName: parentName,
-      participantNames: participantNamesText,
-      turnstileToken: turnstileToken,
-      ...(isDevMode ? { mockUserId: "web_dev_user_001" } : { idToken: lineIdToken })
+async function getAllSystemStatus(env) {
+  try {
+    const { results } = await env.DB.prepare("SELECT key, value FROM system_settings").all();
+    const map = new Map((results || []).map(r => [r.key, r.value === "1"]));
+    return {
+      admin_active: map.has("admin_active") ? map.get("admin_active") : true,
+      issuance_active: map.has("issuance_active") ? map.get("issuance_active") : true,
+      pos_active: map.has("pos_active") ? map.get("pos_active") : true,
     };
+  } catch (e) {
+    return { admin_active: true, issuance_active: true, pos_active: true };
+  }
+}
+
+/* =========================================================
+ * Cloudflare Turnstile & LINE ID Token 検証
+ * ======================================================= */
+
+async function verifyTurnstile(request, env, token) {
+  // TURNSTILE_SECRET_KEY 未設定時はスキップ（安全なフォールバック）
+  if (!env.TURNSTILE_SECRET_KEY) return { ok: true };
+  if (!isNonEmptyString(token, 2048)) return { ok: false };
+
+  const formData = new FormData();
+  formData.append("secret", env.TURNSTILE_SECRET_KEY);
+  formData.append("response", token);
+
+  const remoteIp = request.headers.get("CF-Connecting-IP");
+  if (remoteIp) formData.append("remoteip", remoteIp);
+
+  try {
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) return { ok: false };
+
+    const result = await response.json();
+
+    // 厳格な hostname チェックを排除し、Cloudflare 側の結果(result.success)のみを判定
+    if (!result.success) {
+      console.error("Turnstile verification failed error codes:", result["error-codes"]);
+      return { ok: false };
+    }
+
+    return { ok: true };
+  } catch (e) {
+    console.error("Turnstile exception:", e);
+    return { ok: false };
+  }
+}
+
+async function verifyLineIdToken(idToken, env) {
+  if (!env.LINE_CHANNEL_ID || !isNonEmptyString(idToken, 20000)) return null;
+
+  const form = new URLSearchParams();
+  form.set("id_token", idToken);
+  form.set("client_id", env.LINE_CHANNEL_ID);
+
+  try {
+    const response = await fetch("https://api.line.me/oauth2/v2.1/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+    });
+
+    if (!response.ok) return null;
+
+    const claims = await response.json();
+    if (claims.iss !== "https://access.line.me" || claims.aud !== env.LINE_CHANNEL_ID || !isValidUserId(claims.sub)) {
+      return null;
+    }
+
+    const exp = Number(claims.exp);
+    if (!Number.isFinite(exp) || exp * 1000 <= Date.now()) return null;
+
+    return claims;
+  } catch (e) {
+    console.error("LINE verify exception:", e);
+    return null;
+  }
+}
+
+/* =========================================================
+ * 整理券 DB 操作 & 枠情報・発券ハンドラ
+ * ======================================================= */
+
+async function getExistingActiveTicket(env, lineUserId, date, slotId) {
+  if (!env.DB) throw new Error("D1_DATABASE_NOT_BOUND");
+
+  return env.DB.prepare(`
+    SELECT ticket_number, headcount, visitor_type, parent_name, participant_names, note, status
+    FROM tickets
+    WHERE line_user_id = ? AND date = ? AND slot_id = ? AND status != 'CANCELLED'
+    ORDER BY id ASC
+  `)
+    .bind(lineUserId, date, slotId)
+    .all();
+}
+
+async function issueTicket(env, lineUserId, date, slotId, headcount = 1, visitorType = "family", parentName = "", participantNames = "", note = "") {
+  if (!env.DB) throw new Error("D1_DATABASE_NOT_BOUND");
+
+  await env.DB.prepare(`
+    INSERT INTO ticket_counter (id, next_number) VALUES (1, 1)
+    ON CONFLICT(id) DO UPDATE SET next_number = next_number + 1
+  `).run();
+
+  const insertedRow = await env.DB.prepare(`
+    INSERT INTO tickets (line_user_id, ticket_number, date, slot_id, headcount, visitor_type, parent_name, participant_names, note, status, created_at)
+    SELECT ?, next_number, ?, ?, ?, ?, ?, ?, ?, 'WAITING', datetime('now')
+    FROM ticket_counter
+    WHERE id = 1
+    RETURNING ticket_number
+  `).bind(lineUserId, date, slotId, headcount, visitorType, parentName, participantNames, note).first();
+
+  const ticketNumber = Number(insertedRow?.ticket_number);
+
+  if (!Number.isInteger(ticketNumber) || ticketNumber < 1) {
+    throw new Error("TICKET_COUNTER_ERROR");
+  }
+
+  return ticketNumber;
+}
+
+async function handleGetSlots(request, env, origin) {
+  const url = new URL(request.url);
+  const date = url.searchParams.get("date") || "2026-10-30";
+
+  try {
+    const isIssuanceActive = await getModuleStatus(env, "issuance_active");
+    
+    const { results } = await env.DB.prepare(`
+      SELECT slot_id, COUNT(*) AS booked
+      FROM tickets
+      WHERE date = ? AND status != 'CANCELLED'
+      GROUP BY slot_id
+    `).bind(date).all();
+
+    const bookedMap = new Map((results || []).map((r) => [r.slot_id, Number(r.booked)]));
+
+    const slots = ["slot_1", "slot_2", "slot_3"].map((slotId) => {
+      const booked = bookedMap.get(slotId) || 0;
+      const remaining = Math.max(0, MAX_SLOT_CAPACITY - booked);
+      return {
+        slotId,
+        booked,
+        capacity: MAX_SLOT_CAPACITY,
+        remaining,
+        isFull: remaining <= 0,
+      };
+    });
+
+    return jsonResponse({ success: true, isIssuanceActive, date, slots }, 200, origin);
+  } catch (error) {
+    console.error("Get slots error:", error);
+    return errorResponse("枠情報の取得に失敗しました。", 500, origin);
+  }
+}
+
+async function handleIssue(request, env, ctx, origin) {
+  const isIssuanceActive = await getModuleStatus(env, "issuance_active");
+  if (!isIssuanceActive) {
+    return errorResponse("ただいま整理券（SPIKE体験会）の発券受付は停止しております。", 403, origin);
+  }
+
+  let body;
+  try {
+    body = await readJson(request);
+  } catch {
+    return errorResponse("JSONを読み取れませんでした。", 400, origin);
+  }
+
+  const date = String(body?.date || "").trim();
+  const slotId = String(body?.slotId || "").trim();
+  const visitorType = String(body?.visitorType || "family").trim();
+  const headcount = Math.min(Math.max(Number(body?.headcount) || 1, 1), 15);
+  const parentName = String(body?.parentName || "").slice(0, 100);
+  const participantNames = String(body?.participantNames || "").slice(0, 500);
+  const note = String(body?.note || "").slice(0, 200);
+
+  if (!date || !slotId) return errorResponse("日付と時間枠を指定してください。", 400, origin);
+
+  let lineUserId = null;
+  const mockRequested = body && body.mockUserId !== undefined;
+
+  if (mockRequested) {
+    if (!isValidUserId(body.mockUserId)) {
+      return errorResponse("mockUserIdが不正です。", 400, origin);
+    }
+    lineUserId = body.mockUserId;
+  } else {
+    const claims = await verifyLineIdToken(body?.idToken, env);
+    if (!claims) return errorResponse("LINE認証を確認できませんでした。", 401, origin);
+
+    lineUserId = claims.sub;
+
+    const turnstileResult = await verifyTurnstile(request, env, body?.turnstileToken);
+    if (!turnstileResult.ok) {
+      return errorResponse("安全確認に失敗しました。もう一度お試しください。", 403, origin);
+    }
+  }
+
+  try {
+    const existingResult = await getExistingActiveTicket(env, lineUserId, date, slotId);
+    const existingList = existingResult.results || [];
+    if (existingList.length > 0) {
+      const first = existingList[0];
+      return jsonResponse({
+        success: true,
+        ticketNumber: Number(first.ticket_number),
+        alreadyIssued: true,
+      }, 200, origin);
+    }
+
+    const num = await issueTicket(env, lineUserId, date, slotId, headcount, visitorType, parentName, participantNames, note);
+
+    return jsonResponse({
+      success: true,
+      ticketNumber: num,
+      alreadyIssued: false,
+    }, 200, origin);
+  } catch (error) {
+    console.error("Issue ticket error:", error);
+    return errorResponse("発券に失敗しました。", 500, origin);
+  }
+}
+
+/* =========================================================
+ * 管理者認証 & GAS メール送信機能 API
+ * ======================================================= */
+
+function generate6DigitCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function requireAdmin(request, env, origin) {
+  const isAdminActive = await getModuleStatus(env, "admin_active");
+  if (!isAdminActive) {
+    return errorResponse("管理画面システムは現在停止中です。", 403, origin);
+  }
+
+  if (!env.ADMIN_SECRET_KEY) {
+    return errorResponse("管理機能の設定が不足しています。", 500, origin);
+  }
+
+  const adminKey = request.headers.get("X-Admin-Key");
+  const adminUser = request.headers.get("X-Admin-User");
+
+  if (!adminKey || !timingSafeEqual(adminKey, env.ADMIN_SECRET_KEY)) {
+    return errorResponse("合言葉（パスワード）が正しくありません。", 401, origin);
+  }
+
+  if (!adminUser || typeof adminUser !== "string") {
+    return errorResponse("管理者アカウント情報が不足しています。", 401, origin);
+  }
+
+  const normalizedEmail = adminUser.trim().toLowerCase();
+  try {
+    const adminRecord = await env.DB.prepare(
+      "SELECT id, email, name FROM admin_users WHERE lower(email) = ? AND is_active = 1 LIMIT 1"
+    ).bind(normalizedEmail).first();
+
+    if (!adminRecord) {
+      return errorResponse("登録または有効化されていない管理者アカウントです。", 403, origin);
+    }
+  } catch (err) {
+    console.error("Admin DB auth check failed:", err);
+    return errorResponse("認証処理中にエラーが発生しました。", 500, origin);
+  }
+
+  return null;
+}
+
+async function handleAdminSendAuthCode(request, env, origin) {
+  let body;
+  try {
+    body = await readJson(request);
+  } catch {
+    return errorResponse("リクエスト形式が不正です。", 400, origin);
+  }
+
+  const email = String(body?.email || "").trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    return errorResponse("有効なメールアドレスを入力してください。", 400, origin);
+  }
+
+  const adminRecord = await env.DB.prepare(
+    "SELECT id, email, name FROM admin_users WHERE lower(email) = ? AND is_active = 1 LIMIT 1"
+  ).bind(email).first();
+
+  if (!adminRecord) {
+    return errorResponse("登録されているスタッフ用のメールアドレスではありません。", 403, origin);
+  }
+
+  const code = generate6DigitCode();
+
+  try {
+    await env.DB.prepare(`
+      INSERT INTO admin_auth_codes (email, code, expires_at)
+      VALUES (?, ?, datetime('now', '+10 minutes'))
+      ON CONFLICT(email) DO UPDATE SET
+        code = excluded.code,
+        expires_at = excluded.expires_at
+    `).bind(email, code).run();
+  } catch (e) {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS admin_auth_codes (
+        email TEXT PRIMARY KEY,
+        code TEXT NOT NULL,
+        expires_at DATETIME NOT NULL
+      )
+    `).run();
+
+    await env.DB.prepare(`
+      INSERT INTO admin_auth_codes (email, code, expires_at)
+      VALUES (?, ?, datetime('now', '+10 minutes'))
+      ON CONFLICT(email) DO UPDATE SET
+        code = excluded.code,
+        expires_at = excluded.expires_at
+    `).bind(email, code).run();
+  }
+
+  if (!env.GAS_WEBAPP_URL) {
+    return errorResponse("メール送信連携の設定（GAS_WEBAPP_URL）が見つかりません。", 500, origin);
+  }
+
+  try {
+    const gasRes = await fetch(env.GAS_WEBAPP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "send_auth_code",
+        email: email,
+        name: adminRecord.name,
+        code: code,
+        secret: env.GAS_SHARED_SECRET
+      })
+    });
+
+    if (!gasRes.ok) {
+      console.error("GAS Email Response Error:", await gasRes.text());
+      return errorResponse("GASでのメール送信処理に失敗しました。", 500, origin);
+    }
+  } catch (e) {
+    console.error("GAS Fetch Error:", e);
+    return errorResponse("メール送信サーバーへの接続に失敗しました。", 500, origin);
+  }
+
+  return jsonResponse({
+    success: true,
+    message: "認証コードをメール送信しました。"
+  }, 200, origin);
+}
+
+async function handleAdminVerifyAuthCode(request, env, origin) {
+  let body;
+  try {
+    body = await readJson(request);
+  } catch {
+    return errorResponse("リクエスト形式が不正です。", 400, origin);
+  }
+
+  const email = String(body?.email || "").trim().toLowerCase();
+  const code = String(body?.code || "").trim();
+
+  if (!email || !code) {
+    return errorResponse("メールアドレスと認証コードを入力してください。", 400, origin);
+  }
+
+  const adminRecord = await env.DB.prepare(
+    "SELECT id, email, name FROM admin_users WHERE lower(email) = ? AND is_active = 1 LIMIT 1"
+  ).bind(email).first();
+
+  if (!adminRecord) {
+    return errorResponse("登録されているスタッフアカウントではありません。", 403, origin);
+  }
+
+  const savedCodeRow = await env.DB.prepare(`
+    SELECT code FROM admin_auth_codes
+    WHERE lower(email) = ? AND code = ? AND expires_at > datetime('now')
+    LIMIT 1
+  `).bind(email, code).first();
+
+  if (!savedCodeRow) {
+    return errorResponse("認証コードが正しくないか、有効期限（10分）が切れています。", 400, origin);
+  }
+
+  await env.DB.prepare("DELETE FROM admin_auth_codes WHERE lower(email) = ?").bind(email).run();
+
+  return jsonResponse({
+    success: true,
+    email: adminRecord.email,
+    name: adminRecord.name,
+    adminKey: env.ADMIN_SECRET_KEY
+  }, 200, origin);
+}
+
+async function handleAdminUpdateStatus(request, env, origin) {
+  const authError = await requireAdmin(request, env, origin);
+  if (authError) return authError;
+
+  let body;
+  try {
+    body = await readJson(request);
+  } catch {
+    return errorResponse("リクエスト形式が不正です。", 400, origin);
+  }
+
+  const ticketNumber = Number(body?.ticketNumber);
+  const status = String(body?.status || "").trim();
+
+  if (!ticketNumber || !["WAITING", "CALLED", "ADMITTED", "CANCELLED"].includes(status)) {
+    return errorResponse("無効なパラメータです。", 400, origin);
+  }
+
+  try {
+    const result = await env.DB.prepare(`
+      UPDATE tickets
+      SET status = ?
+      WHERE ticket_number = ?
+    `).bind(status, ticketNumber).run();
+
+    if (result.meta.changes === 0) {
+      return errorResponse("指定された整理券が見つかりません。", 404, origin);
+    }
+
+    return jsonResponse({ success: true, message: "ステータスを更新しました。" }, 200, origin);
+  } catch (err) {
+    console.error("Update status error:", err);
+    return errorResponse("ステータスの更新に失敗しました。", 500, origin);
+  }
+}
+
+async function handleAdminGetSystemControl(request, env, origin) {
+  const status = await getAllSystemStatus(env);
+  return jsonResponse({ success: true, status }, 200, origin);
+}
+
+async function handleAdminUpdateSystemControl(request, env, origin) {
+  let body;
+  try {
+    body = await readJson(request);
+  } catch {
+    return errorResponse("リクエスト形式が不正です。", 400, origin);
+  }
+
+  const { target, active, secret } = body;
+
+  if (secret && secret !== env.GAS_SHARED_SECRET) {
+    return errorResponse("認証キーが正しくありません。", 401, origin);
+  }
+
+  const val = active ? "1" : "0";
+  const validKeys = new Set(["admin_active", "issuance_active", "pos_active"]);
+
+  try {
+    if (target === "all") {
+      await env.DB.batch([
+        env.DB.prepare("INSERT INTO system_settings (key, value) VALUES ('admin_active', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(val),
+        env.DB.prepare("INSERT INTO system_settings (key, value) VALUES ('issuance_active', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(val),
+        env.DB.prepare("INSERT INTO system_settings (key, value) VALUES ('pos_active', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(val),
+      ]);
+    } else if (validKeys.has(target)) {
+      await env.DB.prepare("INSERT INTO system_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").bind(target, val).run();
+    } else {
+      return errorResponse("指定された制御対象が存在しません。", 400, origin);
+    }
+
+    const currentStatus = await getAllSystemStatus(env);
+    return jsonResponse({ success: true, status: currentStatus, message: "稼働状態を更新しました。" }, 200, origin);
+  } catch (err) {
+    console.error("Update system control error:", err);
+    return errorResponse("稼働状態の更新に失敗しました。", 500, origin);
+  }
+}
+
+async function handleAdminList(request, env, origin) {
+  const authError = await requireAdmin(request, env, origin);
+  if (authError) return authError;
+
+  const url = new URL(request.url);
+  const rawLimit = Number(url.searchParams.get("limit") || 100);
+  const limit = Number.isInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 100;
+
+  try {
+    const [rows, total, waiting, called, admitted] = await Promise.all([
+      env.DB.prepare(`
+        SELECT id, ticket_number, date, slot_id, headcount, visitor_type, parent_name, participant_names, note, line_user_id, status, created_at
+        FROM tickets
+        ORDER BY id DESC
+        LIMIT ?
+      `).bind(limit).all(),
+      env.DB.prepare("SELECT COUNT(*) AS count FROM tickets").first(),
+      env.DB.prepare("SELECT COUNT(*) AS count FROM tickets WHERE status = 'WAITING'").first(),
+      env.DB.prepare("SELECT COUNT(*) AS count FROM tickets WHERE status = 'CALLED'").first(),
+      env.DB.prepare("SELECT COUNT(*) AS count FROM tickets WHERE status = 'ADMITTED'").first(),
+    ]);
+
+    return jsonResponse(
+      {
+        success: true,
+        tickets: rows.results || [],
+        stats: {
+          total: Number(total?.count || 0),
+          waiting: Number(waiting?.count || 0),
+          called: Number(called?.count || 0),
+          admitted: Number(admitted?.count || 0),
+        },
+      },
+      200,
+      origin
+    );
+  } catch (error) {
+    console.error("Admin list failed:", error);
+    return errorResponse("一覧を取得できませんでした。", 500, origin);
+  }
+}
+
+/* =========================================================
+ * Worker Main ルーティング
+ * ======================================================= */
+
+export default {
+  async fetch(request, env, ctx) {
+    const origin = request.headers.get("Origin");
 
     try {
-      const res = await fetch(`${BACKEND_ENDPOINT}/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const url = new URL(request.url);
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        const ticketNo = String(data.ticketNumber);
-        const barcodeText = `SHOKO-${ticketNo}`;
-
-        const numEl = document.getElementById("ticket-number");
-        if (numEl) numEl.innerText = ticketNo;
-
-        const svgEl = document.getElementById("barcode-svg");
-        if (svgEl) renderCode128SVG(svgEl, barcodeText);
-
-        const resTypeEl = document.getElementById("res-type");
-        if (resTypeEl) resTypeEl.innerText = selectedVisitorType === "family" ? "ご家族連れ" : "一般・個人";
-        
-        const parentRow = document.getElementById("res-parent-row");
-        const parentNameValEl = document.getElementById("res-parent-name");
-        if (selectedVisitorType === "family" && parentName) {
-          if (parentRow) parentRow.style.display = "flex";
-          if (parentNameValEl) parentNameValEl.innerText = parentName;
-        } else {
-          if (parentRow) parentRow.style.display = "none";
-        }
-
-        const dtEl = document.getElementById("res-datetime");
-        if (dtEl) dtEl.innerText = `${selectedDate} / ${selectedSlotId}`;
-
-        const countEl = document.getElementById("res-count");
-        if (countEl) countEl.innerText = `${currentParticipantCount}名`;
-
-        const namesRow = document.getElementById("res-names-row");
-        const namesValEl = document.getElementById("res-participant-names");
-        if (participantNamesText) {
-          if (namesRow) namesRow.style.display = "flex";
-          if (namesValEl) namesValEl.innerText = participantNamesText;
-        } else {
-          if (namesRow) namesRow.style.display = "none";
-        }
-
-        const unissuedEl = document.getElementById("status-unissued");
-        const issuedEl = document.getElementById("status-issued");
-        if (unissuedEl) unissuedEl.style.display = "none";
-        if (issuedEl) issuedEl.style.display = "block";
-      } else {
-        showError(data.message || "整理券の発行に失敗しました");
+      if (request.method === "OPTIONS") {
+        return handleOptions(request, origin);
       }
-    } catch (e) {
-      console.error(e);
-      showError("通信エラーが発生しました。インターネット接続を確認してください。");
-    } finally {
-      issueBtn.disabled = false;
-      if (btnTitleText) btnTitleText.textContent = "LINEで整理券を発行する";
+
+      if (!isAllowedOrigin(origin)) {
+        return errorResponse("許可されていないアクセス元です。", 403, origin);
+      }
+
+      if (request.method === "GET" && url.pathname === "/") {
+        return jsonResponse({ success: true, service: "shokosai-portal-api", status: "online" }, 200, origin);
+      }
+
+      if (request.method === "POST" && url.pathname === "/admin/send-auth-code") {
+        return await handleAdminSendAuthCode(request, env, origin);
+      }
+
+      if (request.method === "POST" && url.pathname === "/admin/verify-auth-code") {
+        return await handleAdminVerifyAuthCode(request, env, origin);
+      }
+
+      if (request.method === "POST" && url.pathname === "/admin/update-status") {
+        return await handleAdminUpdateStatus(request, env, origin);
+      }
+
+      if (request.method === "GET" && url.pathname === "/admin/system-control") {
+        return await handleAdminGetSystemControl(request, env, origin);
+      }
+
+      if (request.method === "POST" && url.pathname === "/admin/system-control") {
+        return await handleAdminUpdateSystemControl(request, env, origin);
+      }
+
+      if (request.method === "GET" && url.pathname === "/api/slots") {
+        return await handleGetSlots(request, env, origin);
+      }
+
+      if (request.method === "POST" && url.pathname === "/") {
+        return await handleIssue(request, env, ctx, origin);
+      }
+
+      if (request.method === "GET" && url.pathname === "/admin/list") {
+        return await handleAdminList(request, env, origin);
+      }
+
+      return errorResponse("Not Found", 404, origin);
+    } catch (error) {
+      console.error("Unhandled Worker Error:", error);
+      return errorResponse("サーバー内部エラーが発生しました。", 500, origin);
     }
-  });
-</script>
-
-<style is:global>
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    background-color: #f8fafc;
-    color: #1e293b;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  }
-
-  .bright-code-portal {
-    min-height: 100vh;
-    padding: 24px 16px 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .terminal-header {
-    width: 100%;
-    max-width: 440px;
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .header-badge {
-    display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: #0284c7;
-    background: #e0f2fe;
-    border: 1px solid #bae6fd;
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-bottom: 8px;
-  }
-
-  .terminal-header h1 {
-    font-size: 1.45rem;
-    margin: 0;
-    color: #0f172a;
-    font-weight: 900;
-  }
-
-  .terminal-subtitle {
-    font-size: 0.72rem;
-    color: #64748b;
-    margin-top: 4px;
-    font-weight: 700;
-  }
-
-  .portal-container { width: 100%; max-width: 440px; }
-
-  .editor-window {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.08);
-    overflow: hidden;
-  }
-
-  .window-titlebar {
-    background: #f8fafc;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .tab-title { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-  .mode-tag { margin-left: auto; font-size: 0.68rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 4px; }
-
-  .editor-body { padding: 22px 18px; }
-
-  .field-block { margin-bottom: 18px; }
-  .field-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-
-  .step-num {
-    background: #0284c7;
-    color: #ffffff;
-    font-size: 0.7rem;
-    font-weight: 800;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .field-label { font-size: 0.88rem; font-weight: 800; color: #0f172a; }
-  .sub-label { font-size: 0.75rem; color: #64748b; font-weight: normal; }
-  .code-tag { margin-left: auto; font-size: 0.68rem; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
-
-  .selector-grid { display: flex; gap: 6px; }
-  .btn-select {
-    flex: 1;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    color: #475569;
-    padding: 10px 0;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
-
-  .date-grid { display: flex; gap: 8px; }
-  .btn-date {
-    flex: 1;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    padding: 12px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    text-align: center;
-  }
-  .btn-date.active { background: #e0f2fe; border-color: #0369a1; }
-  .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
-
-  .slot-list { display: flex; flex-direction: column; gap: 8px; }
-  .slot-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 10px 14px;
-    cursor: pointer;
-  }
-  .slot-card.active { background: #ffffff; border-color: #0284c7; border-left: 5px solid #0284c7; }
-  .slot-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-
-  .slot-info { display: flex; flex-direction: column; gap: 2px; }
-  .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
-  .slot-time { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-
-  .badge-status { font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
-  .badge-ok { background: #dcfce7; color: #15803d; }
-  .badge-full { background: #fee2e2; color: #b91c1c; }
-
-  .code-input {
-    width: 100%;
-    background: #f8fafc;
-    border: 1.5px solid #cbd5e1;
-    border-radius: 8px;
-    color: #1e293b;
-    padding: 10px 12px;
-    font-size: 0.88rem;
-  }
-  .code-input:focus { outline: none; border-color: #0284c7; background: #ffffff; }
-
-  .custom-input-box { margin-top: 10px; padding: 10px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; }
-  .custom-input-box label { display: block; font-size: 0.78rem; color: #475569; margin-bottom: 6px; font-weight: bold; }
-  .input-with-unit { display: flex; align-items: center; gap: 8px; }
-  .input-with-unit input { width: 100px; text-align: center; }
-  .unit { font-size: 0.9rem; font-weight: bold; color: #334155; }
-
-  .names-container { display: flex; flex-direction: column; gap: 8px; }
-  .name-input-wrapper { display: flex; align-items: center; gap: 8px; }
-  .name-index { font-size: 0.75rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
-
-  .turnstile-wrapper { margin: 12px 0; display: flex; justify-content: center; }
-
-  .error-message {
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
-    color: #dc2626;
-    font-size: 0.8rem;
-    font-weight: bold;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 12px;
-    text-align: center;
-  }
-
-  .terminal-btn {
-    width: 100%;
-    background: #0284c7;
-    border: none;
-    color: #ffffff;
-    padding: 14px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 800;
-    cursor: pointer;
-    margin-top: 10px;
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-  }
-  .terminal-btn:disabled {
-    background: #94a3b8;
-    box-shadow: none;
-    cursor: not-allowed;
-  }
-
-  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
-  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
-
-  .ticket-card-display {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    border-radius: 12px;
-    padding: 20px 14px;
-    color: #ffffff;
-    text-align: center;
-    box-shadow: 0 8px 20px rgba(2, 132, 199, 0.25);
-    margin-bottom: 16px;
-  }
-  .ticket-card-label {
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    opacity: 0.9;
-    text-transform: uppercase;
-  }
-  .ticket-number-box {
-    margin: 6px 0 12px;
-    display: flex;
-    justify-content: center;
-    align-items: baseline;
-    gap: 4px;
-  }
-  .num-prefix { font-size: 1.4rem; font-weight: 800; opacity: 0.9; }
-  .ticket-num { font-size: 3.2rem; font-weight: 900; line-height: 1; letter-spacing: 2px; }
-
-  .barcode-box {
-    background: #ffffff;
-    padding: 12px 10px 8px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  }
-  .barcode-box svg {
-    max-width: 100%;
-    height: auto;
-    display: block;
-  }
-  .barcode-caption {
-    font-size: 0.68rem;
-    color: #475569;
-    font-weight: 800;
-    margin-top: 4px;
-  }
-
-  .screenshot-alert { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .screenshot-alert p { margin: 0; font-size: 0.8rem; color: #991b1b; line-height: 1.4; }
-  .alert-icon { font-size: 1.4rem; }
-
-  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
-  .meta-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
-  .meta-key { color: #64748b; font-weight: 600; }
-  .meta-val { color: #0f172a; font-weight: 800; }
-
-  .remind-info-card {
-    background: #f0fdf4;
-    border: 1px solid #86efac;
-    color: #166534;
-    padding: 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .remind-icon { font-size: 1.4rem; }
-  .remind-text strong { display: block; font-size: 0.82rem; color: #14532d; }
-  .remind-text p { margin: 2px 0 0; font-size: 0.75rem; color: #166534; }
-</style>
+  },
+};
