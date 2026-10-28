@@ -196,7 +196,10 @@ const TIME_SLOTS = [
   </div>
 </Layout>
 
-<script is:inline>
+<!-- ★ is:inline を外し、npmパッケージを使えるように変更 -->
+<script>
+  import liff from '@line/liff'; // npmでインストールしたパッケージを直接読み込む
+
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
   // ★ LINE Developers で取得した LIFF ID を設定してください
   const MY_LIFF_ID = "YOUR_LIFF_ID";
@@ -224,43 +227,43 @@ const TIME_SLOTS = [
 
   const isDevMode = new URLSearchParams(window.location.search).get("dev") === "true";
 
-  // モード判定 & LIFF SDK の動的・安全読み込み
-  if (isDevMode && modeBadge) {
-    modeBadge.textContent = "DEV MOCK MODE";
-    modeBadge.style.background = "#fef3c7";
-    modeBadge.style.color = "#b45309";
-    isLiffReady = true;
-  } else {
-    if (modeBadge) modeBadge.textContent = "ONLINE";
-    
-    window.addEventListener("DOMContentLoaded", () => {
-      const script = document.createElement("script");
-      script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
-      
-      script.onload = async () => {
-        if (window.liff) {
-          try {
-            await liff.init({ liffId: MY_LIFF_ID });
-            if (liff.isLoggedIn()) {
-              lineIdToken = liff.getIDToken();
-              isLiffReady = true;
-            } else {
-              liff.login();
-            }
-          } catch (err) {
-            console.error("LIFF Init Error:", err);
-            showError("LINEログインの初期化に失敗しました。LINEアプリ内から開き直してください。");
-          }
+  function showError(msg) {
+    if (errorMsgEl) {
+      errorMsgEl.textContent = msg;
+      errorMsgEl.style.display = "block";
+    }
+  }
+
+  function hideError() {
+    if (errorMsgEl) {
+      errorMsgEl.style.display = "none";
+    }
+  }
+
+  // ★ CDNスクリプト読み込みを廃止し、直接 liff.init() を実行するように変更
+  async function initLiffApp() {
+    if (isDevMode && modeBadge) {
+      modeBadge.textContent = "DEV MOCK MODE";
+      modeBadge.style.background = "#fef3c7";
+      modeBadge.style.color = "#b45309";
+      isLiffReady = true;
+    } else {
+      if (modeBadge) modeBadge.textContent = "ONLINE";
+      try {
+        await liff.init({ liffId: MY_LIFF_ID });
+        if (liff.isLoggedIn()) {
+          lineIdToken = liff.getIDToken();
+          isLiffReady = true;
+        } else {
+          liff.login();
         }
-      };
-
-      script.onerror = () => {
-        console.error("LIFF SDK Load Error (ERR_CERT_AUTHORITY_INVALID)");
-        showError("LINE通信ライブラリの読み込みに失敗しました。URL末尾に ?dev=true を付けてお試しください。");
-      };
-
-      document.head.appendChild(script);
-    });
+      } catch (err) {
+        console.error("LIFF Init Error:", err);
+        showError("LINE連携の初期化に失敗しました。?dev=true でお試しください。");
+      }
+    }
+    // 枠情報の初期取得
+    fetchSlotAvailability(selectedDate);
   }
 
   // 枠情報の取得
@@ -292,7 +295,8 @@ const TIME_SLOTS = [
     }
   }
 
-  fetchSlotAvailability(selectedDate);
+  // アプリケーションの初期化を実行
+  initLiffApp();
 
   // イベントハンドラ等
   visitorTypeBtns.forEach(btn => {
@@ -385,7 +389,7 @@ const TIME_SLOTS = [
     updateParticipantNameInputs(currentParticipantCount);
   });
 
-  // Code128-B SVG生成関数（元のサイズ指定）
+  // Code128-B SVG生成関数
   function renderCode128SVG(svgEl, text) {
     const patterns = [
       "212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
@@ -437,19 +441,6 @@ const TIME_SLOTS = [
     svgEl.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
     svgEl.removeAttribute("height");
     svgEl.innerHTML = `${rects}<text x="${totalWidth / 2}" y="${height + 25}" font-size="14" font-weight="bold" font-family="monospace" text-anchor="middle" fill="#000">${text}</text>`;
-  }
-
-  function showError(msg) {
-    if (errorMsgEl) {
-      errorMsgEl.textContent = msg;
-      errorMsgEl.style.display = "block";
-    }
-  }
-
-  function hideError() {
-    if (errorMsgEl) {
-      errorMsgEl.style.display = "none";
-    }
   }
 
   // 発行処理
