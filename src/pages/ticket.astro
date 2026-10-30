@@ -109,7 +109,8 @@ const TIME_SLOTS = [
             <div id="custom-count-wrapper" class="custom-input-box" style="display: none;">
               <label for="custom-count-input">体験人数を入力してください：</label>
               <div class="input-with-unit">
-                <input type="number" id="custom-count-input" class="code-input" min="5" max="15" value="5" />
+                <!-- ★ max を 10 に変更 -->
+                <input type="number" id="custom-count-input" class="code-input" min="5" max="10" value="5" />
                 <span class="unit">名</span>
               </div>
             </div>
@@ -372,10 +373,11 @@ const TIME_SLOTS = [
     });
   });
 
+  // ★ 上限チェックを 10 名に変更
   customCountInput?.addEventListener("input", (e) => {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val) || val < 1) val = 1;
-    if (val > 15) val = 15;
+    if (val > 10) val = 10;
     currentParticipantCount = val;
     updateParticipantNameInputs(currentParticipantCount);
   });
@@ -436,7 +438,6 @@ const TIME_SLOTS = [
   issueBtn?.addEventListener("click", async () => {
     hideError();
 
-    // ★ 1. ボタン押下時にログイン確認を行う
     if (!isDevMode) {
       if (!liff.isLoggedIn()) {
         liff.login();
@@ -444,7 +445,6 @@ const TIME_SLOTS = [
       }
     }
 
-    // ★ 2. ボタンを押した「その瞬間」に最新の ID Token を取得
     const currentIdToken = isDevMode ? null : liff.getIDToken();
 
     if (!isDevMode && !currentIdToken) {
