@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// ★ 10/30 を削除し、10/31 (土) のみに変更[cite: 3]
+// 10/31 (土) のみに限定
 const EVENT_DATES = [
   { date: '2026-10-31', label: '10/31 (土)' },
 ];
@@ -203,7 +203,6 @@ const TIME_SLOTS = [
   const MY_LIFF_ID = "2011672035-MlQEQgzQ";
 
   let selectedVisitorType = "family";
-  // ★ 初期設定日付を 2026-10-31 に変更[cite: 3]
   let selectedDate = "2026-10-31";
   let selectedSlotId = "slot_1";
   let currentParticipantCount = 1;
@@ -255,7 +254,13 @@ const TIME_SLOTS = [
         }
       } catch (err) {
         console.error("LIFF Init Error:", err);
-        showError("LINE連携の初期化に失敗しました。?dev=true でお試しください。");
+        isLiffReady = false;
+        if (modeBadge) {
+          modeBadge.textContent = "OFFLINE / ERR";
+          modeBadge.style.background = "#fee2e2";
+          modeBadge.style.color = "#b91c1c";
+        }
+        showError("LINEサーバーとの通信に失敗しました。日時設定やネットワーク環境をご確認いただくか、テスト時には ?dev=true を付けてお試しください。");
       }
     }
     fetchSlotAvailability(selectedDate);
@@ -438,13 +443,30 @@ const TIME_SLOTS = [
     hideError();
 
     if (!isDevMode) {
-      if (!liff.isLoggedIn()) {
-        liff.login();
+      if (!isLiffReady) {
+        showError("LINE連携の初期化が完了していません。通信環境をご確認のうえ画面を再読み込みするか、?dev=true でお試しください。");
+        return;
+      }
+
+      try {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+      } catch (err) {
+        showError("LINEログインの呼び出しに失敗しました。");
         return;
       }
     }
 
-    const currentIdToken = isDevMode ? null : liff.getIDToken();
+    let currentIdToken = null;
+    if (!isDevMode) {
+      try {
+        currentIdToken = liff.getIDToken();
+      } catch (e) {
+        console.error("Failed to get ID Token:", e);
+      }
+    }
 
     if (!isDevMode && !currentIdToken) {
       showError("LINE認証情報の取得に失敗しました。画面を再読み込みしてください。");
@@ -633,4 +655,183 @@ const TIME_SLOTS = [
     justify-content: center;
   }
 
-  .field-label { font-size: 0.88rem; font-weight: 80
+  .field-label { font-size: 0.88rem; font-weight: 800; color: #0f172a; }
+  .sub-label { font-size: 0.75rem; color: #64748b; font-weight: normal; }
+  .code-tag { margin-left: auto; font-size: 0.68rem; color: #0284c7; background: #e0f2fe; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
+
+  .selector-grid { display: flex; gap: 6px; }
+  .btn-select {
+    flex: 1;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    color: #475569;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-select.active { background: #0284c7; border-color: #0284c7; color: #ffffff; }
+
+  .date-grid { display: flex; gap: 8px; }
+  .btn-date {
+    flex: 1;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    padding: 12px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .btn-date.active { background: #e0f2fe; border-color: #0369a1; }
+  .date-label { font-size: 0.9rem; font-weight: 800; color: #0369a1; }
+
+  .slot-list { display: flex; flex-direction: column; gap: 8px; }
+  .slot-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+  .slot-card.active { background: #ffffff; border-color: #0284c7; border-left: 5px solid #0284c7; }
+  .slot-card.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+  .slot-info { display: flex; flex-direction: column; gap: 2px; }
+  .slot-title { font-size: 0.85rem; font-weight: 800; color: #0f172a; }
+  .slot-time { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+
+  .badge-status { font-size: 0.68rem; font-weight: 800; padding: 3px 8px; border-radius: 12px; }
+  .badge-ok { background: #dcfce7; color: #15803d; }
+  .badge-full { background: #fee2e2; color: #b91c1c; }
+
+  .code-input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    color: #1e293b;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+  .code-input:focus { outline: none; border-color: #0284c7; background: #ffffff; }
+
+  .custom-input-box { margin-top: 10px; padding: 10px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; }
+  .custom-input-box label { display: block; font-size: 0.78rem; color: #475569; margin-bottom: 6px; font-weight: bold; }
+  .input-with-unit { display: flex; align-items: center; gap: 8px; }
+  .input-with-unit input { width: 100px; text-align: center; }
+  .unit { font-size: 0.9rem; font-weight: bold; color: #334155; }
+
+  .names-container { display: flex; flex-direction: column; gap: 8px; }
+  .name-input-wrapper { display: flex; align-items: center; gap: 8px; }
+  .name-index { font-size: 0.75rem; font-weight: 800; color: #0284c7; background: #e0f2fe; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+
+  .error-message {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    text-align: center;
+  }
+
+  .terminal-btn {
+    width: 100%;
+    background: #0284c7;
+    border: none;
+    color: #ffffff;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  }
+  .terminal-btn:disabled {
+    background: #94a3b8;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .terminal-success-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 800; margin-bottom: 12px; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; }
+
+  .ticket-card-display {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-radius: 12px;
+    padding: 20px 14px;
+    color: #ffffff;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(2, 132, 199, 0.25);
+    margin-bottom: 16px;
+  }
+  .ticket-card-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    text-transform: uppercase;
+  }
+  .ticket-number-box {
+    margin: 6px 0 12px;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .num-prefix { font-size: 1.4rem; font-weight: 800; opacity: 0.9; }
+  .ticket-num { font-size: 3.2rem; font-weight: 900; line-height: 1; letter-spacing: 2px; }
+
+  .barcode-box {
+    background: #ffffff;
+    padding: 12px 10px 8px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  .barcode-box svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .barcode-caption {
+    font-size: 0.68rem;
+    color: #475569;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+
+  .screenshot-alert { background: #fef2f2; border: 2px solid #fca5a5; border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .screenshot-alert p { margin: 0; font-size: 0.8rem; color: #991b1b; line-height: 1.4; }
+  .alert-icon { font-size: 1.4rem; }
+
+  .ticket-meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+  .meta-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 6px; }
+  .meta-key { color: #64748b; font-weight: 600; }
+  .meta-val { color: #0f172a; font-weight: 800; }
+
+  .remind-info-card {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .remind-icon { font-size: 1.4rem; }
+  .remind-text strong { display: block; font-size: 0.82rem; color: #14532d; }
+  .remind-text p { margin: 2px 0 0; font-size: 0.75rem; color: #166534; }
+</style>
