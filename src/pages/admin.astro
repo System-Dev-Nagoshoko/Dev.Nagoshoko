@@ -113,6 +113,7 @@ import Layout from '../layouts/Layout.astro';
         <thead>
           <tr>
             <th>番号</th>
+            <th>予約時間枠</th>
             <th>区分 / 名義</th>
             <th>人数</th>
             <th>発行時刻</th>
@@ -121,7 +122,7 @@ import Layout from '../layouts/Layout.astro';
           </tr>
         </thead>
         <tbody id="ticket-list-body">
-          <tr><td colspan="6" style="text-align:center;">読み込み中...</td></tr>
+          <tr><td colspan="7" style="text-align:center;">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -130,6 +131,13 @@ import Layout from '../layouts/Layout.astro';
 
 <script is:inline>
   const BACKEND_ENDPOINT = "https://ticket-api.zinn1019t.workers.dev";
+
+  // 時間枠表示用マッピング
+  const SLOT_NAMES = {
+    slot_1: '第一回 (10:00〜11:00)',
+    slot_2: '第二回 (11:30〜12:30)',
+    slot_3: '第三回 (13:00〜14:00)'
+  };
 
   const authOverlay = document.getElementById("auth-overlay");
   const adminMain = document.getElementById("admin-main");
@@ -473,7 +481,7 @@ import Layout from '../layouts/Layout.astro';
           currentUserBadge.textContent = `LOGIN: ${getStaffName() || staffEmail}`;
         }
         if (listBody) {
-          listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
+          listBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#dc2626;font-weight:bold;">⚠️ ${errData.message || "現在管理画面はメンテナンス停止中です"}</td></tr>`;
         }
         if (nextInfoEl) nextInfoEl.textContent = "システム停止中";
         if (callNextBtn) callNextBtn.disabled = true;
@@ -510,7 +518,7 @@ import Layout from '../layouts/Layout.astro';
     } catch (e) {
       console.error(e);
       if (listBody) {
-        listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
+        listBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;">データの取得に失敗しました</td></tr>`;
       }
     }
   }
@@ -521,7 +529,8 @@ import Layout from '../layouts/Layout.astro';
     if (nextWaiting && nextInfoEl && callNextBtn) {
       const count = nextWaiting.headcount || 1;
       const typeStr = nextWaiting.visitor_type === "family" ? "ご家族連れ" : "一般";
-      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">${typeStr} / ${count}名</span>）です`;
+      const slotStr = SLOT_NAMES[nextWaiting.slot_id] || nextWaiting.slot_id || "未指定";
+      nextInfoEl.innerHTML = `次は <strong>No.${nextWaiting.ticket_number}</strong>（<span class="quick-headcount">${slotStr} / ${typeStr} / ${count}名</span>）です`;
       callNextBtn.disabled = false;
       callNextBtn.onclick = () => window.updateStatus(nextWaiting.ticket_number, "CALLED", count);
     } else if (nextInfoEl && callNextBtn) {
@@ -533,7 +542,7 @@ import Layout from '../layouts/Layout.astro';
   function renderTable(tickets) {
     if (!listBody) return;
     if (!tickets || tickets.length === 0) {
-      listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
+      listBody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#94a3b8;">発券されたチケットはありません</td></tr>`;
       return;
     }
 
@@ -544,6 +553,7 @@ import Layout from '../layouts/Layout.astro';
         time = new Date(utcIsoString).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
       }
       
+      const slotLabel = SLOT_NAMES[t.slot_id] || t.slot_id || "-";
       const typeLabel = t.visitor_type === "family" ? "👨‍👩‍👧‍👦 家族" : "👤 一般";
       const nameStr = t.parent_name ? escapeHtml(t.parent_name) : "-";
       const countBadge = `<span class="badge headcount-badge">${t.headcount || 1}名</span>`;
@@ -566,6 +576,7 @@ import Layout from '../layouts/Layout.astro';
       return `
         <tr>
           <td><strong>No.${t.ticket_number}</strong></td>
+          <td><span class="slot-tag">${slotLabel}</span></td>
           <td><span class="type-tag">${typeLabel}</span> <br><small class="name-sub">${nameStr}</small></td>
           <td>${countBadge}</td>
           <td>${time}</td>
@@ -643,7 +654,7 @@ import Layout from '../layouts/Layout.astro';
   .auth-error { color: #ef4444; font-size: 0.8rem; margin-top: 12px; font-weight: bold; }
 
   /* ダッシュボード本体 */
-  .admin-container { max-width: 900px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
+  .admin-container { max-width: 960px; margin: 0 auto; padding: 20px 16px 80px; font-family: system-ui, -apple-system, sans-serif; }
   .admin-header { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
   .header-top { display: flex; align-items: center; justify-content: space-between; }
   .admin-header .tag { font-size: 0.7rem; font-weight: 900; background: #fee2e2; color: #dc2626; width: fit-content; padding: 2px 8px; border-radius: 4px; }
@@ -690,11 +701,12 @@ import Layout from '../layouts/Layout.astro';
   /* 📋 テーブル */
   .table-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; overflow-x: auto; }
   .table-container h2 { font-size: 1.05rem; margin: 0 0 14px 0; }
-  .ticket-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
-  .ticket-table th { padding: 10px 8px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.8rem; }
+  .ticket-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+  .ticket-table th { padding: 10px 8px; border-bottom: 2px solid #e2e8f0; color: #64748b; font-size: 0.78rem; white-space: nowrap; }
   .ticket-table td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; }
 
-  .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
+  .slot-tag { font-size: 0.75rem; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap; }
   .badge.waiting { background: #e0f2fe; color: #0369a1; }
   .badge.called { background: #fef3c7; color: #b45309; }
   .badge.admitted { background: #f1f5f9; color: #64748b; }
